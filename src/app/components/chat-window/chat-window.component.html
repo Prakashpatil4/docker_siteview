@@ -1,0 +1,150 @@
+<div
+  class="chat-wrapper"
+  *ngIf="isShowChatWindow"
+  [class.minimized]="!isOpen"
+  role="region"
+  aria-label="Chat window"
+>
+  <div class="chat-header">
+    <div class="title">Support Chat</div>
+
+    <div class="controls">
+      <button
+        *ngIf="chatHistory.length > 0"
+        (click)="openPopup()"
+        title="Provide Feedback"
+      >
+        <i class="feedback-icon"></i>
+      </button>
+      <button type="button" (click)="toggle()" title="Minimize/Restore">
+        {{ isOpen ? "–" : "+" }}
+      </button>
+      <button type="button" (click)="clear()" title="Clear">X</button>
+    </div>
+  </div>
+  <div class="chat-body" *ngIf="isOpen">
+    <div class="chat-hint" *ngIf="showHint">
+      Welcome to Support chat Type your message to connect with agent
+    </div>
+
+    <div #messagesContainer class="messages">
+      <div
+        *ngFor="
+          let m of chat.messages$ | async;
+          let i = index;
+          trackBy: trackByIndex
+        "
+        [ngClass]="{
+          'msg-user': m.from === 'user',
+          'msg-bot': m.from === 'bot'
+        }"
+      >
+        <div class="msg-text" [innerHTML]="m.text | formatMessage">
+          {{ m.text }}
+        </div>
+        <div class="msg-time">{{ m.time | date : "shortTime" }}</div>
+      </div>
+
+      <div
+        *ngIf="chat.loading$ | async"
+        class="message received typing-indicator"
+      >
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <input
+        type="text"
+        [(ngModel)]="text"
+        (input)="onUserActivity()"
+        (keydown.enter)="send()"
+        placeholder="Type a message..."
+      />
+      <button (click)="send()" [disabled]="!text.trim()">Send</button>
+    </div>
+  </div>
+</div>
+<!--
+  /home/pspatil/siteview/src/app/components/chat-window/chat-window.component.html
+-->
+<div *ngIf="isVisible" class="modal-overlay" (click)="closePopup()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Show success message when feedback is submitted -->
+    <div *ngIf="showSuccessMessage" class="success-message">
+      <p>Thank you for your feedback!</p>
+    </div>
+
+    <form
+      [formGroup]="feedbackForm"
+      (ngSubmit)="onSubmit()"
+      *ngIf="!showSuccessMessage"
+    >
+      <div class="modal-header">
+        <h2>Provide Feedback</h2>
+        <button type="button" class="close-button" (click)="closePopup()">
+          ×
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Rating Section -->
+        <div class="rating-group">
+          <label>How would you rate your experience?</label>
+          <div class="star-rating">
+            <span
+              *ngFor="let star of [1, 2, 3, 4, 5]"
+              class="star"
+              [class.filled]="star <= selectedRating"
+              (click)="setRating(star)"
+            >
+              ★
+            </span>
+          </div>
+          <div
+            *ngIf="feedbackForm.controls['rating'].touched && feedbackForm.controls['rating'].errors?.['min']"
+            class="validation-error"
+          >
+            Please provide a rating.
+          </div>
+        </div>
+
+        <!-- Feedback Text Area -->
+        <div class="form-group">
+          <label for="feedbackText">Your Feedback</label>
+          <textarea
+            id="feedbackText"
+            formControlName="feedbackText"
+            placeholder="Tell us how we can improve..."
+          ></textarea>
+          <div
+            *ngIf="feedbackForm.controls['feedbackText'].touched && feedbackForm.controls['feedbackText'].errors?.['required']"
+            class="validation-error"
+          >
+            Feedback cannot be empty.
+          </div>
+          <div
+            *ngIf="feedbackForm.controls['feedbackText'].touched && feedbackForm.controls['feedbackText'].errors?.['minlength']"
+            class="validation-error"
+          >
+            Please enter at least 5 characters.
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="submit-button"
+          [disabled]="!feedbackForm.valid || isSubmitting"
+        >
+          {{ isSubmitting ? "Submitting..." : "Submit Feedback" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

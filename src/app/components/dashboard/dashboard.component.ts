@@ -13,6 +13,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserGroup, faStar } from '@fortawesome/free-solid-svg-icons';
 import emailjs from '@emailjs/browser';
+import { ChatWindowComponent } from '../chat-window/chat-window.component';
 
 interface SiteStats {
   associates: number;
@@ -41,7 +42,7 @@ interface AnnouncementForm {
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDatepickerModule,
-    MatFormFieldModule, MatInputModule, MatNativeDateModule, FontAwesomeModule],
+    MatFormFieldModule, MatInputModule, MatNativeDateModule, FontAwesomeModule,ChatWindowComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -72,7 +73,9 @@ export class DashboardComponent implements OnInit {
   ];
 
   currentMessage: string = '';
-
+  isShowChatWindow = false;
+  selectedUserId:number = 310;
+  showAgentButton = false;
 
   getNextMessage() {
     let currentIndex = parseInt(localStorage.getItem('messageIndex') || '0', 10);
@@ -579,5 +582,10 @@ export class DashboardComponent implements OnInit {
   closeActionPopup() {
     this.showActionPopup = false;
   }
+
+  showChatWindow() {
+   this.isShowChatWindow = true;
+   this.showAgentButton = true;
+ }
 }
 

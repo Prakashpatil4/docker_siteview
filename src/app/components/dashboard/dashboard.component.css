@@ -263,3 +263,110 @@
   flex-direction: column;
   justify-content: flex-start;
 }
+.attention-message {
+    /* You can blink other properties like background-color or border as well */
+    background-color: #ffdddd;
+    /* Optional: A background color for better visual cue */
+    border: 1px solid red;
+    /* Optional: A border to highlight it */
+
+    /* Animation properties: */
+    animation-name: blinker;
+    animation-duration: 1s;
+    /* The total time for one cycle (on/off/on) */
+    animation-timing-function: linear;
+    /* Constant speed */
+    animation-iteration-count: infinite;
+    /* Keeps repeating forever */
+
+    /* You can combine the above into a shorthand property: */
+    /* animation: blinker 1s linear infinite; */
+}
+.connect-agent {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: linear-gradient(90deg, #ff0066, #ff8a00);
+    color: #fff;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    transform-origin: center;
+    box-shadow: 0 6px 22px rgba(255, 90, 110, 0.28),
+        inset 0 -2px 0 rgba(255, 255, 255, 0.06);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    position: relative;
+    z-index: 10;
+    animation: ca-bounce 1.6s cubic-bezier(0.2, 0.9, 0.3, 1) infinite,
+        ca-glow 2.2s ease-in-out infinite;
+
+    /* Prevent the animated pseudo-element from creating page overflow */
+    overflow: hidden;
+}
+
+/* live pulse ring - use centered sizing + transform so it stays inside parent bounds */
+.connect-agent::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(100% + 32px);
+    /* larger than the button but contained by overflow:hidden */
+    height: calc(100% + 32px);
+    transform: translate(-50%, -50%) scale(0.9);
+    border-radius: 999px;
+    background: radial-gradient(circle at center,
+            rgba(255, 140, 90, 0.1),
+            transparent 40%);
+    opacity: 0.95;
+    z-index: -1;
+    pointer-events: none;
+    animation: ca-ring 1.8s ease-out infinite;
+}
+
+/* --- Floating Button Core Styles --- */
+.connect-agent-btn {
+    /* Core Positioning */
+    position: fixed;
+    bottom: 20px;
+    /* Distance from the bottom edge */
+    right: 20px;
+    /* Distance from the right edge */
+    z-index: 10000;
+    /* Ensure it stays above all other content */
+
+    /* Appearance and Functionality */
+    background-color: #4a90e2;
+    /* Accent Color (e.g., primary blue) */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 30px;
+    /* Pill shape for a modern look */
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+
+    /* Subtle Effects */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    /* Soft shadow for lift */
+    transition: background-color 0.3s ease, transform 0.2s ease,
+        box-shadow 0.3s ease;
+}
+
+/* Hover Effect for Engagement */
+.connect-agent-btn:hover {
+    background-color: #3a7acb;
+    /* Slightly darker blue on hover */
+    transform: translateY(-2px);
+    /* Slight lift effect */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Optional: Focus effect for accessibility */
+.connect-agent-btn:focus {
+    outline: 2px solid #285e9b;
+    outline-offset: 2px;
+}
