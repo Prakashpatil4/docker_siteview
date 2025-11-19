@@ -1,4 +1,4 @@
-/* --- Global & Centering (Modified for fixed position) --- */
+ /* --- Global & Centering (Modified for fixed position) --- */
 
 .chat-wrapper {
   position: fixed;
@@ -29,6 +29,16 @@ button {
   color: white;
 }
 
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  height: 30px;
+  background: #007bff;
+  color: #fff;
+  border-bottom: 1px solid #e6e9ee;
+}
 .chat-header .title {
   font-weight: 600;
   font-size: 14px;
@@ -61,6 +71,58 @@ button {
   border-top-right-radius: 4px;
   font-weight: 500;
 }
+
+.composer {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.composer input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+.composer button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 0;
+  background: #007bff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.loader-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50px; /* below header */
+  bottom: 86px; /* leave space for composer */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 5;
+  pointer-events: none; /* allow clicks to pass (optional) */
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  pointer-events: auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ensure chat-wrapper is position:relative so overlay positions correctly */
 
 /* Fancy chat hint */
 .chat-hint {
@@ -187,6 +249,13 @@ button {
   word-wrap: break-word;
 }
 
+.timestamp {
+  display: block;
+  font-size: 0.7em;
+  color: #888;
+  margin-top: 5px;
+}
+
 .message.received {
   background-color: #e9ecef; /* Light gray */
   align-self: flex-start; /* Aligns to the left */
@@ -200,6 +269,17 @@ button {
 
 .message.sent .timestamp {
   color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Header Styling (No Change) --- */
+.chat-header {
+  background-color: #3f51b5;
+  color: white;
+  padding: 15px 20px;
+  text-align: left;
+  font-weight: 600;
+  height: 45px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .chat-header h3 {
@@ -261,16 +341,17 @@ button {
 }
 
 /* --- Input Area Styling (No Change) --- */
-.chat-input {
+.chat-input { 
   display: flex;
   align-items: center;
-  padding: 10px 20px;
+  padding: 15px;
   border-top: 1px solid #e0e0e0;
   background-color: #f7f7f7;
 }
 
-.chat-input input[type="text"] {
+.input-main {
   flex-grow: 1;
+  height: 38px;
   padding: 12px 15px;
   border: 1px solid #cfdef3;
   border-radius: 25px;
@@ -280,26 +361,29 @@ button {
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.chat-input input[type="text"]:focus {
+.input-main:focus {
   outline: none;
   border-color: #ff7e5f;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08),
     0 0 5px rgba(255, 126, 95, 0.5);
 }
 
-.chat-input button {
+.send-button {
   background-color: #3f51b5;
   color: white;
   border: none;
-  padding: 10px 20px;
+  width: 38px;
+  height: 38px;
   border-radius: 25px;
   cursor: pointer;
   font-weight: 600;
   transition: background-color 0.3s, transform 0.1s;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+ 
+  margin: 0 5px;
 }
 
-.chat-input button:hover {
+.send-button:hover:enabled {
   background-color: #3f51b5;
   transform: translateY(-1px);
 }
@@ -307,63 +391,62 @@ button {
 
 /* The actual message bubble for the 'typing' state */
 .typing-indicator {
-  /* Ensure it aligns like a received message */
-  align-self: flex-start;
-  background-color: #e0e0e0;
-  padding: 8px 12px;
-  border-radius: 18px;
-  /* Optional: Remove the timestamp from this bubble */
-  min-height: 20px;
-  max-width: fit-content;
+    /* Ensure it aligns like a received message */
+    align-self: flex-start;
+    background-color: #e0e0e0;
+    padding: 8px 12px;
+    border-radius: 18px;
+    /* Optional: Remove the timestamp from this bubble */
+    min-height: 20px;
+    max-width: fit-content;
 }
 
 /* Container for the animated dots */
 .typing-dots {
-  display: flex;
-  align-items: center;
-  height: 10px; /* Space for the dots to move */
+    display: flex;
+    align-items: center;
+    height: 10px; /* Space for the dots to move */
 }
 
 /* Individual dots */
 .typing-dots span {
-  width: 6px;
-  height: 6px;
-  margin: 0 2px;
-  background-color: #555; /* Dot color */
-  border-radius: 50%;
-  opacity: 0;
-  animation: bounce 1.2s infinite ease-in-out;
+    width: 6px;
+    height: 6px;
+    margin: 0 2px;
+    background-color: #555; /* Dot color */
+    border-radius: 50%;
+    opacity: 0;
+    animation: bounce 1.2s infinite ease-in-out;
 }
 
 /* Delay for each dot to create the "wave" effect */
 .typing-dots span:nth-child(1) {
-  animation-delay: 0s;
+    animation-delay: 0s;
 }
 
 .typing-dots span:nth-child(2) {
-  animation-delay: 0.2s;
+    animation-delay: 0.2s;
 }
 
 .typing-dots span:nth-child(3) {
-  animation-delay: 0.4s;
+    animation-delay: 0.4s;
 }
 
 /* The bounce animation itself */
 @keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.5;
-  }
-  50% {
-    transform: translateY(-5px); /* Move dot up */
-    opacity: 1;
-  }
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translateY(-5px); /* Move dot up */
+        opacity: 1;
+    }
 }
 
 /* Hide the .msg-time content for this specific indicator if it were present */
 .typing-indicator .msg-time {
-  display: none;
+    display: none;
 }
 
 /* --- Modal Background and Overlay --- */
@@ -470,118 +553,98 @@ textarea {
 
 /* --- Base Chat Header Styles (Existing) --- */
 .chat-header {
-  background-color: #4a90e2; /* VIP Support Blue */
-  color: white;
-  padding: 12px 15px;
-  font-size: 16px;
-  font-weight: bold;
-  display: flex;
-  /* Adjusted alignment to fit the new button */
-  justify-content: space-between;
-  align-items: center;
-  cursor: default; /* Remove cursor: pointer from header if we only want controls to be clickable */
+    background-color: #4a90e2; /* VIP Support Blue */
+    color: white;
+    padding: 12px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    /* Adjusted alignment to fit the new button */
+    justify-content: space-between;
+    align-items: center;
+    cursor: default; /* Remove cursor: pointer from header if we only want controls to be clickable */
 }
 
 .chat-header .title {
-  /* Keep title on the left */
-  flex-grow: 1;
+    /* Keep title on the left */
+    flex-grow: 1;
 }
 
 .feedback-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  /* Reset some styles to fit in the input area */
-  background: none;
+  background: #3f51b5;
   border: none;
-  padding: 0;
-  margin: 0 8px 0 0; /* Add some space to its right */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px; /* Slightly smaller */
-  height: 24px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   transition: background-color 0.2s;
+  color: #fff;
+  font-size: 18px;
 }
 
 .feedback-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
   background-color: #e0e0e0; /* Light grey hover for contrast */
-}
-
-.feedback-icon {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  background-color: white;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 12H5v-2h14v2zm0-3H5V9h14v2zm0-3H5V6h14v2z'/%3E%3C/svg%3E");
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
 }
 
 /* --- Controls Styling (Existing, but ensures right alignment) --- */
 .chat-header .controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 /* Ensure the control buttons don't inherit the feedback-button styling */
 .chat-header .controls button {
-  /* Ensure styles from previous example are here: */
-  font-size: 18px;
-  margin-left: 8px;
-  padding: 2px 5px;
-  line-height: 1;
+    /* Ensure styles from previous example are here: */
+    font-size: 18px;
+    margin-left: 8px;
+    padding: 2px 5px;
+    line-height: 1;
 }
 /* --- Rating Group Styling --- */
 .rating-group {
-  margin-bottom: 25px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 20px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
 }
 
 .rating-group label {
-  font-size: 1.1em;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 10px;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 10px;
 }
 
 .star-rating {
-  font-size: 30px; /* Size of the star characters */
-  display: inline-block;
+    font-size: 30px; /* Size of the star characters */
+    display: inline-block;
 }
 
 .star {
-  cursor: pointer;
-  color: #ccc; /* Unfilled star color (light gray) */
-  transition: color 0.2s;
-  user-select: none; /* Prevent selection */
-  padding: 0 2px;
+    cursor: pointer;
+    color: #ccc; /* Unfilled star color (light gray) */
+    transition: color 0.2s;
+    user-select: none; /* Prevent selection */
+    padding: 0 2px;
 }
 
 /* Filled star color (Typically gold/yellow) */
 .star.filled {
-  color: #ffc107;
+    color: #ffc107;
 }
 
 /* Hover effect on stars */
 .star-rating:hover .star {
-  /* When hovering over the container, all stars turn filled */
-  color: #ffc107;
+    /* When hovering over the container, all stars turn filled */
+    color: #ffc107;
 }
 
 /* Clear the filled state when hovering *over a star* to allow the rating to be selected */
 .star-rating .star:hover ~ .star {
-  color: #ccc;
+    color: #ccc;
 }
 
 /* --- Success Message Styling --- */
