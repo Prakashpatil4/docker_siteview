@@ -146,3 +146,15 @@
     border-bottom: 10px solid #ffffff;
     z-index: 1001;
 }
+.notification-dropdown-wrapper {
+  position: absolute;
+  top: 100%; 
+  right: -4px; /* Adjust this if the triangle isn't perfectly centered on the bell */
+  width: 360px;
+  z-index: 1000;
+}
+.notification-container {
+  position: relative; /* Creates context for the absolute dropdown */
+  display: inline-block;
+}
+ 
