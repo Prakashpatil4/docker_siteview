@@ -1,0 +1,11 @@
+# Ignore node modules and build output
+node_modules
+dist
+.angular
+out-tsc
+
+# Ignore Git-related files and temporary files
+.git
+.gitignore
+.editorconfig
+tmp

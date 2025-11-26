@@ -1,8 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-
+import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-popup-modal',
   standalone: true,
+  imports:[CommonModule],
   templateUrl: './popup-modal.component.html',
   styleUrls: ['./popup-modal.component.css']
 })

@@ -10,9 +10,10 @@ import { HttpClient } from '@angular/common/http';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FilterService } from '../../services/filter.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import the module
-
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserGroup, faStar } from '@fortawesome/free-solid-svg-icons';
+import emailjs from '@emailjs/browser';
+import { ChatWindowComponent } from '../chat-window/chat-window.component';
 
 interface SiteStats {
   associates: number;
@@ -31,12 +32,17 @@ interface CesData {
   string_field_9: string;
 }
 
+interface AnnouncementForm {
+  specialization: string;
+  message: string;
+}
+
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDatepickerModule,
-    MatFormFieldModule, MatInputModule, MatNativeDateModule, FontAwesomeModule], 
+    MatFormFieldModule, MatInputModule, MatNativeDateModule, FontAwesomeModule,ChatWindowComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -45,6 +51,11 @@ export class DashboardComponent implements OnInit {
   topPerformers = 0;
   averagePerformers = 0;
   bottomPerformers = 0;
+
+  form: AnnouncementForm = {
+    specialization: 'all', // Default to 'all'
+    message: ''
+  };
 
   messages: string[] = [
     'Kudos, you are doing an amazing job!',
@@ -62,7 +73,9 @@ export class DashboardComponent implements OnInit {
   ];
 
   currentMessage: string = '';
-
+  isShowChatWindow = false;
+  selectedUserId:number = 310;
+  showAgentButton = false;
 
   getNextMessage() {
     let currentIndex = parseInt(localStorage.getItem('messageIndex') || '0', 10);
@@ -74,13 +87,15 @@ export class DashboardComponent implements OnInit {
     localStorage.setItem('messageIndex', currentIndex.toString());
   }
 
+  private fromEmail: string = "Testing Mail";
+
   constructor(
     private http: HttpClient,
     private googleAuth: GoogleAuthService,
     private cesDataService: CesDataService,
     private filterService: FilterService
   ) {
-    library.add(faUserGroup, faStar); // Add icons to the library
+    library.add(faUserGroup, faStar); 
   }
   selectedSite: string = 'Select';
   selectedBusinessline: string = 'Select';
@@ -179,7 +194,40 @@ export class DashboardComponent implements OnInit {
       this.calculateCounts();
     });
     this.fetchTrainingSheetData();
+
+     emailjs.init({
+      publicKey: '4177LkedBuEy5l2mE',
+    });
+
   }
+
+  send() {
+    console.log('Sending announcement:', this.form);
+
+    const apiUrl = 'http://localhost:3001/api/send-announcement'; 
+
+    // 4. Manually build the payload to send to the backend
+    const payload = {
+      specialization: this.form.specialization,
+      message: this.form.message,
+      from_email: this.fromEmail // ⬅️ Add the hardcoded email here
+    };
+
+    // 5. Send the new payload
+    this.http.post(apiUrl, payload)
+      .subscribe({
+        next: (response) => {
+          console.log('SUCCESS!', response);
+          alert('Your announcement has been sent!');
+          this.form.message = ''; // Reset form
+        },
+        error: (err) => {
+          console.error('FAILED...', err);
+          alert(`Failed to send the message: ${err.error?.error || err.message}`);
+        }
+      });
+  }
+
 
   applyFilter() {
 
@@ -238,29 +286,30 @@ export class DashboardComponent implements OnInit {
     this.showCesPopup = false;
   }
 
+  //sdr
   showSdrPopup = false;
   sdrPopupData: { specialization: string, sdr_count: number }[] = [];
   sdrPopupTitle = 'SDR by Specialization';
 
   openSdrPopup() {
-  this.showSdrPopup = true;
-  this.http.get<any>('http://localhost:3001/api/sdr-by-specialization', {
-    params: {
-      startDate: this.formatDate(this.startDate),
-      endDate: this.formatDate(this.endDate),
-      businessLine: this.selectedBusinessline,
-      site: this.selectedSite
-    }
-  }).subscribe({
-    next: (data) => {
-      console.log('SDR API response:', data);
-      this.sdrPopupData = data;
-    },
-    error: (error) => {
-      console.error('Error fetching SDR data:', error);
-      this.sdrPopupData = [];
-    }
-  });
+    this.showSdrPopup = true;
+    this.http.get<any>('http://localhost:3001/api/sdr-by-specialization', {
+      params: {
+        startDate: this.formatDate(this.startDate),
+        endDate: this.formatDate(this.endDate),
+        businessLine: this.selectedBusinessline,
+        site: this.selectedSite
+      }
+    }).subscribe({
+      next: (data) => {
+        console.log('SDR API response:', data);
+        this.sdrPopupData = data;
+      },
+      error: (error) => {
+        console.error('Error fetching SDR data:', error);
+        this.sdrPopupData = [];
+      }
+    });
   }
   closeSdrPopup() {
     this.showSdrPopup = false;
@@ -271,25 +320,25 @@ export class DashboardComponent implements OnInit {
   escalationPopupTitle = 'Escalation Rate';
 
   openEscalationPopup() {
-  this.showEscalationPopup = true;
-  this.http.get<any>('http://localhost:3001/api/escalation-rate', {
-    params: {
-      startDate: this.formatDate(this.startDate),
-      endDate: this.formatDate(this.endDate),
-      businessLine: this.selectedBusinessline,
-      site: this.selectedSite
-    }
-  }).subscribe({
-    next: (data) => {
-      console.log('Escalation API response:', data);
-      this.escalationPopupData = [data];
-    },
-    error: (error) => {
-      console.error('Error fetching escalation rate data:', error);
-      this.escalationPopupData = [];
-    }
-  });
-}
+    this.showEscalationPopup = true;
+    this.http.get<any>('http://localhost:3001/api/escalation-rate', {
+      params: {
+        startDate: this.formatDate(this.startDate),
+        endDate: this.formatDate(this.endDate),
+        businessLine: this.selectedBusinessline,
+        site: this.selectedSite
+      }
+    }).subscribe({
+      next: (data) => {
+        console.log('Escalation API response:', data);
+        this.escalationPopupData = [data];
+      },
+      error: (error) => {
+        console.error('Error fetching escalation rate data:', error);
+        this.escalationPopupData = [];
+      }
+    });
+  }
 
   closeEscalationPopup() {
     this.showEscalationPopup = false;
@@ -533,5 +582,10 @@ export class DashboardComponent implements OnInit {
   closeActionPopup() {
     this.showActionPopup = false;
   }
+
+  showChatWindow() {
+   this.isShowChatWindow = true;
+   this.showAgentButton = true;
+ }
 }
 

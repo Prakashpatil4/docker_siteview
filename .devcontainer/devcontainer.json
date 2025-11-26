@@ -1,0 +1,11 @@
+{
+  "name": "Docker & Docker Compose",
+  "image": "mcr.microsoft.com/devcontainers/universal:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRoot": "true"
+    }
+  },
+  "remoteUser": "codespace"
+}

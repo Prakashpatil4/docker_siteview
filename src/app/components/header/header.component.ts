@@ -7,11 +7,12 @@ import { HttpClient } from '@angular/common/http';
 import { MatNativeDateModule, MatOptionModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { FilterService } from '../../services/filter.service';
+import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-header',
   standalone: true,
   imports: [FormsModule, MatDatepickerModule,
-    MatFormFieldModule, MatInputModule, MatNativeDateModule, MatOptionModule, MatSelectModule],
+    MatFormFieldModule, MatInputModule, MatNativeDateModule, MatOptionModule, MatSelectModule, CommonModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
@@ -42,5 +43,10 @@ export class HeaderComponent {
   }
   
   
+  showNotification: boolean = false;
+
+  toggleNotification(): void {
+    this.showNotification = !this.showNotification;
+  }
   
 }

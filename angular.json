@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "SiteOps": {
+    "sitenov": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/site-ops",
+            "outputPath": "dist/sitenov",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -60,10 +60,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "SiteOps:build:production"
+              "buildTarget": "sitenov:build:production"
             },
             "development": {
-              "buildTarget": "SiteOps:build:development"
+              "buildTarget": "sitenov:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -96,6 +96,6 @@
     }
   },
   "cli": {
-    "analytics": false
+    "analytics": "e8b4e2b8-5d90-45c5-b625-48ed0ef9abc1"
   }
 }

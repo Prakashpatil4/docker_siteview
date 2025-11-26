@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class CesDataService {
-  private apiUrl = 'http://localhost:3001/api/ces-data';
+  private apiUrl = 'http://localhost:3000/api/ces-data';
 
   constructor(private http: HttpClient) {}
 

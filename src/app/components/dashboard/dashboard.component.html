@@ -1,6 +1,6 @@
-<main class="p-6 space-y-6 bg-gray-100">
+<main class="p-6 space-y-3 bg-gray-100">
   <section
-    class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-between px-5 py-5 mb-6">
+    class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-between px-5 py-5">
     <div>
       <h1 class="text-white text-xl font-bold mb-2">Hey there!</h1>
       <p class="text-white text-base mb-2">{{ currentMessage }}</p>
@@ -11,10 +11,18 @@
     </div>
     <div>
       <img src="motivation.png" class="h-32" alt="Motivation" />
+       <!-- <i class="fa-solid fa-user-secret fa-8x"></i> -->
     </div>
   </section>
+     <button *ngIf="!showAgentButton || !isShowChatWindow" (click)="showChatWindow()" class="connect-agent connect-agent-btn" title="Chat with a live agent">
+ 💬 Connect with Agent
+</button>
+
+<div *ngIf="isShowChatWindow">
+  <app-chat-window [userId]="selectedUserId" (closed)="isShowChatWindow = false"></app-chat-window>
+</div>
   <!-- calender filter -->
-  <div class="flex items-center justify-between w-full px-4 py-3">
+  <div class="flex items-center justify-between w-full px-4 py-2">
 
     <div class="flex items-center gap-3">
       <label class="text-lg font-bold text-gray-800">Select Time Zone:</label>
@@ -50,7 +58,7 @@
 
   </div>
 
-  <section class="grid grid-cols-1 md:grid-cols-4 gap-8 mt-2 pr-8">
+  <section class="grid grid-cols-1 md:grid-cols-4 gap-8 mt-0 pr-8">
     <!-- <p>*ngIf="sheetData">{{ sheetData | json }}</p> -->
     <div class="bg-white shadow rounded-lg p-4 border-l-4 border-blue-500 ml-4 cursor-pointer"
       (click)="showPopup('totalAssociates')">
@@ -150,7 +158,6 @@
           </button>
           <button (click)="showMissions('Experiential Specialization Training')"
             class="flex items-center justify-start gap-2 bg-blue-50 text-blue-700 font-semibold py-2 px-3 rounded-lg hover:bg-blue-100 shadow">
-            <!-- <img src="training.png" alt="Experiential Specialization Training" class="w-6 h-6"> -->
             <i class="fa-solid fa-graduation-cap fa-lg"></i>
             Experiential Specialization Training
           </button>
@@ -165,7 +172,6 @@
         </div>
       </div>
     </div>
-
 
 
     <div class="bg-white p-6 rounded-lg shadow w-full mb-8 metrics-card">
@@ -257,7 +263,7 @@
           <!-- Filter Dropdown -->
           <div class="flex items-center gap-2">
             <label for="taskFilter" class="text-sm font-semibold text-gray-700">Assign To:</label>
-            <select id="taskFilter" class="border border-gray-300 rounded-lg p-2 flex-1">
+            <select id="taskFilter" class="border border-gray-300 rounded-lg p-2 flex-1" [(ngModel)]="form.specialization">
               <option value="all">All Specializations</option>
               <option value="Compute">Compute</option>
               <option value="DevOps">DevOps</option>
@@ -273,9 +279,9 @@
           </div>
           <!-- Input and Save Button -->
           <div class="flex gap-2">
-            <input type="text" placeholder="Enter announcement here"
+            <input type="text" placeholder="Enter announcement here" [(ngModel)]="form.message"
               class="flex-1 border border-gray-300 rounded-lg p-2">
-            <button class="bg-green-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-green-600">
+            <button (click)="send()" class="bg-green-500 text-white font-semibold py-1 px-3 rounded-lg hover:bg-green-600">
               Save
             </button>
           </div>
@@ -352,9 +358,6 @@
 </div>
 
 <!-- SDR Popup Modal -->
-
-
-<!-- SDR Popup Modal -->
 <div *ngIf="showSdrPopup" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
   <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
     <div class="flex justify-between items-center mb-4">
@@ -397,23 +400,3 @@
     </ng-template>
   </div>
 </div>
-
-<!-- <div *ngIf="showSdrPopup" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">{{ sdrPopupTitle }}</h2>
-      <button (click)="closeSdrPopup()" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-    </div>
-    <div *ngIf="sdrPopupData.length > 0; else noData">
-      <ul>
-        <li *ngFor="let row of sdrPopupData" class="flex justify-between py-2 border-b">
-          <span>{{ row.specialization }}</span>
-          <span class="font-semibold text-blue-700">{{ row.sdr_count }}</span>
-        </li>
-      </ul>
-    </div>
-    <ng-template #noData>
-      <div class="text-gray-500 text-center py-4">No SDR data available for the selected filters.</div>
-    </ng-template>
-  </div>
-</div> -->

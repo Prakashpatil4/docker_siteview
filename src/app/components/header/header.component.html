@@ -8,11 +8,10 @@
           <i class="fas fa-filter"></i>
         </span>
         <span class="text-lg font-bold text-gray-800">Site Filter:</span>
-        <select 
+        <select
           class="text-lg font-semibold border-2 border-blue-400 rounded-xl px-4 py-2 bg-white shadow focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200"
-          [(ngModel)]="selectedSite" 
-          (change)="onSiteChange()">
-          <option value="Select">Select Site</option> 
+          [(ngModel)]="selectedSite" (change)="onSiteChange()">
+          <option value="Select">All Sites</option>
           <option value="CGN - HYD">CGN - HYD</option>
           <option value="CGN - BUH">CGN - BUH</option>
           <option value="CGN - BLR">CGN - BLR</option>
@@ -33,19 +32,19 @@
     </div>
   </div>
 
-  <div class="relative ml-auto flex-shrink-0">
-    <button (click)="toggleMenu()" class="flex items-center space-x-2 focus:outline-none">
-      <img src="https://i.pravatar.cc/32?img=12" alt="Avatar" class="w-8 h-8 rounded-full border">
-      <i class="fas fa-bars text-gray-700 text-lg ml-1"></i>
-    </button>
-    <div id="menuDropdown"
-      class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-md text-sm hidden z-50">
-      <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Dashboard</a>
-      <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">My Learning</a>
-      <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Challenges</a>
-      <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Logout</a>
-    </div>
+  <div class="flex items-center space-x-4">
+    
+    <div class="notification-container">
+  <button (click)="toggleNotification()" class="bell-button">
+    <span class="icon-wrapper">
+      <i class="fa-solid fa-bell"></i>
+      <div *ngIf="!showNotification" class="notification-badge"></div>
+    </span>
+  </button>
+
+  <div *ngIf="showNotification" class="notification-box">
+You are all caught up!
+  </div>
+</div>
   </div>
 </header>
-
-

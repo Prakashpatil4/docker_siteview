@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { BigQuery } = require('@google-cloud/bigquery');
+const emailjs = require('@emailjs/nodejs');
 
 const SCOPES = [
   'https://www.googleapis.com/auth/bigquery',
@@ -17,6 +18,16 @@ const bigquery = new BigQuery({
   keyFilename: './src/keys.json',
   projectId: 'elevate360-poc',
   scopes: SCOPES,
+});
+
+const EMAILJS_SERVICE_ID = 'service_kj4vmwp';
+const EMAILJS_TEMPLATE_ID = 'template_y6uiu37';
+const EMAILJS_PUBLIC_KEY = 'TSj3bq6Ew_TjrTSeO';
+const EMAILJS_PRIVATE_KEY = 'i_p_JgGTUlLGxIupkJSYr'; 
+
+emailjs.init({
+  publicKey: EMAILJS_PUBLIC_KEY,
+  privateKey: EMAILJS_PRIVATE_KEY,
 });
 
 app.get('/api/sdr-by-specialization', async (req, res) => {
@@ -89,6 +100,69 @@ app.get('/api/escalation-rate', async (req, res) => {
   } catch (err) {
     console.error('BigQuery Error:', err);
     res.status(500).send('Query Failed');
+  }
+});
+
+app.post('/api/send-announcement', async (req, res) => {
+  const { specialization, message, from_email } = req.body;
+
+  // 4. Build BigQuery query to get Owner_ldap
+  let queryOptions = {
+    query: `
+      SELECT DISTINCT string_field_12 AS owner_ldap
+      FROM \`elevate360-poc.hyd_core_data.core-metrics\`
+      WHERE string_field_10 = @specialization
+    `,
+    params: { specialization: specialization }
+  };
+
+  // If 'all' is selected, get all owners
+  if (specialization === 'all') {
+    queryOptions = {
+      query: `
+        SELECT DISTINCT string_field_12 AS owner_ldap
+        FROM \`elevate360-poc.hyd_core_data.core-metrics\`
+      `
+  
+    };
+  }
+
+  try {
+    // 5. Get LDAP list from BigQuery
+    const [rows] = await bigquery.query(queryOptions);
+
+    if (rows.length === 0) {
+      return res.status(404).send({ error: 'No recipients found for this specialization.' });
+    }
+
+    // 6. ❗ IMPORTANT: Convert LDAP usernames to full email addresses
+    //    You must add your company's email domain here.
+    const recipientEmails = rows
+      .map(row => `${row.owner_ldap}@google.com`) 
+      .join(',');
+
+    console.log('Sending to:', recipientEmails);
+
+    // 7. Prepare variables for the EmailJS template
+    const templateParams = {
+      to_email: recipientEmails,  // This will go to the 'To', 'CC', or 'BCC' field in your template
+      message: message,           // The announcement message
+      reply_to: from_email,       // The mail provided in the website that wil be reflected to viewer
+      from_name: from_email,      // "from" name for the viewer of the mail
+    };
+
+    // 8. Send the email
+    await emailjs.send(
+      EMAILJS_SERVICE_ID,
+      EMAILJS_TEMPLATE_ID,
+      templateParams
+    );
+
+    res.status(200).send({ success: true, message: 'Announcement sent!' });
+
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).send({ error: 'Failed to send announcement.' });
   }
 });
 
