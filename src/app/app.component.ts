@@ -5,21 +5,19 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { CesDataService } from './services/ces-data.service';
+import { RouterOutlet } from '@angular/router';
 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, DashboardComponent, HeaderComponent, HttpClientModule],
+  imports: [ RouterOutlet,CommonModule, FormsModule, ReactiveFormsModule, HttpClientModule],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit{
 
- cesData: any[] = [];
-
-  constructor(private cesDataService: CesDataService) {}
-
+ 
   ngOnInit() {
   }
  

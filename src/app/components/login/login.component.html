@@ -1,0 +1,60 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>Elevate360° SiteOps View</h2>
+    
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input 
+              id="name" 
+              type="text" 
+              formControlName="name" 
+              placeholder="Enter your name"
+                [class.invalid]="loginForm.get('name')?.invalid && loginForm.get('name')?.touched"
+            >
+            <div *ngIf="loginForm.get('name')?.invalid && loginForm.get('name')?.touched" class="error-text">
+               Please enter your Name.
+            </div>
+        </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          id="email" 
+          type="email" 
+          formControlName="email" 
+          placeholder="Enter your email"
+          [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+        >
+        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-text">
+          Please enter a valid email.
+        </div>
+      </div>
+
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          id="password" 
+          type="password" 
+          formControlName="password" 
+          placeholder="Enter your password"
+          [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        >
+        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-text">
+          Password must be at least 6 characters.
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="api-error">
+        {{ errorMessage }}
+      </div>
+
+      <button type="submit" [disabled]="loginForm.invalid || isLoading">
+        {{ isLoading ? 'Logging in...' : 'Login' }}
+      </button>
+
+    </form>
+  </div>
+</div>
