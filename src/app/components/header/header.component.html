@@ -1,7 +1,5 @@
 <header class="bg-white shadow px-6 py-4 flex items-center justify-between">
-  <h1 class="text-2xl font-bold text-blue-600 flex-shrink-0">
-    Elevate 360° - Site Ops Dashboard
-  </h1>
+  <h1 class="text-2xl font-bold text-blue-600 flex-shrink-0">Elevate 360° - Site Ops Dashboard</h1>
 
   <div class="flex-1 flex justify-center">
     <div class="flex justify-between items-center gap-8">
@@ -12,9 +10,7 @@
         <span class="text-lg font-bold text-gray-800">Site Filter:</span>
         <select
           class="text-lg font-semibold border-2 border-blue-400 rounded-xl px-4 py-2 bg-white shadow focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200"
-          [(ngModel)]="selectedSite"
-          (change)="onSiteChange()"
-        >
+          [(ngModel)]="selectedSite" (change)="onSiteChange()">
           <option value="Select">All Sites</option>
           <option value="CGN - HYD">CGN - HYD</option>
           <option value="CGN - BUH">CGN - BUH</option>
@@ -24,15 +20,10 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <label for="premiumFilter" class="text-lg font-bold text-gray-800"
-          >Business Line:</label
-        >
-        <select
-          id="premiumFilter"
+        <label for="premiumFilter" class="text-lg font-bold text-gray-800">Business Line:</label>
+        <select id="premiumFilter"
           class="text-lg font-semibold border-2 border-blue-400 rounded-xl px-4 py-2 bg-white shadow focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200"
-          [(ngModel)]="selectedBusinessline"
-          (change)="onBusinessLineChange()"
-        >
+          [(ngModel)]="selectedBusinessline" (change)="onBusinessLineChange()">
           <option value="Select">Select</option>
           <option value="GCP Tech Premium">GCP Tech Premium</option>
           <option value="GCP Tech Non-Premium">GCP Tech Non-Premium</option>
