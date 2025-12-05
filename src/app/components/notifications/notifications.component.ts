@@ -4,11 +4,12 @@ import {
   NotificationItem,
   NotificationService,
 } from "../../services/notification-service";
+import { TimeAgoPipe } from "./timeago";
 
 @Component({
   selector: "app-notifications",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,TimeAgoPipe],
   templateUrl: "/notifications.component.html",
   styleUrls: ["./notifications.component.css"],
 })
@@ -19,6 +20,7 @@ export class NotificationsComponent implements OnInit {
   // Configuration
   initialCount = 2; // Initially show only 2
   showAll = false; // State to track if list is expanded
+   now = new Date();
 
   constructor(
     private svc: NotificationService, // Uncomment your service
@@ -26,7 +28,7 @@ export class NotificationsComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.loading = true;
+     this.loading = true;
     try {
       this.all = await this.svc.fetchFirstN(7);
       this.cdr.detectChanges();
