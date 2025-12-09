@@ -19,11 +19,11 @@ import { NotificationsComponent } from "../notifications/notifications.component
 })
 export class HeaderComponent {
   selectedSite: string = 'Select';
-  
+
   selectedBusinessline: string = 'Select';
-  
+
   constructor(private filterService: FilterService, private eRef: ElementRef) {}
- 
+
   onSiteChange(): void {
     console.log(`HEADER: Sending site to service: '${this.selectedSite}'`);
     this.filterService.setSite(this.selectedSite);

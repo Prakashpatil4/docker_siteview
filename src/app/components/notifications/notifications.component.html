@@ -1,40 +1,115 @@
-<div class="dropdown-card">
+ <div class="dropdown-card">
+  <!-- Header -->
   <div class="dropdown-header">
     <span class="header-title">Notifications</span>
-    <!-- Optional: Show total count -->
-    <span class="count-badge" *ngIf="all.length">{{ all.length }}</span>
+    <span class="badge" *ngIf="all.length">{{ all.length }}</span>
   </div>
 
-  <!-- The body scrolls internally if the list gets too long -->
+  <!-- Body -->
   <div class="dropdown-body">
-    
-    <div *ngIf="loading" class="state-msg">
-      <div class="spinner"></div>
-    </div>
+    <div *ngIf="loading" class="state-msg"><div class="spinner"></div> Loading Analysis...</div>
+    <div *ngIf="!loading && all.length === 0" class="state-msg">No new summaries available.</div>
 
-    <div *ngIf="!loading && all.length === 0" class="state-msg">
-      <p>You are all caught up!</p>
-    </div>
+    <!-- Notification List (Now only contains Summary) -->
     <ul *ngIf="!loading && all.length > 0" class="notif-list">
-      <li 
-        *ngFor="let n of all | slice : 0 : (showAll ? all.length : initialCount)" 
-        class="notif-item"
-      >
-        <div class="notif-icon">
-          <i class="fa-solid fa-bell"></i>
-        </div>
+      <li *ngFor="let item of all" class="notif-item summary-card" (click)="openDetails(item)">
+
         <div class="notif-content">
-          <div class="n-title">{{ n.title }}</div>
-          <div class="n-time">{{ n.time | date : "short" }}</div>
-          <!-- <div class="n-time">{{ n.dateVal | timeAgo }}</div> -->
+          <div class="n-title">{{ item.title }}</div>
+          <div class="n-body">{{ item.body }}</div>
+          <div class="n-time">{{ item.time | timeAgo }}</div>
         </div>
+        <div class="chevron">›</div>
       </li>
     </ul>
   </div>
+</div>
 
-  <div class="dropdown-footer" *ngIf="all.length > initialCount">
-    <button class="see-all-btn" (click)="toggleView()">
-      {{ showAll ? 'Show Less' : 'See all activity' }}
-    </button>
+<!-- ================= DASHBOARD MODAL ================= -->
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal($event)">
+  <div class="modal-dashboard" (click)="$event.stopPropagation()">
+
+    <!-- 1. Modal Header -->
+    <div class="dash-header">
+
+        <div class="dash-title">ELEVATE360 SITEOPS 📍 SITE FILTER: <strong>{{ selectedSite || 'Global View' }}</strong></div>
+
+      <button class="close-btn" (click)="closeModal($event)">×</button>
+    </div>
+
+    <div class="dash-scroll-body">
+
+      <!-- 2. Key Stats Row -->
+      <div class="stats-grid">
+
+        <!-- 1. Red Box: Alerts (Icon: crisis_alert) -->
+          <div class="stat-box red-gradient">
+            <span class="material-icons dash-icon">crisis_alert</span>
+            <div class="stat-value">{{ selectedData?.stats?.total_alerts | number }}</div>
+            <div class="stat-label">Total Alerts</div>
+          </div>
+
+          <!-- 2. Blue Box: Teams (Icon: diversity_3) -->
+          <div class="stat-box blue-gradient">
+            <span class="material-icons dash-icon">diversity_3</span>
+            <div class="stat-value">{{ selectedData?.stats?.impacted_team_count }}</div>
+            <div class="stat-label">Teams Impacted</div>
+          </div>
+
+          <!-- 3. Purple Box: Gap/Metrics (Icon: ssid_chart) -->
+          <div class="stat-box purple-gradient">
+            <span class="material-icons dash-icon">ssid_chart</span>
+            <div class="stat-value">{{ selectedData?.stats?.avg_gap | number:'1.0-1' }}%</div>
+            <div class="stat-label">Avg Gap</div>
+          </div>
+
+
+      </div>
+
+      <!-- 3. Top Failing Metrics -->
+      <div class="section-title">📊 TOP FAILING METRICS</div>
+      <div class="metrics-container">
+        <div class="metric-row" *ngFor="let m of selectedData?.metric_insights; let i = index">
+
+          <div class="m-header">
+            <span class="m-name">{{ i + 1 }}. {{ m.metric_name }}</span>
+            <span class="m-count" [ngClass]="getSeverityColor(m.alert_count)">
+              {{ m.alert_count }} Alerts
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-track">
+            <div class="progress-fill"
+                 [ngClass]="getSeverityColor(m.alert_count)"
+                 [style.width]="getProgressWidth(m.alert_count)">
+            </div>
+          </div>
+
+          <div class="m-footer">
+            <span class="m-contributor">
+              Major Contributor: <strong>{{ m.contributors[0]?.name || 'Unknown' }}</strong>
+            </span>
+            <span class="m-score" *ngIf="m.contributors[0]?.score > 0">
+              (Score: {{ m.contributors[0]?.score | number:'1.0-1' }})
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Volume Leaders -->
+      <div class="section-title">🏆 VOLUME LEADERS</div>
+      <div class="leaders-grid">
+        <div class="leader-card" *ngFor="let l of selectedData?.volume_leaders; let i = index">
+          <div class="leader-rank">#{{ i + 1 }}</div>
+          <div class="leader-info">
+            <div class="leader-name">{{ l.name }}</div>
+            <div class="leader-team">{{ l.team }}</div>
+          </div>
+          <div class="leader-alerts">{{ l.total_alerts }} Alerts</div>
+        </div>
+      </div>
+
+    </div> <!-- End Scroll Body -->
   </div>
 </div>
