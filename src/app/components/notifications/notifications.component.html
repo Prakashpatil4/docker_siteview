@@ -32,7 +32,7 @@
     <!-- 1. Modal Header -->
     <div class="dash-header">
 
-        <div class="dash-title">ELEVATE360 SITEOPS 📍 SITE FILTER: <strong>{{ selectedSite || 'Global View' }}</strong></div>
+        <div class="dash-title">ELEVATE360 SITEOPS  SITE FILTER: <strong>{{ selectedSite || 'Global View' }}</strong></div>
 
       <button class="close-btn" (click)="closeModal($event)">×</button>
     </div>
@@ -52,7 +52,7 @@
           <!-- 2. Blue Box: Teams (Icon: diversity_3) -->
           <div class="stat-box blue-gradient">
             <span class="material-icons dash-icon">diversity_3</span>
-            <div class="stat-value">{{ selectedData?.stats?.impacted_team_count }}</div>
+            <div class="stat-value">{{ selectedData?.stats?.impacted_manager_count }}</div>
             <div class="stat-label">Teams Impacted</div>
           </div>
 

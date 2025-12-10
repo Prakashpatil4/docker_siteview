@@ -1,17 +1,20 @@
- import { Component, OnInit } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { lastValueFrom } from "rxjs";
-import { TimeAgoPipe } from "./timeago";
-import { NotificationItem, NotificationService } from "../../services/notification-service";
-import { FilterService } from "../../services/filter.service";
- // Update import path
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { lastValueFrom } from 'rxjs';
+import { TimeAgoPipe } from './timeago';
+import {
+  NotificationItem,
+  NotificationService,
+} from '../../services/notification-service';
+import { FilterService } from '../../services/filter.service';
+// Update import path
 
 @Component({
-  selector: "app-notifications",
+  selector: 'app-notifications',
   standalone: true,
   imports: [CommonModule, TimeAgoPipe],
-  templateUrl: "./notifications.component.html",
-  styleUrls: ["./notifications.component.css"],
+  templateUrl: './notifications.component.html',
+  styleUrls: ['./notifications.component.css'],
 })
 export class NotificationsComponent implements OnInit {
   all: NotificationItem[] = [];
@@ -24,23 +27,25 @@ export class NotificationsComponent implements OnInit {
   // Modal State
   isModalOpen = false;
   selectedData: any = null; // Will hold the full JSON for the modal
-  selectedSite: string = "";
+  selectedSite: string = '';
 
-  constructor(private svc: NotificationService, private filterService: FilterService) {}
+  constructor(
+    private svc: NotificationService,
+    private filterService: FilterService
+  ) {}
 
   ngOnInit(): void {
     this.filterService.currentSite.subscribe(async (site) => {
-      console.log(`NOTIFICATION: Site changed to '${site}'`);
       this.selectedSite = site;
 
-      if(this.selectedSite == "Select") {
-        this.selectedSite = "";
+      if (this.selectedSite == 'Select') {
+        this.selectedSite = '';
       }
 
       const payload = {
-        "action": "fetch_summary",
-        "role": "SITEOPS",
-        "site": this.selectedSite
+        action: 'fetch_summary',
+        role: 'SITEOPS',
+        site: this.selectedSite,
       };
 
       await this.loadNotifications(payload);
@@ -50,11 +55,12 @@ export class NotificationsComponent implements OnInit {
   async loadNotifications(payload: any) {
     this.loading = true;
     try {
-      const response: any = await lastValueFrom(this.svc.fetchNotificationSummary(payload));
-      console.log(response)
+      const response: any = await lastValueFrom(
+        this.svc.fetchNotificationSummary(payload)
+      );
+
       this.transformData(response);
     } catch (err) {
-      console.error('Error fetching notifications:', err);
       this.all = [];
     } finally {
       this.loading = false;
@@ -66,20 +72,18 @@ export class NotificationsComponent implements OnInit {
 
     // ONLY create the Summary Item
     if (apiData.summaries[0].stats) {
-      console.log(apiData);
       list.push({
         id: 1,
         title: `ELEVATE360 Summary: ${this.selectedSite || 'All Sites'}`,
-        body: `🚨 ${apiData.summaries[0].stats.total_alerts} Total Alerts across ${apiData.summaries[0].stats.impacted_team_count} Teams. Tap to view dashboard.`,
-        time: new Date(),
+        body: `📢 ${apiData.summaries[0].stats.total_alerts} Total Alerts across ${apiData.summaries[0].stats.impacted_manager_count} Teams.  Tap to view dashboard.`,
+        time: apiData.summaries[0].date,
         icon: 'analytics', // Dashboard icon
         type: 'summary',
-        fullData: apiData.summaries[0] // <--- Store the whole JSON here
+        fullData: apiData.summaries[0], // <--- Store the whole JSON here
       });
     }
 
     this.all = list;
-    console.log(this.all)
   }
 
   // --- Modal Logic ---
@@ -89,10 +93,10 @@ export class NotificationsComponent implements OnInit {
   }
 
   closeModal(event?: Event) {
-     if (event) {
-    event.stopPropagation();
-    event.preventDefault(); // Good practice to prevent default anchor behaviors
-  }
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault(); // Good practice to prevent default anchor behaviors
+    }
     this.isModalOpen = false;
     this.selectedData = null;
   }
@@ -105,10 +109,13 @@ export class NotificationsComponent implements OnInit {
 
   // Calculate width for progress bars relative to the highest alert count
   getProgressWidth(count: number): string {
-    if(!this.selectedData) return '0%';
+    if (!this.selectedData) return '0%';
     // Find max value to normalize bars (prevent overflow)
-    const max = Math.max(...this.selectedData.metric_insights.map((m:any) => m.alert_count), 100);
-    return Math.min(((count / max) * 100), 100) + '%';
+    const max = Math.max(
+      ...this.selectedData.metric_insights.map((m: any) => m.alert_count),
+      100
+    );
+    return Math.min((count / max) * 100, 100) + '%';
   }
 
   // Determine color based on severity (you can adjust thresholds)
