@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener } from "@angular/core";
+import { Component, ElementRef, HostListener, OnInit } from "@angular/core";
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,6 +9,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { FilterService } from '../../services/filter.service';
 import { CommonModule } from '@angular/common';
 import { NotificationsComponent } from "../notifications/notifications.component";
+import { NotificationService } from "../../services/notification-service";
+import { lastValueFrom } from "rxjs";
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -17,16 +19,50 @@ import { NotificationsComponent } from "../notifications/notifications.component
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
+  private storageKey = 'currentUser';
   selectedSite: string = 'Select';
 
   selectedBusinessline: string = 'Select';
+  userData: any;
+  unreadCount: any;
 
-  constructor(private filterService: FilterService, private eRef: ElementRef) {}
-
+  constructor(private filterService: FilterService,private svc: NotificationService,  private eRef: ElementRef) {}
+  ngOnInit(): void {
+     this.getUnreadNotificationCount();
+     this.userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+  }
+  // async loadNotifications(payload: any) {
+  async getUnreadNotificationCount() { 
+      // this.userData.email  use this code for dynamic user_id
+      let siteVal = '';
+      if(this.selectedSite =='Select') {
+        siteVal = 'ALL'
+      } else {
+         siteVal = this.selectedSite;
+      }
+    
+       const payload = {
+        "user_id": "oladri@google.com",
+        "site": siteVal
+      };
+      try {
+        const response: any = await lastValueFrom(this.svc.getNotificationUnreadCount(payload));
+        console.log(response);
+        this.unreadCount =   response.unread_count
+         
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+        
+      } finally {
+       // this.loading = false;
+      }
+    }
   onSiteChange(): void {
     console.log(`HEADER: Sending site to service: '${this.selectedSite}'`);
     this.filterService.setSite(this.selectedSite);
+     this.getUnreadNotificationCount()
+ 
   }
 
   onBusinessLineChange() {

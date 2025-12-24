@@ -1,25 +1,106 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { lastValueFrom } from 'rxjs';
-import { TimeAgoPipe } from './timeago';
-import {
-  NotificationItem,
-  NotificationService,
-} from '../../services/notification-service';
-import { FilterService } from '../../services/filter.service';
-// Update import path
+ import { Component, effect, EventEmitter, Input, input, OnInit, Output } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { lastValueFrom } from "rxjs";
+import { TimeAgoPipe } from "./timeago";
+import { NotificationItem, NotificationService } from "../../services/notification-service";
+import { FilterService } from "../../services/filter.service";
+import { SafeHtml } from "@angular/platform-browser";
+ // Update import path
+interface MetricAlert {
+  metric: string;
+  metric_full_name: string;
+  frequency: string;
+  affected_tsrs: number;
+  total_tsrs: number;
+  avg_score: number;
+  target: number;
+  deviation: number;
+  severity: string;
+  primary_specialization: string;
+  primary_specialization_pct: number;
+}
+
+interface SpecializationHealth {
+  specialization: string;
+  metrics: {
+    volume: {
+      cases_in_bad_tsrs: number;
+      pct_of_total: number;
+    };
+    compliance_rate: number;
+  };
+  status: string;
+  trending: string;
+  top_products: {
+    product: string;
+    cases: number;
+    pct: number;
+  }[];
+  tsrs_count: number;
+  failing_metrics: string[];
+}
+
+interface TrendMetric {
+  metric: string;
+  metric_full_name: string;
+  change_pct: number;
+  recent_avg: number;
+}
+
+interface Workload {
+  trends: {
+    total_created: number;
+    total_closed: number;
+    net_flow: number;
+    flow_status: string;
+  };
+  workload_status: string;
+}
+
+interface DigestData {
+  metadata: {
+    site_location: string;
+    generated_at: string;
+  };
+  executive_summary: {
+    total_tsrs_active: number;
+    overall_compliance_rate: number;
+    total_cases_7d: number;
+    alert_level: string;
+  };
+  critical_alerts: MetricAlert[];
+  specialization_health: SpecializationHealth[];
+  volume_workload: Workload;
+  emerging_trends: {
+    declining_metrics: TrendMetric[];
+    improving_metrics: TrendMetric[];
+  };
+  summary_insights: string[];
+}
+
+interface NotificationCard {
+  type: 'critical' | 'warning' | 'info' | 'success';
+  emoji: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  content: string; // Used to determine modal content
+}
 
 @Component({
-  selector: 'app-notifications',
+  selector: "app-notifications",
   standalone: true,
   imports: [CommonModule, TimeAgoPipe],
-  templateUrl: './notifications.component.html',
-  styleUrls: ['./notifications.component.css'],
+  templateUrl: "./notifications.component.html",
+  styleUrls: ["./notifications.component.css"],
 })
 export class NotificationsComponent implements OnInit {
+  private storageKey = 'currentUser';
+  latestNote: any;
+   userData: any;
   all: NotificationItem[] = [];
   loading = false;
-
+ unreadCount = input<number>(0);
   // View Control
   initialCount = 5; // Enough to show the summary
   showAll = false;
@@ -27,14 +108,124 @@ export class NotificationsComponent implements OnInit {
   // Modal State
   isModalOpen = false;
   selectedData: any = null; // Will hold the full JSON for the modal
-  selectedSite: string = '';
+  selectedSite: string = "";
+  localCount: number | undefined;
+  //digestData: any = null; // Will hold the JSON
+  currentView: 'focus' | 'specializations' | 'products' | 'trends' = 'focus';
+ 
+  // UI Flags
+  showNotificationPanel = true;
+  showReportModal = false;
+  showDetailModal = false;
+  selectedAlert: any = null;
 
-  constructor(
-    private svc: NotificationService,
-    private filterService: FilterService
-  ) {}
+  // Helper properties for the view
+  greeting: string = '';
+  headerInfo: string = '';
+  alertInfo: any;
+ 
+   digestData: any = null
+ // digestData: DigestData = this.getInitialDigestData(); // Load data from method
+  notificationCards: NotificationCard[] = [];
+  
+  isPanelOpen: boolean = true;
+  // isModalOpen: boolean = false;
+  modalTitle: string = '';
+  modalBodyContent: SafeHtml | undefined;
+   // unreadCount = 0;
+  @Output() unreadCountChange = new EventEmitter<number>();
+  notifications: any;
+  constructor(private svc: NotificationService, private filterService: FilterService) {
+ 
+  }
 
+  
+ closeReportModal() {
+    this.showReportModal = false;
+  }
+
+  openAlertDetail(alert: any) {
+    this.selectedAlert = alert;
+    this.showDetailModal = true;
+  }
+
+  closeDetailModal() {
+    this.showDetailModal = false;
+    // this.selectedAlert = null;
+  }
+    getTrendItems(type: 'declining' | 'improving') {
+    const daily = this.digestData?.emerging_trends?.daily?.[type] || [];
+    const monthly = this.digestData?.emerging_trends?.monthly?.[type] || [];
+
+    return [...daily, ...monthly];
+  }
+  getStatusColor(status: string): string {
+    const colors: any = {
+      CRITICAL: 'var(--red-500)',
+      NEEDS_ATTENTION: 'var(--yellow-500)',
+      GOOD: 'var(--blue-500)',
+      EXCELLENT: 'var(--green-500)',
+    };
+    return colors[status] || 'var(--text-secondary)';
+  }
+
+  getMetricColor(value: number): string {
+    if (value >= 70) return 'var(--green-500)';
+    if (value >= 50) return 'var(--yellow-500)';
+    return 'var(--red-500)';
+  }
+
+  formatMetricName(name: string): string {
+    // return name.replace(/_/g, ' ').replace(/Rate|Score/g, '');
+    return String(name)
+      .replace(/_/g, ' ')
+      .replace(/Rate|Score/g, '');
+  }
+
+  getTrendCounts() {
+    const daily = this.digestData?.emerging_trends?.daily || {};
+    const monthly = this.digestData?.emerging_trends?.monthly || {};
+    const declining =
+      (daily.declining?.length || 0) + (monthly.declining?.length || 0);
+    const improving =
+      (daily.improving?.length || 0) + (monthly.improving?.length || 0);
+    return { declining, improving };
+  }
+
+   switchView(view: 'focus' | 'specializations' | 'products' | 'trends') {
+    this.currentView = view;
+  }
+    toggleNotificationPanel(event?: Event) {
+    if (event) event.stopPropagation();
+    this.showNotificationPanel = !this.showNotificationPanel;
+  }
+
+  closeNotificationPanel() {
+    this.showNotificationPanel = false;
+  }
+  toggleSpecCard(index: number) {
+    // We add a transient property to the spec object for UI toggling
+    const spec = this.digestData.specialization_health[index];
+    spec.expanded = !spec.expanded;
+  }
+  openFullReport(notification_id:string) {
+    console.log(notification_id);
+    // this.showNotificationPanel = false;
+    this.currentView = 'focus';
+    this.showReportModal = true;
+    this.getNotificationDetails(notification_id);
+  }
+
+   togglePanel() {
+    this.isPanelOpen = !this.isPanelOpen;
+  }
   ngOnInit(): void {
+ 
+    this.localCount  = this.unreadCount(); // plainNumber is now exactly 3
+    this.userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+    this.getNotificationData()
+    this.userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+
     this.filterService.currentSite.subscribe(async (site) => {
       this.selectedSite = site;
 
@@ -48,23 +239,144 @@ export class NotificationsComponent implements OnInit {
         site: this.selectedSite,
       };
 
-      await this.loadNotifications(payload);
+      await  this.loadDefaultData(payload);
     });
-  }
 
-  async loadNotifications(payload: any) {
+
+  }
+  async loadDefaultData(payload: any) {
+    console.log('data default')
+    this.digestData = null;
+    this.loading = true;
+    setTimeout(() => {
+   // this.digestData = this.getHardcodedData();
+    this.loading = false;
+    // this.alertInfo = this.digestData.critical_alerts.all[0];
+    // this.headerInfo = this.digestData.metadata.site_location;
+   // this.updateUnreadCount();
+  }, 3000);
+}
+
+  async getNotificationData() {
+    console.log('getNotificationData');
+   //  this.userData.email use this user_id as a dynamic for below payload
+     let siteVal = '';
+      if(this.selectedSite =='') {
+        siteVal = 'ALL'
+      } else {
+         siteVal = this.selectedSite;
+      }
+      console.log('nooooooo-->'+siteVal)
+    const payload = {
+      "user_id": "oladri@google.com",
+      "site": siteVal,
+      "limit":this.localCount
+    };
+
     this.loading = true;
     try {
-      const response: any = await lastValueFrom(
-        this.svc.fetchNotificationSummary(payload)
-      );
+      const response: any = await lastValueFrom(this.svc.getNotificationData(payload));
+    const firstSummaryRaw = response[0].summary;
+    const firstSummaryParsed = firstSummaryRaw ? JSON.parse(firstSummaryRaw) : null;
+    
+  const firstRecordSummary = response[0].summary;
+  let parsed = { health_status: '', people_focus: '', key_areas: '' };
 
-      this.transformData(response);
+  // 2. Parse it into a real object
+  try {
+    if (firstRecordSummary) {
+      parsed = JSON.parse(firstRecordSummary);
+    }
+  } catch (e) {
+    console.error("Summary parsing failed", e);
+  }
+
+  // 3. Map every record to include these specific fields
+  // this.notifications =  response.map((item: any) => ({
+    
+  //   notification_id: item.notification_id,
+  //   healthStatus: parsed.health_status,
+  //   peopleFocus: parsed.people_focus,
+  //   keyAreas: parsed.key_areas
+  // }));
+ this.notifications = response.map((item: any, i: number) => {
+  // Start with the base object containing the unique ID
+  const formattedItem: any = {
+    notification_id: item.notification_id
+  };
+
+  // Determine which field to add based on the row index
+  // i % 3 will result in 0, 1, 2, then repeat 0, 1, 2...
+  const rotationIndex = i % 3;
+
+  if (rotationIndex === 0) {
+    formattedItem.healthStatus = parsed.health_status;
+  } else if (rotationIndex === 1) {
+    formattedItem.peopleFocus = parsed.people_focus;
+  } else if (rotationIndex === 2) {
+    formattedItem.keyAreas = parsed.key_areas;
+  }
+
+  return formattedItem;
+});
+    
+console.log('NEW DATA-->'+ JSON.stringify(this.notifications))
+    //  this.getNotificationDetails();
     } catch (err) {
+      console.error('Error fetching notifications:', err);
       this.all = [];
     } finally {
       this.loading = false;
     }
+    
+  }
+  trackByFn(index: number, item: any) {
+  return item.notification_id; // Tells Angular to track items by ID instead of index
+}
+  // Inside your component.ts
+  truncateText(text: string, limit: number): string {
+    if (!text) return '';
+    return text.length > limit ? text.substring(0, limit) + '...' : text;
+  }
+  async getNotificationDetails(notification_id: string) {
+    console.log('getNotificationDetails');
+   //  this.userData.email use this user_id as a dynamic for below payload
+  //    "b41c862f-9dca-4d5d-bd0b-9331e27f8ce9"
+    const payload = {
+      "user_id": "oladri@google.com",
+      "notification_id": notification_id
+  
+    };
+
+    this.loading = true;
+    try {
+      const response: any = await lastValueFrom(this.svc.getNotificationDetails(payload));
+      
+      this.digestData = response.payload_json
+     console.log('Notification detail data--?'+JSON.stringify(this.digestData));
+ 
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      this.all = [];
+    } finally {
+      this.loading = false;
+    }
+    
+  }
+  async loadNotifications(payload: any) {
+    console.log('i m calling')
+    this.loading = true;
+    try {
+      const response: any = await lastValueFrom(this.svc.fetchNotificationSummary(payload));
+      console.log(response)
+      this.transformData(response);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      this.all = [];
+    } finally {
+      this.loading = false;
+    }
+    this.getNotificationData();
   }
 
   transformData(apiData: any) {
@@ -72,18 +384,20 @@ export class NotificationsComponent implements OnInit {
 
     // ONLY create the Summary Item
     if (apiData.summaries[0].stats) {
+      console.log(apiData);
       list.push({
         id: 1,
         title: `ELEVATE360 Summary: ${this.selectedSite || 'All Sites'}`,
-        body: `📢 ${apiData.summaries[0].stats.total_alerts} Total Alerts across ${apiData.summaries[0].stats.impacted_manager_count} Teams.  Tap to view dashboard.`,
-        time: apiData.summaries[0].date,
+        body: `🚨 ${apiData.summaries[0].stats.total_alerts} Total Alerts across ${apiData.summaries[0].stats.impacted_team_count} Teams. Tap to view dashboard.`,
+        time: new Date(),
         icon: 'analytics', // Dashboard icon
         type: 'summary',
-        fullData: apiData.summaries[0], // <--- Store the whole JSON here
+        fullData: apiData.summaries[0] // <--- Store the whole JSON here
       });
     }
 
     this.all = list;
+    console.log(this.all)
   }
 
   // --- Modal Logic ---
@@ -93,10 +407,10 @@ export class NotificationsComponent implements OnInit {
   }
 
   closeModal(event?: Event) {
-    if (event) {
-      event.stopPropagation();
-      event.preventDefault(); // Good practice to prevent default anchor behaviors
-    }
+     if (event) {
+    event.stopPropagation();
+    event.preventDefault(); // Good practice to prevent default anchor behaviors
+  }
     this.isModalOpen = false;
     this.selectedData = null;
   }
@@ -109,13 +423,10 @@ export class NotificationsComponent implements OnInit {
 
   // Calculate width for progress bars relative to the highest alert count
   getProgressWidth(count: number): string {
-    if (!this.selectedData) return '0%';
+    if(!this.selectedData) return '0%';
     // Find max value to normalize bars (prevent overflow)
-    const max = Math.max(
-      ...this.selectedData.metric_insights.map((m: any) => m.alert_count),
-      100
-    );
-    return Math.min((count / max) * 100, 100) + '%';
+    const max = Math.max(...this.selectedData.metric_insights.map((m:any) => m.alert_count), 100);
+    return Math.min(((count / max) * 100), 100) + '%';
   }
 
   // Determine color based on severity (you can adjust thresholds)
@@ -124,4 +435,5 @@ export class NotificationsComponent implements OnInit {
     if (count > 100) return 'orange';
     return 'green';
   }
+ 
 }

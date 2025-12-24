@@ -42,15 +42,49 @@ export interface NotificationItem {
 
 @Injectable({ providedIn: "root" })
 export class NotificationService {
+ 
   private readonly url = "https://jsonplaceholder.typicode.com/posts";
   private notificationApiUrl = 'https://elevate360-notification-service-803836599959.us-central1.run.app';
-   //private notificationApiUrl = '/api/notifications'; // Use the proxy path
+  private notificationReadUnredUrl = 'https://siteops-notif-service-dot-digital-sme.uc.r.appspot.com/notifications/unread-count';
+
 
   constructor(private http: HttpClient) {}
 fetchNotificationSummary(payload: any): Observable<any> {
     // The payload is now passed from the component
     return this.http.post(this.notificationApiUrl, payload);
 }
+getNotificationUnreadCount(payload: any)  {
+  
+    const encodedSite = encodeURIComponent(payload.site);
+    const userEmail = payload.user_id;
+ 
+   const url = `https://siteops-notif-service-dot-digital-sme.uc.r.appspot.com/notifications/unread-count/${encodedSite}?user_id=${userEmail}`;
+   return this.http.get<any>(url);
+ }
 
+getNotificationData(payload: any)  {
+  console.log('service')
+  const encodedSite = encodeURIComponent(payload.site);
+  const userEmail = payload.user_id;
+  const datalimit = payload.limit;
+ 
+   const url = `https://siteops-notif-service-dot-digital-sme.uc.r.appspot.com/notifications/${encodedSite}?user_id=${userEmail}&limit=${datalimit}`;
+   return this.http.get<any>(url);
+ }
+ getNotificationDetails(payload: any)  {
+  const userEmail = payload.user_id;
+  const notificationId = payload.notification_id;
+ 
+   const url = `https://siteops-notif-service-dot-digital-sme.uc.r.appspot.com/notifications/detail/${notificationId}?user_id=${userEmail}`;
+   return this.http.get<any>(url);
+ }
 
+  markNotificationRead(payload: any)  {
+  const userEmail = payload.user_id;
+  const notificationId = payload.notification_id;
+ 
+   const url = `https://siteops-notif-service-dot-digital-sme.uc.r.appspot.com/notifications/${notificationId}/read?user_id=${userEmail}`;
+  return this.http.post(url, payload);
+   return this.http.get<any>(url);
+ }
 }

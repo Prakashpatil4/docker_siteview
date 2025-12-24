@@ -157,5 +157,44 @@
   position: relative; /* Creates context for the absolute dropdown */
   display: inline-block;
 }
- 
-
+.notification-read-count-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+} 
+.notification-read-count {
+    position: absolute;
+    top: -8px;
+    right: 0px;
+    min-width: 18px;
+    height: 18px;
+    background: red;
+    color: white;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+}
+.notification-new-dropdown-wrapper  {
+    position: absolute;
+    top: 80%;
+}
+.notification-new-dropdown-wrapper::before  {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: -32px;
+    border-width: 0 10px 10px 10px;
+    border-style: solid;
+    border-color: transparent transparent #3b82f6 transparent;
+}

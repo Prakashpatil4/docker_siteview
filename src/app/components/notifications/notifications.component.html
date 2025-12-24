@@ -1,115 +1,727 @@
- <div class="dropdown-card">
-  <!-- Header -->
-  <div class="dropdown-header">
-    <span class="header-title">Notifications</span>
-    <span class="badge" *ngIf="all.length">{{ all.length }}</span>
-  </div>
+<header class="header" (click)="closeNotificationPanel()">
+ 
 
-  <!-- Body -->
-  <div class="dropdown-body">
-    <div *ngIf="loading" class="state-msg"><div class="spinner"></div> Loading Analysis...</div>
-    <div *ngIf="!loading && all.length === 0" class="state-msg">No new summaries available.</div>
+  <div
+    class="notification-panel"
+    [class.active]="showNotificationPanel"
+    (click)="$event.stopPropagation()"
+  >
 
-    <!-- Notification List (Now only contains Summary) -->
-    <ul *ngIf="!loading && all.length > 0" class="notif-list">
-      <li *ngFor="let item of all" class="notif-item summary-card" (click)="openDetails(item)">
-
-        <div class="notif-content">
-          <div class="n-title">{{ item.title }}</div>
-          <div class="n-body">{{ item.body }}</div>
-          <div class="n-time">{{ item.time | timeAgo }}</div>
-        </div>
-        <div class="chevron">›</div>
-      </li>
-    </ul>
-  </div>
-</div>
-
-<!-- ================= DASHBOARD MODAL ================= -->
-<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal($event)">
-  <div class="modal-dashboard" (click)="$event.stopPropagation()">
-
-    <!-- 1. Modal Header -->
-    <div class="dash-header">
-
-        <div class="dash-title">ELEVATE360 SITEOPS  SITE FILTER: <strong>{{ selectedSite || 'Global View' }}</strong></div>
-
-      <button class="close-btn" (click)="closeModal($event)">×</button>
+    
+    <div class="panel-header">
+      <div class="panel-title">Daily Digest</div>
+      <!-- <div class="panel-subtitle" *ngIf="digestData">
+        {{ digestData.metadata.snapshot_date | date : "fullDate" }}
+      </div> -->
     </div>
-
-    <div class="dash-scroll-body">
-
-      <!-- 2. Key Stats Row -->
-      <div class="stats-grid">
-
-        <!-- 1. Red Box: Alerts (Icon: crisis_alert) -->
-          <div class="stat-box red-gradient">
-            <span class="material-icons dash-icon">crisis_alert</span>
-            <div class="stat-value">{{ selectedData?.stats?.total_alerts | number }}</div>
-            <div class="stat-label">Total Alerts</div>
-          </div>
-
-          <!-- 2. Blue Box: Teams (Icon: diversity_3) -->
-          <div class="stat-box blue-gradient">
-            <span class="material-icons dash-icon">diversity_3</span>
-            <div class="stat-value">{{ selectedData?.stats?.impacted_manager_count }}</div>
-            <div class="stat-label">Teams Impacted</div>
-          </div>
-
-          <!-- 3. Purple Box: Gap/Metrics (Icon: ssid_chart) -->
-          <div class="stat-box purple-gradient">
-            <span class="material-icons dash-icon">ssid_chart</span>
-            <div class="stat-value">{{ selectedData?.stats?.avg_gap | number:'1.0-1' }}%</div>
-            <div class="stat-label">Avg Gap</div>
-          </div>
-
-
+    <!-- {{ note.notification_id }}  -->
+    <div *ngIf="loading" class="state-msg"><div class="spinner"></div> Loading Analysis...</div>
+    <!-- <div *ngIf="!loading && digestData.length === 0" class="state-msg">No new summaries available.</div>
+    -->
+    <div *ngFor="let note of notifications;">
+      <div class="digest-summary" *ngIf="notifications">
+      <div class="info-row" *ngIf="note.healthStatus" (click)="openFullReport(note.notification_id)">
+        <span class="label">Health:</span> {{ note.healthStatus }} 
+      </div>
+      <div class="info-row" *ngIf="note.peopleFocus" (click)="openFullReport(note.notification_id)">
+        <span class="label">Focus:</span> {{ note.peopleFocus }} 
+      </div>
+      <div class="info-row" *ngIf="note.keyAreas" (click)="openFullReport(note.notification_id)">
+        <span class="label">Areas:</span> {{ note.keyAreas }} 
+      </div> 
+      </div>
+    <!-- <ng-container *ngFor="let note of notifications; let i = index">
+   
+  <div class="notification-card" *ngIf="i === 0">
+    <div class="notification-body">
+      
+      <div class="info-row health-row" *ngIf="note.healthStatus">
+        <span class="label">Health:</span> {{ note.healthStatus }} {{note.notification_id}}
       </div>
 
-      <!-- 3. Top Failing Metrics -->
-      <div class="section-title">📊 TOP FAILING METRICS</div>
-      <div class="metrics-container">
-        <div class="metric-row" *ngFor="let m of selectedData?.metric_insights; let i = index">
+      <div class="info-row people-row" *ngIf="note.peopleFocus">
+        <span class="label">Focus:</span> {{ note.peopleFocus }} {{note.notification_id}}
+      </div>
 
-          <div class="m-header">
-            <span class="m-name">{{ i + 1 }}. {{ m.metric_name }}</span>
-            <span class="m-count" [ngClass]="getSeverityColor(m.alert_count)">
-              {{ m.alert_count }} Alerts
-            </span>
+      <div class="info-row areas-row" *ngIf="note.keyAreas">
+        <span class="label">Areas:</span> {{ note.keyAreas }} {{note.notification_id}}
+      </div>
+
+      <div class="info-row summary-row" *ngIf="note.healthStatus">
+        <span class="label">Quick View:</span> 
+        {{ truncateText(note.healthStatus, 60) }} {{note.notification_id}}
+      </div>
+      
+    </div>
+  </div>
+
+</ng-container> -->
+   
+      <!-- <div class="digest-highlight">
+        <div class="digest-icon health">💪</div>
+        <div class="digest-content">
+          <div class="digest-label">Team Health</div>
+          <div class="digest-text">
+            {{ digestData.summary.health_rate }}% healthy ({{
+              digestData.summary.tsrs_healthy
+            }}/{{ digestData.summary.total_tsrs }} TSRs)
           </div>
+          <div class="digest-subtext">
+            {{ digestData.summary.tsrs_with_issues }} team members need support
+          </div>
+        </div>
+      </div> -->
 
-          <!-- Progress Bar -->
-          <div class="progress-track">
-            <div class="progress-fill"
-                 [ngClass]="getSeverityColor(m.alert_count)"
-                 [style.width]="getProgressWidth(m.alert_count)">
+      
+      <!-- <div class="digest-highlight" *ngIf="digestData.summary.total_alerts > 0">
+        <div class="digest-icon focus">🎯</div>
+        <div class="digest-content">
+          <div class="digest-label">Focus Areas</div>
+          <div class="digest-text">
+            {{ digestData.summary.total_alerts }} items need attention
+          </div>
+          <div class="digest-subtext">
+            {{ digestData.summary.alerts_by_frequency.daily }} daily •
+            {{ digestData.summary.alerts_by_frequency.monthly }} monthly
+          </div>
+        </div>
+      </div> -->
+
+      <!-- <div class="digest-highlight" *ngIf="alertInfo">
+        <div class="digest-icon focus">📌</div>
+        <div class="digest-content">
+          <div class="digest-label">Top Priority</div>
+          <div class="digest-text">{{ alertInfo.metric_full_name }}</div>
+          <div class="digest-subtext">
+            {{ alertInfo.affected_pct }} % of TSRs affected
+          </div>
+        </div>
+      </div> -->
+
+<!--    
+      <ng-container *ngIf="getTrendCounts() as trends">
+        <div
+          class="digest-highlight"
+          *ngIf="trends.improving > 0 || trends.declining > 0"
+        >
+          <div class="digest-icon trend">📈</div>
+          <div class="digest-content">
+            <div class="digest-label">Trends</div>
+            <div class="digest-text">
+              <span *ngIf="trends.improving > 0"
+                >{{ trends.improving }} improving</span
+              >
+              <span *ngIf="trends.improving > 0 && trends.declining > 0">
+                •
+              </span>
+              <span *ngIf="trends.declining > 0"
+                >{{ trends.declining }} declining</span
+              >
+            </div>
+            <div class="digest-subtext">Week-over-week changes</div>
+          </div>
+        </div>
+      </ng-container> -->
+    </div>
+
+    <!-- <div class="panel-footer" *ngIf="!loading && digestData">
+      <span class="view-details-btn" (click)="openFullReport()">
+        View full report
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+      </span>
+    </div> -->
+  </div>
+</header>
+
+<!-- Full Report Modal -->
+<div
+  class="modal-overlay"
+  [class.active]="showReportModal"
+  (click)="closeReportModal()"
+>
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Performance Report</div>
+      <button class="modal-close" (click)="closeReportModal()">&times;</button>
+    </div>
+
+    <div class="modal-body" *ngIf="digestData">
+      <!-- Tabs -->
+      <div class="tab-pills">
+        <button
+          class="tab-pill"
+          [class.active]="currentView === 'focus'"
+          (click)="switchView('focus')"
+        >
+          🎯 Focus Areas
+        </button>
+        <button
+          class="tab-pill"
+          [class.active]="currentView === 'specializations'"
+          (click)="switchView('specializations')"
+        >
+          🏢 Teams
+        </button>
+        <button
+          class="tab-pill"
+          [class.active]="currentView === 'products'"
+          (click)="switchView('products')"
+        >
+          📦 Products
+        </button>
+        <button
+          class="tab-pill"
+          [class.active]="currentView === 'trends'"
+          (click)="switchView('trends')"
+        >
+          📈 Trends
+        </button>
+      </div>
+
+      <!-- View: FOCUS -->
+      <div *ngIf="currentView === 'focus'">
+        <!-- Daily Section -->
+        <div
+          class="focus-section"
+          *ngIf="digestData.critical_alerts.daily?.length > 0"
+        >
+          <div class="section-title">📅 Daily Metrics ({{
+              digestData.critical_alerts.daily?.length
+            }})</div>
+          <div class="focus-list">
+
+ <!-- [ngClass]="{
+                'priority-high': alert.severity === 'CRITICAL',
+                'priority-medium': alert.severity === 'HIGH',
+                'priority-low': alert.severity === 'LOW'
+              }" -->
+
+            <div
+              class="focus-item priority-low"
+              *ngFor="let alert of digestData.critical_alerts.daily"
+             
+              (click)="openAlertDetail(alert)"
+            >
+              <div class="focus-item-header">
+                <span class="focus-item-title">{{
+                  alert.metric_full_name
+                }}</span>
+                <span
+                  class="focus-item-badge"
+                  [class.badge-daily]="alert.frequency === 'DAILY'"
+                  >{{ alert.frequency }}</span
+                >
+              </div>
+              <div class="focus-item-stats">
+                {{ alert.tsrs_struggling }}/{{ alert.total_tsrs }} TSRs • Avg:
+                {{ alert.avg_score }}%
+                <span
+                  class="trend-badge"
+                  [ngClass]="
+                    alert.trend_direction === 'IMPROVING'
+                      ? 'trend-up'
+                      : 'trend-down'
+                  "
+                  *ngIf="alert.change_pct"
+                >
+                  {{ alert.change_pct > 0 ? "↑" : "↓" }}
+                  {{ alert.change_pct | number : "1.1-1" }}%
+                </span>
+              </div>
+              <div class="focus-item-insight">
+                <!-- <span>💡</span> {{ alert.affected_pct }}% of team affected -->
+
+                <p class="metric-insight">
+                  <ng-container
+                    *ngIf="alert.primary_specialization; else teamAffected"
+                  >
+                    <span>💡</span>Main impact:
+                    {{ alert.primary_specialization }} ({{
+                      alert.primary_specialization_pct | number : "1.1-2"
+                    }}%)
+                  </ng-container>
+
+                  <ng-template #teamAffected>
+                    {{ alert.affected_pct | number : "1.1-1" }}% of team
+                    affected
+                  </ng-template>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ngClass]="{
+                   'priority-high': alert.severity === 'CRITICAL',
+                   'priority-medium': alert.severity === 'HIGH',
+                   'priority-low': alert.severity === 'LOW'
+                 }" -->
+        <!-- Monthly Section -->
+        <div
+          class="focus-section"
+          *ngIf="digestData.critical_alerts.monthly?.length > 0"
+        >
+          <div class="section-title">
+            📆 Monthly Metrics ({{
+              digestData.critical_alerts.monthly?.length
+            }})
+          </div>
+          <div class="focus-list">
+     <!-- [ngClass]="{
+                'priority-critical': alert.severity === 'CRITICAL',
+                'priority-high': alert.severity === 'HIGH',
+                'priority-medium': alert.severity === 'MEDIUM',
+                'priority-low': alert.severity === 'LOW'
+              }" -->
+
+            <div
+              class="focus-item priority-low"
+              *ngFor="let alert of digestData.critical_alerts.monthly"
+           
+              (click)="openAlertDetail(alert)"
+            >
+              <!-- Same structure as daily -->
+              <div class="focus-item-header">
+                <span class="focus-item-title">{{
+                  alert.metric_full_name
+                }}</span>
+                <span class="focus-item-badge badge-monthly">{{
+                  alert.frequency
+                }}</span>
+              </div>
+              <div class="focus-item-stats">
+                {{ alert.tsrs_struggling }}/{{ alert.total_tsrs }} TSRs • Avg:
+                {{ alert.avg_score | number : "1.0-2" }}%
+                <span
+                  class="trend-badge"
+                  [ngClass]="
+                    alert.trend_direction === 'IMPROVING'
+                      ? 'trend-up'
+                      : 'trend-down'
+                  "
+                  *ngIf="alert.change_pct"
+                >
+                  {{ alert.change_pct > 0 ? "↑" : "↓" }}
+                  {{ alert.change_pct | number : "1.1-1" }}%
+                </span>
+              </div>
+              <div class="focus-item-insight">
+                <p class="metric-insight">
+                  <ng-container
+                    *ngIf="alert.primary_specialization; else teamAffected"
+                  >
+                    <span>💡</span>Main impact:
+                    {{ alert.primary_specialization }} ({{
+                      alert.primary_specialization_pct | number : "1.1-2"
+                    }}%)
+                  </ng-container>
+
+                  <ng-template #teamAffected>
+                    {{ alert.affected_pct | number : "1.1-1" }}% of team
+                    affected
+                  </ng-template>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View: TEAMS (Specializations) -->
+      <div *ngIf="currentView === 'specializations'" class="focus-list">
+        <div
+          class="spec-card"
+          *ngFor="let spec of digestData.specialization_health; let i = index"
+          [class.expanded]="spec.expanded"
+        >
+          <div class="spec-header" (click)="toggleSpecCard(i)">
+            <div>
+              <div class="spec-name">{{ spec.specialization }}</div>
+              <div class="spec-meta">
+                {{ spec.tsrs_count }} TSRs •
+                {{ spec.volume.cases_in_spec | number }} cases
+              </div>
+            </div>
+            <div class="spec-health-badges">
+              <div class="spec-health-item">
+                <div
+                  class="spec-health-value"
+                  [style.color]="getStatusColor(spec.daily_health.status)"
+                >
+                  {{ spec.daily_health.compliance.current }}%
+                </div>
+                <div class="spec-health-label">Daily</div>
+              </div>
+              <div class="spec-health-item">
+                <div
+                  class="spec-health-value"
+                  [style.color]="getStatusColor(spec.monthly_health.status)"
+                >
+                  {{ spec.monthly_health.compliance.current }}%
+                </div>
+                <div class="spec-health-label">Monthly</div>
+              </div>
+              <svg
+                class="spec-expand"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                />
+              </svg>
             </div>
           </div>
 
-          <div class="m-footer">
-            <span class="m-contributor">
-              Major Contributor: <strong>{{ m.contributors[0]?.name || 'Unknown' }}</strong>
-            </span>
-            <span class="m-score" *ngIf="m.contributors[0]?.score > 0">
-              (Score: {{ m.contributors[0]?.score | number:'1.0-1' }})
-            </span>
+          <div class="spec-details">
+            <div class="health-grid">
+              <!-- Reusable logic could be a sub-component, but inline for now -->
+              <div class="health-box">
+                <div class="health-box-title">📅 Daily Health</div>
+                <div>
+                  <span
+                    class="health-box-value"
+                    [style.color]="getStatusColor(spec.daily_health.status)"
+                    >{{ spec.daily_health.compliance.current }}%</span
+                  >
+                  <span
+                    class="trend-badge"
+                    [ngClass]="
+                      spec.daily_health.compliance.change > 0
+                        ? 'status-excellent'
+                        : 'status-critical'
+                    "
+                    *ngIf="spec.daily_health.compliance.change"
+                  >
+                    {{ spec.daily_health.compliance.change > 0 ? "↑" : "↓" }}
+                    {{
+                      spec.daily_health.compliance.change | number : "1.1-1"
+                    }}%
+                  </span>
+                  <div class="spec-meta">
+                    Week1: {{ spec.daily_health.compliance.week1 | number }}% →
+                    Week2: {{ spec.daily_health.compliance.week2 | number }}%
+                  </div>
+                  <div class="spec-meta">
+                    <span class="ranking-pill">
+                      #{{ spec.daily_health.ranking?.current_rank }}/{{
+                        spec.daily_health.ranking?.total
+                      }}
+                    </span>
+
+                    <span class="leadership-pill leadership-leading">
+                      {{ spec.daily_health.leadership }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="metric-list">
+                  <div
+                    class="metric-row"
+                    *ngFor="
+                      let m of spec.daily_health.metric_pass_rates
+                        | keyvalue
+                        | slice : 0 : 4
+                    "
+                  >
+                    <span class="metric-name">{{
+                      formatMetricName($any(m.key))
+                    }}</span>
+                    <span
+                      class="metric-value"
+                      [style.color]="getMetricColor($any(m.value).pass_rate)"
+                    >
+                      {{ $any(m.value).pass_rate | number : "1.0-0" }}%
+                    </span>
+                    <div class="contribution-bar">
+                      <div
+                        class="contribution-fill"
+                        [style.background-color]="
+                          getMetricColor($any(m.value).pass_rate)
+                        "
+                        [style.width.%]="$any(m.value).pass_rate"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="health-box">
+                <div class="health-box-title">📅 Monthly Health</div>
+                <div>
+                  <span
+                    class="health-box-value"
+                    [style.color]="getStatusColor(spec.monthly_health.status)"
+                    >{{ spec.monthly_health.compliance.current }}%</span
+                  >
+                  <span
+                    class="trend-badge"
+                    [ngClass]="
+                      spec.monthly_health.compliance.change > 0
+                        ? 'status-excellent'
+                        : 'status-critical'
+                    "
+                    *ngIf="spec.monthly_health.compliance.change"
+                  >
+                    {{ spec.monthly_health.compliance.change > 0 ? "↑" : "↓" }}
+                    {{
+                      spec.monthly_health.compliance.change | number : "1.1-1"
+                    }}%
+                  </span>
+                  <div class="spec-meta">
+                    Month1:
+                    {{ spec.monthly_health.compliance.month1 | number }}% →
+                    Month2:
+                    {{ spec.monthly_health.compliance.month2 | number }}%
+                  </div>
+                  <div class="spec-meta">
+                    <span class="ranking-pill">
+                      #{{ spec.monthly_health.ranking?.current_rank }}/{{
+                        spec.monthly_health.ranking?.total
+                      }}
+                    </span>
+
+                    <span class="leadership-pill leadership-leading">
+                      {{ spec.monthly_health.leadership }}
+                    </span>
+                  </div>
+                </div>
+                <div class="metric-list">
+                  <div
+                    class="metric-row"
+                    *ngFor="
+                      let m of spec.monthly_health.metric_pass_rates
+                        | keyvalue
+                        | slice : 0 : 4
+                    "
+                  >
+                    <span class="metric-name">{{
+                      formatMetricName($any(m.key))
+                    }}</span>
+                    <span
+                      class="metric-value"
+                      [style.color]="getMetricColor($any(m.value).pass_rate)"
+                    >
+                      {{ $any(m.value).pass_rate | number : "1.0-0" }}%
+                    </span>
+                    <div class="contribution-bar">
+                      <div
+                        class="contribution-fill"
+                        [style.background-color]="
+                          getMetricColor($any(m.value).pass_rate)
+                        "
+                        [style.width.%]="$any(m.value).pass_rate"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 4. Volume Leaders -->
-      <div class="section-title">🏆 VOLUME LEADERS</div>
-      <div class="leaders-grid">
-        <div class="leader-card" *ngFor="let l of selectedData?.volume_leaders; let i = index">
-          <div class="leader-rank">#{{ i + 1 }}</div>
-          <div class="leader-info">
-            <div class="leader-name">{{ l.name }}</div>
-            <div class="leader-team">{{ l.team }}</div>
+      <!-- View: PRODUCTS -->
+      <div *ngIf="currentView === 'products'">
+        <table class="products-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Team</th>
+              <th>Cases</th>
+              <th>Compliance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of digestData.product_insights">
+              <td>
+                <span class="product-name">{{ p.product }}</span>
+              </td>
+              <td>{{ p.specialization }}</td>
+              <td>{{ p.cases | number }}</td>
+              <td [style.color]="getStatusColor(p.status)">
+                {{ p.compliance_rate }}%
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- View: TRENDS -->
+      <div *ngIf="currentView === 'trends'">
+        <div class="focus-section">
+          <div class="section-title">
+            📉 Declining ({{ getTrendItems("declining").length }})
           </div>
-          <div class="leader-alerts">{{ l.total_alerts }} Alerts</div>
+          <div class="focus-list">
+            <div
+              class="focus-item priority-medium"
+              *ngFor="let t of getTrendItems('declining')"
+            >
+              <div class="focus-item-header">
+                <span class="focus-item-title">{{ t.metric_full_name }}</span>
+                <span
+                  class="focus-item-badge"
+                  
+                  [class.badge-daily]="t.frequency === 'MONTHLY'"
+                  >{{ t.frequency }}</span
+                >
+              </div>
+              <div class="focus-item-stats">
+                {{ t.previous_avg | number : "1.1-1" }}% →
+                {{ t.recent_avg | number : "1.1-1" }}%
+                <span class="trend-badge trend-down"
+                  >{{ t.change_pct | number : "1.1-1" }}%</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="focus-section">
+          <div class="section-title">
+            📈 Improving ({{ getTrendItems("improving").length }})
+          </div>
+          <div class="focus-list">
+            <div
+              class="focus-item priority-low"
+              *ngFor="let t of getTrendItems('improving')"
+            >
+              <div class="focus-item-header">
+                <span class="focus-item-title">{{ t.metric_full_name }}</span>
+                <span
+                  class="focus-item-badge"
+                  [class.badge-monthly]="t.frequency === 'DAILY'"
+                  >{{ t.frequency }}</span
+                >
+              </div>
+              <div class="focus-item-stats">
+                {{ t.previous_avg | number : "1.1-1" }}% →
+                {{ t.recent_avg | number : "1.1-1" }}%
+                <span class="trend-badge trend-up"
+                  >{{ t.change_pct | number : "1.1-1" }}%</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div
+  class="modal-overlay"
+  [class.active]="showDetailModal"
+  (click)="closeDetailModal()"
+>
+  <div class="modal" (click)="$event.stopPropagation()" *ngIf="selectedAlert">
+    <div class="modal-header">
+      <div class="modal-title">{{ selectedAlert.metric_full_name }}</div>
+      <button class="modal-close" (click)="closeDetailModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="back-btn" (click)="closeDetailModal()">← Back to list</div>
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="detail-label">Frequency</div>
+          <div class="detail-value">{{ selectedAlert.frequency }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Priority</div>
+          <div class="detail-value">{{ selectedAlert.severity }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">TSRs Affected</div>
+          <div class="detail-value">
+            {{ selectedAlert.tsrs_struggling }}/{{ selectedAlert.total_tsrs }}
+
+            ({{
+              (selectedAlert.tsrs_struggling / selectedAlert.total_tsrs) * 100
+                | number : "1.1-1"
+            }}%)
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Avg Score</div>
+          <div class="detail-value">{{ selectedAlert.avg_score }}%</div>
         </div>
       </div>
 
-    </div> <!-- End Scroll Body -->
+      <!-- Angular Templates for dynamic content -->
+
+      <div class="contribution-section" *ngIf="selectedAlert.previous_avg">
+        <div class="contribution-title">📈 Trend</div>
+        <p>
+          {{ selectedAlert.previous_avg | number : "1.1-1" }}% →
+          {{ selectedAlert.recent_avg | number : "1.1-1" }}%
+
+          <span
+            class="trend-badge"
+            [ngClass]="
+              selectedAlert.trend_direction === 'IMPROVING'
+                ? 'trend-up'
+                : 'trend-down'
+            "
+          >
+            {{ selectedAlert.change_pct > 0 ? "+" : ""
+            }}{{ selectedAlert.change_pct | number : "1.1-1" }}%
+          </span>
+        </p>
+      </div>
+
+      <div
+        class="contribution-section"
+        *ngIf="selectedAlert.specialization_contribution_pct"
+      >
+        <div class="contribution-title">🏢 Team Contribution</div>
+        <div
+          class="contribution-row"
+          *ngFor="
+            let item of selectedAlert.specialization_contribution_pct | keyvalue
+          "
+        >
+          <span class="contribution-label">{{ item.key }}</span>
+          <div class="contribution-bar">
+            <div class="contribution-fill" [style.width.%]="item.value"></div>
+          </div>
+          <span class="contribution-value"
+            >{{ $any(item.value) | number : "1.0-1" }}%</span
+          >
+        </div>
+      </div>
+
+      <div
+        class="contribution-section"
+        *ngIf="selectedAlert.product_contribution_pct"
+      >
+        <div class="contribution-title">📦 Product Contribution</div>
+        <div
+          class="contribution-row"
+          *ngFor="let item of selectedAlert.product_contribution_pct | keyvalue"
+        >
+          <span class="contribution-label">{{ item.key }}</span>
+          <div class="contribution-bar">
+            <div
+              class="contribution-product-fill"
+              [style.width.%]="item.value"
+            ></div>
+          </div>
+          <span class="contribution-value"
+            >{{ $any(item.value) | number : "1.0-1" }}%</span
+          >
+        </div>
+      </div>
+    </div>
   </div>
 </div>
