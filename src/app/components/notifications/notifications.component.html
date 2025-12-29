@@ -1,144 +1,39 @@
 <header class="header" (click)="closeNotificationPanel()">
- 
-
   <div
     class="notification-panel"
     [class.active]="showNotificationPanel"
     (click)="$event.stopPropagation()"
   >
-
-    
     <div class="panel-header">
       <div class="panel-title">Daily Digest</div>
-      <!-- <div class="panel-subtitle" *ngIf="digestData">
-        {{ digestData.metadata.snapshot_date | date : "fullDate" }}
-      </div> -->
     </div>
     <!-- {{ note.notification_id }}  -->
-    <div *ngIf="loading" class="state-msg"><div class="spinner"></div> Loading Analysis...</div>
-    <!-- <div *ngIf="!loading && digestData.length === 0" class="state-msg">No new summaries available.</div>
-    -->
-    <div *ngFor="let note of notifications;">
-      <div class="digest-summary" *ngIf="notifications">
-      <div class="info-row" *ngIf="note.healthStatus" (click)="openFullReport(note.notification_id)">
-        <span class="label">Health:</span> {{ note.healthStatus }} 
-      </div>
-      <div class="info-row" *ngIf="note.peopleFocus" (click)="openFullReport(note.notification_id)">
-        <span class="label">Focus:</span> {{ note.peopleFocus }} 
-      </div>
-      <div class="info-row" *ngIf="note.keyAreas" (click)="openFullReport(note.notification_id)">
-        <span class="label">Areas:</span> {{ note.keyAreas }} 
-      </div> 
-      </div>
-    <!-- <ng-container *ngFor="let note of notifications; let i = index">
-   
-  <div class="notification-card" *ngIf="i === 0">
-    <div class="notification-body">
-      
-      <div class="info-row health-row" *ngIf="note.healthStatus">
-        <span class="label">Health:</span> {{ note.healthStatus }} {{note.notification_id}}
-      </div>
-
-      <div class="info-row people-row" *ngIf="note.peopleFocus">
-        <span class="label">Focus:</span> {{ note.peopleFocus }} {{note.notification_id}}
-      </div>
-
-      <div class="info-row areas-row" *ngIf="note.keyAreas">
-        <span class="label">Areas:</span> {{ note.keyAreas }} {{note.notification_id}}
-      </div>
-
-      <div class="info-row summary-row" *ngIf="note.healthStatus">
-        <span class="label">Quick View:</span> 
-        {{ truncateText(note.healthStatus, 60) }} {{note.notification_id}}
-      </div>
-      
+    <div *ngIf="loading" class="state-msg">
+      <div class="spinner"></div>
+      Loading Analysis...
     </div>
-  </div>
-
-</ng-container> -->
-   
-      <!-- <div class="digest-highlight">
-        <div class="digest-icon health">💪</div>
-        <div class="digest-content">
-          <div class="digest-label">Team Health</div>
-          <div class="digest-text">
-            {{ digestData.summary.health_rate }}% healthy ({{
-              digestData.summary.tsrs_healthy
-            }}/{{ digestData.summary.total_tsrs }} TSRs)
-          </div>
-          <div class="digest-subtext">
-            {{ digestData.summary.tsrs_with_issues }} team members need support
-          </div>
-        </div>
-      </div> -->
-
-      
-      <!-- <div class="digest-highlight" *ngIf="digestData.summary.total_alerts > 0">
-        <div class="digest-icon focus">🎯</div>
-        <div class="digest-content">
-          <div class="digest-label">Focus Areas</div>
-          <div class="digest-text">
-            {{ digestData.summary.total_alerts }} items need attention
-          </div>
-          <div class="digest-subtext">
-            {{ digestData.summary.alerts_by_frequency.daily }} daily •
-            {{ digestData.summary.alerts_by_frequency.monthly }} monthly
-          </div>
-        </div>
-      </div> -->
-
-      <!-- <div class="digest-highlight" *ngIf="alertInfo">
-        <div class="digest-icon focus">📌</div>
-        <div class="digest-content">
-          <div class="digest-label">Top Priority</div>
-          <div class="digest-text">{{ alertInfo.metric_full_name }}</div>
-          <div class="digest-subtext">
-            {{ alertInfo.affected_pct }} % of TSRs affected
-          </div>
-        </div>
-      </div> -->
-
-<!--    
-      <ng-container *ngIf="getTrendCounts() as trends">
-        <div
-          class="digest-highlight"
-          *ngIf="trends.improving > 0 || trends.declining > 0"
-        >
-          <div class="digest-icon trend">📈</div>
-          <div class="digest-content">
-            <div class="digest-label">Trends</div>
-            <div class="digest-text">
-              <span *ngIf="trends.improving > 0"
-                >{{ trends.improving }} improving</span
-              >
-              <span *ngIf="trends.improving > 0 && trends.declining > 0">
-                •
-              </span>
-              <span *ngIf="trends.declining > 0"
-                >{{ trends.declining }} declining</span
-              >
-            </div>
-            <div class="digest-subtext">Week-over-week changes</div>
-          </div>
-        </div>
-      </ng-container> -->
+    <div *ngIf="!loading && notifications.length === 0" class="state-msg">
+      No new summaries available.
     </div>
 
-    <!-- <div class="panel-footer" *ngIf="!loading && digestData">
-      <span class="view-details-btn" (click)="openFullReport()">
-        View full report
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
-      </span>
-    </div> -->
+    <div class="notification-list" *ngIf="!loading">
+      <div
+        *ngFor="let note of notifications"
+        class="notification-item"
+        [class.unread]="!note.is_read"
+        [class.is-read]="note.is_read"
+        (click)="openFullReport(note)"
+      >
+        <div class="notification-content">
+          <div class="notification-line" *ngIf="note.summary">
+            {{ note.summary }}
+          </div>
+          <div class="notification-time time-stamp">
+            {{ note.created_at | timeAgo }}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -153,7 +48,10 @@
       <div class="modal-title">Performance Report</div>
       <button class="modal-close" (click)="closeReportModal()">&times;</button>
     </div>
-
+    <div *ngIf="!digestData" class="state-msg">
+      <div class="spinner"></div>
+      Loading Analysis...
+    </div>
     <div class="modal-body" *ngIf="digestData">
       <!-- Tabs -->
       <div class="tab-pills">
@@ -194,12 +92,11 @@
           class="focus-section"
           *ngIf="digestData.critical_alerts.daily?.length > 0"
         >
-          <div class="section-title">📅 Daily Metrics ({{
-              digestData.critical_alerts.daily?.length
-            }})</div>
+          <div class="section-title">
+            📅 Daily Metrics ({{ digestData.critical_alerts.daily?.length }})
+          </div>
           <div class="focus-list">
-
- <!-- [ngClass]="{
+            <!-- [ngClass]="{
                 'priority-high': alert.severity === 'CRITICAL',
                 'priority-medium': alert.severity === 'HIGH',
                 'priority-low': alert.severity === 'LOW'
@@ -208,7 +105,6 @@
             <div
               class="focus-item priority-low"
               *ngFor="let alert of digestData.critical_alerts.daily"
-             
               (click)="openAlertDetail(alert)"
             >
               <div class="focus-item-header">
@@ -275,7 +171,7 @@
             }})
           </div>
           <div class="focus-list">
-     <!-- [ngClass]="{
+            <!-- [ngClass]="{
                 'priority-critical': alert.severity === 'CRITICAL',
                 'priority-high': alert.severity === 'HIGH',
                 'priority-medium': alert.severity === 'MEDIUM',
@@ -285,7 +181,6 @@
             <div
               class="focus-item priority-low"
               *ngFor="let alert of digestData.critical_alerts.monthly"
-           
               (click)="openAlertDetail(alert)"
             >
               <!-- Same structure as daily -->
@@ -571,8 +466,7 @@
                 <span class="focus-item-title">{{ t.metric_full_name }}</span>
                 <span
                   class="focus-item-badge"
-                  
-                  [class.badge-daily]="t.frequency === 'MONTHLY'"
+                  [class.badge-daily]="t.frequency === 'DAILY'"
                   >{{ t.frequency }}</span
                 >
               </div>
@@ -642,7 +536,7 @@
           <div class="detail-value">{{ selectedAlert.severity }}</div>
         </div>
         <div class="detail-item">
-          <div class="detail-label">TSRs Affected</div>
+          <div class="detail-label">TSRs Included</div>
           <div class="detail-value">
             {{ selectedAlert.tsrs_struggling }}/{{ selectedAlert.total_tsrs }}
 

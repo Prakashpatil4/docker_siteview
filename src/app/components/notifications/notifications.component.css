@@ -1,4 +1,4 @@
- :host {
+:host {
   /* Variables defined here so they scope to this component */
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
@@ -15,6 +15,14 @@
   --yellow-50: #fef7e0;
   --red-500: #d93025;
   --red-50: #fce8e6;
+
+  --gmail-unread-bg: #f2f6fc; /* Soft light blue tint */
+  --gmail-read-bg: #ffffff; /* Pure white */
+  --gmail-border: #e0e0e0; /* Light grey border */
+  --gmail-text-unread: #1f1f1f; /* Near black */
+  --gmail-text-read: #5f6368; /* Muted grey */
+  --gmail-accent: #0b57d0; /* Gmail Blue */
+
   --shadow-1: 0 1px 2px 0 rgba(60, 64, 67, 0.3),
     0 1px 3px 1px rgba(60, 64, 67, 0.15);
   --shadow-2: 0 1px 3px 0 rgba(60, 64, 67, 0.3),
@@ -153,7 +161,7 @@
   right: 0;
   width: 380px;
   right: -50px;
-  top: 12px;
+  top: 11px;
   background: var(--bg-primary);
   border-radius: 8px;
   box-shadow: var(--shadow-3);
@@ -166,16 +174,16 @@
 /* .notification-panel::before {
   content: "";
   position: absolute;
-  top: -9px;  
-  right: 14px;  
- 
+  top: -9px;
+  right: 14px;
+
   border-width: 0 10px 10px 10px;
   border-style: solid;
 
- 
+
   border-color: transparent transparent #3b82f6 transparent;
 
-  z-index: 10;  
+  z-index: 10;
 } */
 .notification-panel.active {
   display: block;
@@ -897,4 +905,134 @@ thead {
   padding: 2px 6px;
   border-radius: 4px;
   text-transform: uppercase;
+}
+
+/* Notification Panel Styles */
+.notification-list {
+  padding: 0 8px;
+  max-height: 420px; /* Set a maximum height */
+  overflow-y: auto;
+}
+
+/* .notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    border-radius: 8px;
+    margin-bottom: 4px;
+}
+
+.notification-item:hover {
+    background-color: #f9fafb;
+}
+
+.notification-item.unread {
+    background-color: #f2f4f8;
+}
+
+.notification-item.unread:hover {
+   background-color: #e0f2fe;
+ } */
+
+.notification-item {
+  display: flex;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gmail-border);
+  cursor: pointer;
+  transition: box-shadow 0.15s, background-color 0.1s;
+  align-items: center;
+  font-family: "Roboto", "Segoe UI", sans-serif;
+}
+
+/* --- UNREAD STATE --- */
+.notification-item.unread {
+  background-color: var(--gmail-unread-bg);
+  color: var(--gmail-text-unread);
+  font-weight: 500; /* Bold text like Gmail */
+}
+
+.notification-item.unread:hover {
+  box-shadow: inset 1px 0 0 var(--gmail-accent),
+    inset -1px 0 0 var(--gmail-border), 0 1px 2px 0 rgba(60, 64, 67, 0.3),
+    0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+
+/* --- READ STATE --- */
+.notification-item .is-read {
+  background-color: var(--gmail-read-bg);
+  color: var(--gmail-text-read);
+  font-weight: 400; /* Regular weight */
+}
+
+.notification-item .is-read:hover {
+  background-color: #f7f8f9; /* Subtle grey hover for read items */
+}
+
+/* Indicator for Unread (Blue bar on the left) */
+.notification-item .unread::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--gmail-accent);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  margin-right: 12px;
+  color: #6b7280; /* gray-500 */
+}
+
+.notification-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.notification-content {
+  flex-grow: 1;
+}
+
+.notification-line {
+  font-size: 0.79rem; /* text-sm */
+  color: #374151; /* gray-700 */
+  margin-bottom: 4px;
+}
+
+.notification-line .label {
+  font-weight: 600; /* font-semibold */
+  color: #1f2937; /* gray-800 */
+}
+.notification-time {
+  font-size: 13px;
+  color: #70757a; /* Muted grey for metadata */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* Optional: Add a small clock icon effect using CSS */
+.notification-time::before {
+  content: "🕒";
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* Position it in the top-right of your card */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.time-stamp {
+  font-weight: 400;
+  padding: 2px 8px;
+  border-radius: 12px;
 }

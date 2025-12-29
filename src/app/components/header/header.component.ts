@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit } from "@angular/core";
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, HostListener, OnInit } from "@angular/core";
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -33,7 +33,7 @@ export class HeaderComponent implements OnInit {
      this.userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
   }
   // async loadNotifications(payload: any) {
-  async getUnreadNotificationCount() { 
+  async getUnreadNotificationCount() {
       // this.userData.email  use this code for dynamic user_id
       let siteVal = '';
       if(this.selectedSite =='Select') {
@@ -41,7 +41,7 @@ export class HeaderComponent implements OnInit {
       } else {
          siteVal = this.selectedSite;
       }
-    
+
        const payload = {
         "user_id": "oladri@google.com",
         "site": siteVal
@@ -50,10 +50,10 @@ export class HeaderComponent implements OnInit {
         const response: any = await lastValueFrom(this.svc.getNotificationUnreadCount(payload));
         console.log(response);
         this.unreadCount =   response.unread_count
-         
+
       } catch (err) {
         console.error('Error fetching notifications:', err);
-        
+
       } finally {
        // this.loading = false;
       }
@@ -61,8 +61,8 @@ export class HeaderComponent implements OnInit {
   onSiteChange(): void {
     console.log(`HEADER: Sending site to service: '${this.selectedSite}'`);
     this.filterService.setSite(this.selectedSite);
-     this.getUnreadNotificationCount()
- 
+    this.getUnreadNotificationCount()
+
   }
 
   onBusinessLineChange() {
@@ -71,7 +71,13 @@ export class HeaderComponent implements OnInit {
 
     this.filterService.setBusinessLine(this.selectedBusinessline);
   }
+ handleChildAlert() {
+    //this.parentMessage = message;
+    if(this.unreadCount !== 0 ) {
+      this.unreadCount = this.unreadCount - 1;
+    }
 
+  }
   toggleMenu() {
     const dropdown = document.getElementById("menuDropdown");
     if (dropdown) {

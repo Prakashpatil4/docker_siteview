@@ -37,14 +37,14 @@
       <button (click)="toggleNotification($event)" class="bell-button">
         <span class="icon-wrapper">
           <i class="fa-solid fa-bell"></i>
-          <div *ngIf="!showNotification" class="notification-read-count-wrapper ">
-            <span class="notification-read-count" id="notificationBadge">{{unreadCount}}</span>
-          </div>
+
+            <div class="notification-read-count-wrapper notification-read-count" id="notificationBadge">{{unreadCount}}</div>
+
         </span>
       </button>
 
       <div *ngIf="showNotification" class="notification-new-dropdown-wrapper">
-        <app-notifications [unreadCount] = "unreadCount" (close)="closeNotification()"></app-notifications>
+        <app-notifications (alertOccurred)="handleChildAlert()"    [unreadCount] = "unreadCount" (close)="closeNotification()"></app-notifications>
       </div>
     </div>
   </div>
