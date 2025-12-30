@@ -274,6 +274,7 @@ export class NotificationsComponent implements OnInit {
       );
 
       this.notifications = response.map((item: any, i: number) => {
+
         let summaryData = {
           health_status: 'N/A',
           people_focus: 'N/A',
@@ -302,6 +303,7 @@ export class NotificationsComponent implements OnInit {
         };
 
         return formattedItem;
+
       });
     } catch (err) {
       console.error('Error fetching notifications:', err);
@@ -334,14 +336,14 @@ export class NotificationsComponent implements OnInit {
         this.svc.getNotificationDetails(payload)
       );
 
-      // this.getNotificationData()
-      this.digestData = response.payload_json;
+     this.digestData = response.payload_json;
+
       if (!note.is_read) {
         const readResponse: any = await lastValueFrom(
           this.svc.markNotificationRead(payload)
         );
         if (readResponse.status == 'success') {
-          //  note.is_read = true;
+          note.is_read = true;
           this.alertOccurred.emit();
         }
       }
@@ -358,7 +360,16 @@ export class NotificationsComponent implements OnInit {
     this.selectedData = item.fullData;
     this.isModalOpen = true;
   }
+  getLeadershipClass(status: string): string {
+    if (!status) return 'leadership-none';
 
+    const s = status.toLowerCase();
+    if (s.includes('lead')) return 'leadership-leading';
+    if (s.includes('lag') || s.includes('crit')) return 'leadership-lagging';
+    return 'leadership-stable'; // Default for "Maintaining" or "Developing"
+  }
+
+ 
   closeModal(event?: Event) {
     if (event) {
       event.stopPropagation();

@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, HostListener, OnInit } from "@angular/core";
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, HostListener, OnInit, signal } from "@angular/core";
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -26,14 +26,16 @@ export class HeaderComponent implements OnInit {
   selectedBusinessline: string = 'Select';
   userData: any;
   unreadCount: any;
-
+  isLoading = signal<boolean>(false);
   constructor(private filterService: FilterService,private svc: NotificationService,  private eRef: ElementRef) {}
   ngOnInit(): void {
+
      this.getUnreadNotificationCount();
      this.userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
   }
   // async loadNotifications(payload: any) {
   async getUnreadNotificationCount() {
+     this.isLoading.set(true);
       // this.userData.email  use this code for dynamic user_id
       let siteVal = '';
       if(this.selectedSite =='Select') {
@@ -55,6 +57,7 @@ export class HeaderComponent implements OnInit {
         console.error('Error fetching notifications:', err);
 
       } finally {
+        this.isLoading.set(false);
        // this.loading = false;
       }
     }

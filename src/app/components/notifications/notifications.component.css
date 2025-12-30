@@ -501,6 +501,18 @@
   transition: all 0.2s;
   border-left: 3px solid transparent;
 }
+.text-muted {
+  color: #5f6368; /* Gmail/Google standard grey */
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+/* For even lighter metadata (like IDs or very old dates) */
+.text-subtle {
+  color: #70757a;
+  font-size: 0.75rem;
+}
 .focus-item:hover {
   background: var(--bg-hover);
 }
@@ -1035,4 +1047,71 @@ thead {
   font-weight: 400;
   padding: 2px 8px;
   border-radius: 12px;
+}
+.ranking-pill {
+  background-color: #f1f3f4;
+  color: #3c4043;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #dadce0;
+}
+
+.leadership-pill {
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0 10px;
+}
+
+.leadership-leading {
+  background-color: #e6f4ea;
+  color: #137333;
+}
+
+.leadership-lagging {
+  background-color: #fce8e6;
+  color: #c5221f;
+}
+
+.leadership-none {
+  background-color: #f8f9fa;
+  color: #70757a;
+  border: 1px dashed #dadce0;
+}
+.metric-row {
+  display: grid;
+  grid-template-columns: 1fr 45px 80px; /* Name, Value, Bar */
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.metric-name {
+  font-size: 0.8rem;
+  color: #3c4043;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.contribution-bar {
+  height: 6px;
+  background-color: #f1f3f4;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.contribution-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
