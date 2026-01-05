@@ -39,9 +39,7 @@
       <button (click)="toggleNotification($event)" class="bell-button">
         <span class="icon-wrapper">
           <i class="fa-solid fa-bell"></i>
-
-            <div class="notification-read-count-wrapper notification-read-count" id="notificationBadge">{{unreadCount}}</div>
-
+            <div *ngIf="unreadCount > 0" class="notification-read-count-wrapper notification-read-count" id="notificationBadge">{{unreadCount}}</div>
         </span>
       </button>
 

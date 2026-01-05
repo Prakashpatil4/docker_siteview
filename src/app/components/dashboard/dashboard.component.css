@@ -305,13 +305,7 @@
   box-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.agent-fab:hover {
-  background-color: #f8f9fa;
-  box-shadow: 0 2px 3px rgba(60,64,67,0.3), 0 6px 10px 4px rgba(60,64,67,0.15);
-  transform: scale(1.02);
-}
-
+ 
 .agent-fab:active {
   background-color: #e8f0fe;
   transform: scale(0.95);

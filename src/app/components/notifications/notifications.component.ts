@@ -238,10 +238,6 @@ export class NotificationsComponent implements OnInit {
     this.filterService.currentSite.subscribe(async (site) => {
       this.selectedSite = site;
 
-      if (this.selectedSite == 'Select') {
-        this.selectedSite = '';
-      }
-
       const payload = {
         action: 'fetch_summary',
         role: 'SITEOPS',
@@ -255,7 +251,7 @@ export class NotificationsComponent implements OnInit {
     //  this.userData.email use this user_id as a dynamic for below payload
     let siteVal = '';
 
-    if (this.selectedSite == '') {
+    if (this.selectedSite == 'Select') {
       siteVal = 'ALL';
     } else {
       siteVal = this.selectedSite;
@@ -264,7 +260,7 @@ export class NotificationsComponent implements OnInit {
     const payload = {
       user_id: 'oladri@google.com',
       site: siteVal,
-      limit: this.localCount,
+      limit: 7,
     };
 
     this.loading = true;
@@ -369,7 +365,7 @@ export class NotificationsComponent implements OnInit {
     return 'leadership-stable'; // Default for "Maintaining" or "Developing"
   }
 
- 
+
   closeModal(event?: Event) {
     if (event) {
       event.stopPropagation();

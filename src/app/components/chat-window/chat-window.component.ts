@@ -3,12 +3,12 @@ import {
   FormGroup,
   ReactiveFormsModule,
   Validators,
-} from "@angular/forms";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatDatepickerModule } from "@angular/material/datepicker";
-import { MatNativeDateModule } from "@angular/material/core";
-import { FontAwesomeModule } from "@fortawesome/angular-fontawesome"; // Import the module
+} from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import the module
 import {
   Component,
   AfterViewChecked,
@@ -19,16 +19,17 @@ import {
   Input,
   Output,
   EventEmitter,
-} from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
-import { AsyncPipe, NgFor, NgClass } from "@angular/common";
-import { Subscription } from "rxjs";
-import { ChatMessage, ChatService } from "../../services/chat.service";
-import { FormatMessagePipe } from "./format-html.pipe";
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { AsyncPipe, NgFor, NgClass } from '@angular/common';
+import { Subscription } from 'rxjs';
+import { ChatMessage, ChatService } from '../../services/chat.service';
+import { FormatMessagePipe } from './format-html.pipe';
+import { FilterService } from '../../services/filter.service';
 //import { ChatService, ChatMessage } from '../../chat';
 @Component({
-  selector: "app-chat-window",
+  selector: 'app-chat-window',
   standalone: true,
   imports: [
     CommonModule,
@@ -41,13 +42,13 @@ import { FormatMessagePipe } from "./format-html.pipe";
     FontAwesomeModule,
     FormatMessagePipe,
   ],
-  templateUrl: "./chat-window.component.html",
-  styleUrl: "./chat-window.component.css",
+  templateUrl: './chat-window.component.html',
+  styleUrl: './chat-window.component.css',
 })
 export class ChatWindowComponent
   implements AfterViewChecked, OnInit, OnDestroy
 {
-  @ViewChild("messagesContainer", { static: false })
+  @ViewChild('messagesContainer', { static: false })
   private messagesContainer?: ElementRef;
   @Input() userId?: number;
   @Output() closed = new EventEmitter<void>(); // <-- new output
@@ -56,7 +57,7 @@ export class ChatWindowComponent
   isSubmitting = false;
   showSuccessMessage = false;
   isVisible: boolean = false;
-  text = "";
+  text = '';
   isOpen = true;
   isShowChatWindow = true;
   showHint = true;
@@ -66,8 +67,30 @@ export class ChatWindowComponent
   private idleTimer?: ReturnType<typeof setTimeout>;
   private lastActivity = 0;
   private subscriptions = new Subscription();
-  constructor(public chat: ChatService, private fb: FormBuilder) {}
+  selectedSite: string | undefined;
+  constructor(
+    public chat: ChatService,
+    private filterService: FilterService,
+    private fb: FormBuilder
+  ) {}
   ngOnInit(): void {
+    this.filterService.showAgentButton$.subscribe((visible) => {
+      // this.clear();
+      if (!visible) {
+        this.clear();
+      }
+    });
+
+    this.filterService.currentSite.subscribe(async (site) => {
+      this.selectedSite = site;
+
+      if (this.selectedSite == 'Select') {
+        this.selectedSite = 'ALL';
+      } else {
+        this.selectedSite = this.selectedSite;
+      }
+    });
+
     const messagesSub = this.chat.messages$.subscribe((msgs) => {
       if (msgs && msgs.length > 0) {
         this.showHint = false; // hide hint on first message
@@ -78,7 +101,7 @@ export class ChatWindowComponent
     this.subscriptions.add(messagesSub);
     const sessionSub = this.chat.getSessions().subscribe((response: any) => {
       if (response?.session_id) {
-        this.chat.connect(response.session_id);
+        this.chat.connect(response.session_id, this.selectedSite);
       }
     });
     this.subscriptions.add(sessionSub);
@@ -91,15 +114,15 @@ export class ChatWindowComponent
   initForm(): void {
     this.feedbackForm = this.fb.group({
       // The 'feedbackText' control is required (must not be empty)
-      feedbackText: ["", [Validators.required, Validators.minLength(5)]],
+      feedbackText: ['', [Validators.required, Validators.minLength(5)]],
       rating: [0, [Validators.required, Validators.min(1)]],
     });
   }
   setRating(rating: number): void {
     this.selectedRating = rating; // Update the form control value
-    this.feedbackForm.controls["rating"].setValue(rating); // Manually mark the rating control as touched if needed for validation visibility
-    this.feedbackForm.controls["rating"].markAsDirty();
-    this.feedbackForm.controls["rating"].markAsTouched();
+    this.feedbackForm.controls['rating'].setValue(rating); // Manually mark the rating control as touched if needed for validation visibility
+    this.feedbackForm.controls['rating'].markAsDirty();
+    this.feedbackForm.controls['rating'].markAsTouched();
   }
   ngOnDestroy(): void {
     this.clearIdleTimer();
@@ -108,11 +131,11 @@ export class ChatWindowComponent
   send() {
     if (!this.text.trim()) return;
     this.chat.sendMessage(this.text);
-    this.text = "";
+    this.text = '';
     this.onUserActivity(); // reset timer on send
   }
   showChatWindow() {
-    this.text = "";
+    this.text = '';
     this.isShowChatWindow = true;
     this.isOpen = true;
     this.showHint = true;
@@ -175,9 +198,9 @@ export class ChatWindowComponent
     [key: string]: boolean;
   } {
     const classes: { [key: string]: boolean } = {};
-    if (message.from === "bot") {
-      if (message.text.includes("```")) {
-        classes["agent-code-block"] = true;
+    if (message.from === 'bot') {
+      if (message.text.includes('```')) {
+        classes['agent-code-block'] = true;
       }
     }
     return classes;

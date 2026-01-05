@@ -19,6 +19,8 @@ export class ChatService {
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
   readonly loading$ = this.loadingSubject.asObservable();
+  private chatAPIURL =
+    'https://e360-siteops-bot-dot-digital-sme.uc.r.appspot.com';
 
   private sessionId: string | null = null;
   private socket$?: WebSocketSubject<any>;
@@ -31,10 +33,12 @@ export class ChatService {
 
   getSessions(): Observable<any> {
     const userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
-    const apiUrl =
-      'https://e360-bot-mvp-dot-digital-sme.uc.r.appspot.com/sessions';
-    const body = { user_id: 'test.siteops@company.com' };
+
+    const apiUrl = `${this.chatAPIURL}/sessions`;
+
+    const body = { user_id: 'oladri@google.com' };
     //const body = { userid: userData.email, role: userData.role };
+
     return this.http.post<any>(apiUrl, body);
   }
 
@@ -70,19 +74,20 @@ export class ChatService {
     this.sessionId = null;
   }
 
-  connect(sessionId: string): void {
+  connect(sessionId: string, selectedSite: any): void {
+    console.log('selected site-->' + selectedSite);
     if (this.socket$ && !this.socket$.closed) {
       return; // Already connected
     }
     this.sessionId = sessionId;
-    console.log('Hello-->' + this.sessionId);
+
     if (!this.sessionId) {
       console.error('No session ID to connect to WebSocket');
       return;
     }
 
     // --- FIX 1: Corrected syntax with backticks (`) --- e360-bot-mvp-dot-digital-sme.uc.r.appspot.com
-    const wsUrl = `wss://e360-bot-mvp-dot-digital-sme.uc.r.appspot.com/ws/${this.sessionId}`;
+    const wsUrl = `wss://e360-siteops-bot-dot-digital-sme.uc.r.appspot.com/ws/${this.sessionId}?owner_team=${selectedSite}`;
 
     this.socket$ = new WebSocketSubject(wsUrl);
     console.log('socket-->' + JSON.stringify(this.socket$));
