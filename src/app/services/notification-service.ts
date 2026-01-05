@@ -28,7 +28,7 @@ export class NotificationService {
     'https://elevate360-notification-service-803836599959.us-central1.run.app';
 
   private siteOpsnotificationApiUrl =
-    'https://siteops-notif-service-dot-digital-sme.uc.r.appspot.com';
+    'https://siteops-notif-service-v2-dot-digital-sme.uc.r.appspot.com';
 
   constructor(private http: HttpClient) {}
   fetchNotificationSummary(payload: any): Observable<any> {
