@@ -1,4 +1,4 @@
-import {
+ import {
   Component,
   effect,
   EventEmitter,
@@ -166,21 +166,40 @@ export class NotificationsComponent implements OnInit {
     this.showDetailModal = false;
     // this.selectedAlert = null;
   }
+  // Add this method to handle the 'unknown' conversion
+getSeverityData(value: unknown): { count: number, label: string } {
+  return value as { count: number, label: string };
+}
   getTrendItems(type: 'declining' | 'improving') {
-    const daily = this.digestData?.emerging_trends?.daily?.[type] || [];
-    const monthly = this.digestData?.emerging_trends?.monthly?.[type] || [];
 
+   // const daily = this.digestData?.emerging_trends?.daily?.[type] || [];
+  //  const monthly = this.digestData?.emerging_trends?.monthly?.[type] || [];
+
+    const daily = this.digestData?.trends?.metrics?.['DAILY'] || [];
+
+    // const daily = this.digestData?.trends?.frequency?.['DAILY'] || [];
+    const monthly = this.digestData?.trends?.frequency?.['MONTHLY'] || [];
+    console.log('Hiii-->'+daily, monthly);
     return [...daily, ...monthly];
   }
-  getStatusColor(status: string): string {
-    const colors: any = {
-      CRITICAL: 'var(--red-500)',
-      NEEDS_ATTENTION: 'var(--yellow-500)',
-      GOOD: 'var(--blue-500)',
-      EXCELLENT: 'var(--green-500)',
-    };
-    return colors[status] || 'var(--text-secondary)';
-  }
+ getStatusColor(status: string): string {
+  if (!status) return 'var(--text-secondary)';
+
+  // 1. Normalize: Convert "Needs Attention" -> "NEEDS_ATTENTION"
+  // and "Critical" -> "CRITICAL"
+  const normalizedStatus = status
+    .toUpperCase()         // Handles "critical" or "Critical"
+    .replace(/\s+/g, '_'); // Handles spaces by turning them into underscores
+
+  const colors: { [key: string]: string } = {
+    CRITICAL: 'var(--red-500)',
+    NEEDS_ATTENTION: 'var(--yellow-500)',
+    GOOD: 'var(--blue-500)',
+    EXCELLENT: 'var(--green-500)',
+  };
+
+  return colors[normalizedStatus] || 'var(--text-secondary)';
+}
 
   getMetricColor(value: number): string {
     if (value >= 70) return 'var(--green-500)';
@@ -189,6 +208,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   formatMetricName(name: string): string {
+    console.log(name)
     // return name.replace(/_/g, ' ').replace(/Rate|Score/g, '');
     return String(name)
       .replace(/_/g, ' ')
@@ -218,7 +238,7 @@ export class NotificationsComponent implements OnInit {
   }
   toggleSpecCard(index: number) {
     // We add a transient property to the spec object for UI toggling
-    const spec = this.digestData.specialization_health[index];
+    const spec = this.digestData.specializations.specializations[index];
     spec.expanded = !spec.expanded;
   }
   openFullReport(note: any) {
@@ -269,7 +289,7 @@ export class NotificationsComponent implements OnInit {
         this.svc.getNotificationData(payload)
       );
 
-      this.notifications = response.map((item: any, i: number) => {
+      this.notifications = response.map(async (item: any, i: number) => {
 
         let summaryData = {
           health_status: 'N/A',
@@ -279,23 +299,42 @@ export class NotificationsComponent implements OnInit {
 
         if (item.summary) {
           try {
-            const parsedSummary = JSON.parse(item.summary);
-            summaryData.health_status = parsedSummary.health_status || 'N/A';
-            summaryData.people_focus = parsedSummary.people_focus || 'N/A';
-            summaryData.key_areas = parsedSummary.key_areas || 'N/A';
-          } catch (e) {
-            console.error(
-              `Summary parsing failed for notification ${item.notification_id}`,
-              e
-            );
-          }
+  const response: any = await lastValueFrom(
+    this.svc.getNotificationData(payload)
+  );
+
+  this.notifications = response.map((item: any) => {
+    let extractedHighlights = 'N/A';
+    let extractedBrightSpots = 'N/A';
+
+    if (item.summary) {
+      // Regex to find text between **Highlights:** and the next ** header
+      const highlightsMatch = item.summary.match(/\*\*Highlights:\*\*\s*([^*]+)/);
+      // Regex to find text between **Bright Spots:** and the next ** header
+      const brightSpotsMatch = item.summary.match(/\*\*Bright Spots:\*\*\s*([^*]+)/);
+
+      if (highlightsMatch) extractedHighlights = highlightsMatch[1].trim();
+      if (brightSpotsMatch) extractedBrightSpots = brightSpotsMatch[1].trim();
+    }
+
+    return {
+      notification_id: item.notification_id,
+      is_read: item.is_read,
+      created_at: item.report_date,
+      highlights: extractedHighlights,
+      brightSpots: extractedBrightSpots
+    };
+  });
+} catch (e) {
+  console.error("API Error", e);
+}
         }
 
         const formattedItem: any = {
           notification_id: item.notification_id,
           is_read: item.is_read,
-          created_at: item.created_at, // Add created_at for the timeago pipe
-          summary: `Health Status: ${summaryData.health_status}`,
+          created_at: item.report_date, // Add created_at for the timeago pipe
+          summary: summaryData.health_status,
         };
 
         return formattedItem;
@@ -351,21 +390,49 @@ export class NotificationsComponent implements OnInit {
     }
   }
 
+
+
+
   // --- Modal Logic ---
   openDetails(item: NotificationItem) {
     this.selectedData = item.fullData;
     this.isModalOpen = true;
   }
-  getLeadershipClass(status: string): string {
-    if (!status) return 'leadership-none';
+  // getLeadershipClass(status: string): string {
+  //   if (!status) return 'leadership-none';
 
-    const s = status.toLowerCase();
-    if (s.includes('lead')) return 'leadership-leading';
-    if (s.includes('lag') || s.includes('crit')) return 'leadership-lagging';
-    return 'leadership-stable'; // Default for "Maintaining" or "Developing"
+  //   const s = status.toLowerCase();
+  //   if (s.includes('lead')) return 'leadership-leading';
+  //   if (s.includes('lag') || s.includes('crit')) return 'leadership-lagging';
+  //   return 'leadership-stable'; // Default for "Maintaining" or "Developing"
+  // }
+
+  getLeadershipClass(status: string): string {
+  if (!status) return 'leadership-none';
+
+  const s = status.toLowerCase();
+
+  // 1. Positive states (Leading, Holding)
+  if (s.includes('lead') || s.includes('hold')) {
+    return 'leadership-leading';
   }
 
+  // 2. Negative states (Lagging, Critical)
+  if (s.includes('lag') || s.includes('crit')) {
+    return 'leadership-lagging';
+  }
 
+  // 3. Neutral/Default states
+  return 'leadership-stable';
+}
+// Assuming your object is named 'metricsDetail'
+get dailyMetricsCount(): number {
+  if (!this.digestData.focus) return 0;
+
+  return Object.values(this.digestData.focus.metric_info).filter((metric: any) =>
+    metric.frequency === 'DAILY'
+  ).length;
+}
   closeModal(event?: Event) {
     if (event) {
       event.stopPropagation();
