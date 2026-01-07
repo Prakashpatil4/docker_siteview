@@ -170,18 +170,39 @@ export class NotificationsComponent implements OnInit {
 getSeverityData(value: unknown): { count: number, label: string } {
   return value as { count: number, label: string };
 }
-  getTrendItems(type: 'declining' | 'improving') {
+  // getTrendItems(type: 'declining' | 'improving') {
 
-   // const daily = this.digestData?.emerging_trends?.daily?.[type] || [];
-  //  const monthly = this.digestData?.emerging_trends?.monthly?.[type] || [];
+  //  // const daily = this.digestData?.emerging_trends?.daily?.[type] || [];
+  // //  const monthly = this.digestData?.emerging_trends?.monthly?.[type] || [];
 
-    const daily = this.digestData?.trends?.metrics?.['DAILY'] || [];
+  //   const daily = this.digestData?.trends?.metrics?.['DAILY'] || [];
 
-    // const daily = this.digestData?.trends?.frequency?.['DAILY'] || [];
-    const monthly = this.digestData?.trends?.frequency?.['MONTHLY'] || [];
-    console.log('Hiii-->'+daily, monthly);
-    return [...daily, ...monthly];
-  }
+  //   const monthly = this.digestData?.trends?.frequency?.['MONTHLY'] || [];
+  //   console.log('Hiii-->'+daily, monthly);
+  //   return [...daily, ...monthly];
+  // }
+
+getTrendItems(filterDirection: string): any[] {
+  // 1. Safety check to ensure trends object exists
+  const trends = this.digestData?.trends;
+  if (!trends) return [];
+
+  // 2. Extract metrics from both Daily and Monthly arrays
+  const dailyMetrics = trends.daily_trends?.metrics || [];
+  const monthlyMetrics = trends.monthly_trends?.metrics || [];
+
+  // 3. Combine both lists into one
+  const allMetrics = [...dailyMetrics, ...monthlyMetrics];
+
+
+
+  // 4. Filter based on the direction (case-insensitive)
+  return allMetrics.filter((item: any) => {
+    const direction = item?.site_trend?.direction?.toLowerCase();
+    return direction === filterDirection.toLowerCase();
+  });
+}
+
  getStatusColor(status: string): string {
   if (!status) return 'var(--text-secondary)';
 
@@ -425,14 +446,79 @@ getSeverityData(value: unknown): { count: number, label: string } {
   // 3. Neutral/Default states
   return 'leadership-stable';
 }
-// Assuming your object is named 'metricsDetail'
-get dailyMetricsCount(): number {
-  if (!this.digestData.focus) return 0;
+// inside your component class
+openSpec: string | null = null;
+openProd: string | null = null;
 
-  return Object.values(this.digestData.focus.metric_info).filter((metric: any) =>
-    metric.frequency === 'DAILY'
-  ).length;
+toggleSpec(specName: string) {
+  this.openSpec = this.openSpec === specName ? null : specName;
 }
+
+toggleProd(prodName: string) {
+  this.openProd = this.openProd === prodName ? null : prodName;
+}
+
+getTrendIcon(trend: string): string {
+  if (trend === 'IMPROVING') return 'trending_up';
+  if (trend === 'DECLINING') return 'trending_down';
+  return 'remove';
+}
+get dailyMetricsCount(): number {
+  if (!this.digestData?.focus) return 0;
+  return Object.values(this.digestData.focus).reduce((total: number, spec: any) => {
+    const dailyCount = Object.values(spec?.metric_info || {})
+      .filter((m: any) => m.frequency === 'DAILY').length;
+    return total + dailyCount;
+  }, 0);
+}
+
+// dashboard.component.ts
+
+// Getter for Daily Alerts
+get dailyAlerts() {
+  return this.digestData?.focus?.filter((item: any) =>
+    item.metric_info?.frequency === 'DAILY'
+  ) || [];
+}
+
+// Getter for Monthly Alerts
+get monthlyAlerts() {
+  return this.digestData?.focus?.filter((item: any) =>
+    item.metric_info?.frequency === 'MONTHLY'
+  ) || [];
+}
+
+hasValidBreakdown(breakdown: any[]): boolean {
+  if (!breakdown) return false;
+  // Returns true if at least one item has a score > 0
+  return breakdown.some(item => item.spec_ttm_score_pct > 0);
+}
+
+// Assuming your object is named 'metricsDetail'
+//  get dailyMetricsCount(): number {
+//   // 1. Safety check: ensure focus exists
+//   if (!this.digestData?.focus) return 0;
+
+//   // 2. Extract all metrics from every specialization in focus
+//   // Since 'focus' is an object where keys are spec names (AI and ML, Serverless, etc.)
+//   const allFocusItems = Object.values(this.digestData.focus);
+
+//   let count = 0;
+
+//   allFocusItems.forEach((spec: any) => {
+//     // 3. check if this spec has metric_info
+//     if (spec?.metric_info) {
+//       // 4. Count metrics inside this spec that are 'DAILY'
+//       const dailyInSpec = Object.values(spec.metric_info).filter((m: any) =>
+//         m.frequency === 'DAILY'
+//       ).length;
+
+//       count += dailyInSpec;
+//     }
+//   });
+
+//   return count;
+// }
   closeModal(event?: Event) {
     if (event) {
       event.stopPropagation();

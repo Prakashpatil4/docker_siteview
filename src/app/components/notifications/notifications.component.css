@@ -496,7 +496,7 @@
 .focus-item {
   background: var(--bg-secondary);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding:0.3rem 1rem;
   cursor: pointer;
   transition: all 0.2s;
   border-left: 3px solid transparent;
@@ -517,16 +517,16 @@
   background: var(--bg-hover);
 }
 .focus-item.priority-critical {
-  border-left-color: var(--red-500);
+  border-left-color: var(--critical);
 }
 .focus-item.priority-high {
   border-left-color: var(--red-500);
 }
 .focus-item.priority-medium {
-  border-left-color: var(--yellow-500);
+  border-left-color: var(--medium);
 }
 .focus-item.priority-low {
-  border-left-color: var(--blue-500);
+  border-left-color: var(--low);
 }
 
 .focus-item-header {
@@ -590,7 +590,6 @@
 .spec-card {
   background: var(--bg-secondary);
   border-radius: var(--radius);
-  margin-bottom: 0.75rem;
   overflow: hidden;
 }
 .spec-header {
@@ -660,6 +659,7 @@
   background: var(--bg-primary);
   border-radius: var(--radius);
   padding: 1rem;
+  border:1px solid #D9D9D9;
 }
 .health-box-title {
   font-size: 0.8125rem;
@@ -1086,7 +1086,6 @@ thead {
   grid-template-columns: 1fr 45px 80px; /* Name, Value, Bar */
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
 }
 
 .metric-name {
@@ -1138,7 +1137,9 @@ thead {
   font-size: 0.75rem; /* Smaller font for dates */
   white-space: nowrap;
 }
-
+.align-monthly-title {
+  padding-top: 20px;
+}
 .trend-arrow {
   color: #dadce0;
   font-size: 1.2rem;
@@ -1395,6 +1396,307 @@ thead {
       &.improving { color: var(--success); }
       &.declining { color: var(--critical); }
       &.stable { color: var(--low); }
+    }
+  }
+}
+
+
+.comparison-grid {
+  display: flex;
+ align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 5px;
+    background: aliceblue;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #D9D9D9;
+}
+
+.comparison-node {
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+}
+
+.node-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #80868b;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+
+.node-label.active {
+  color: #1a73e8;
+}
+
+.node-value {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #202124;
+}
+
+.node-value.muted {
+  color: #5f6368;
+}
+
+.node-date {
+  font-size: 11px;
+  color: #70757a;
+  white-space: nowrap;
+}
+
+.comparison-divider {
+  color: #dadce0;
+  font-weight: 300;
+}
+
+/* Modern Badge Styling */
+.trend-badge-modern {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.bg-success {
+  background-color: #e6f4ea;
+  color: #137333;
+}
+
+.bg-danger {
+  background-color: #fce8e6;
+  color: #c5221f;
+}
+
+.trend-icon {
+  font-size: 10px;
+  margin-right: 4px;
+}
+.no-cursor {
+  cursor: auto !important;
+}
+.align-health {
+  padding: 0 20px;
+}
+/* below css for rank */
+ .spec-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', -apple-system, sans-serif;
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    height: 24px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+
+    .pill-icon {
+      margin-right: 6px;
+      font-size: 0.85rem;
+    }
+  }
+
+  /* Ranking Specifics */
+  .ranking-pill {
+    background-color: #f1f3f4;
+    color: #3c4043;
+    border-color: #dadce0;
+
+    &.top-performer {
+      background-color: #fef7e0;
+      color: #b06000;
+      border-color: #fbde8d;
+    }
+
+    .total-count {
+      color: #70757a;
+      font-weight: 400;
+    }
+  }
+
+  /* Leadership Pill Specifics */
+  .leadership-pill {
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 0.7rem;
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 8px;
+      background-color: currentColor;
+    }
+
+    /* Professional Color Palette */
+    &.leader, &.leadership-high {
+      background-color: #e6f4ea;
+      color: #1e8e3e;
+    }
+
+    &.developing, &.leadership-medium {
+      background-color: #e8f0fe;
+      color: #1a73e8;
+    }
+
+    &.at-risk, &.leadership-low {
+      background-color: #fce8e6;
+      color: #d93025;
+    }
+
+    &.leadership-none {
+      background-color: #f8f9fa;
+      color: #9aa0a6;
+      border-style: dashed;
+      border-color: #dadce0;
+
+      .status-dot {
+        display: none;
+      }
+    }
+  }
+}
+/* below code for products */
+:host {
+  --prod-critical: #d93025;
+  --prod-high: #f29900;
+  --prod-medium: #1a73e8;
+  --prod-success: #1e8e3e;
+  --prod-border-color: #dadce0;
+ 
+}
+.dashboard {
+  padding: 20px;
+  background: #fdfdfd;
+  color: #3c4043;
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+
+    .summary-card {
+      padding: 15px;
+      border-radius: 8px;
+      background: white;
+      border-bottom: 4px solid #ccc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+
+      .label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #70757a; }
+      .count { font-size: 24px; font-weight: bold; margin-top: 5px; }
+
+      &.critical { border-color: var(--prod-critical); .count { color: var(--prod-critical); } }
+      &.high { border-color: var(--prod-high); .count { color: var(--prod-high); } }
+      &.medium { border-color: var(--prod-medium); .count { color: var(--prod-medium); } }
+    }
+  }
+
+  .alert-row {
+    display: flex;
+    align-items: center;
+    background: white;
+    margin-bottom: 8px;
+    border: 1px solid var(--prod-border-color);
+    border-radius: 6px;
+    overflow: hidden;
+
+    .severity-indicator {
+      width: 6px;
+      align-self: stretch;
+      &[data-severity="CRITICAL"] { background: var(--prod-critical); }
+      &[data-severity="HIGH"] { background: var(--prod-high); }
+      &[data-severity="MEDIUM"] { background: var(--prod-medium); }
+      &[data-severity="LOW"] { background: #64748B; }
+      &[data-severity="INFO"] { background: #006FB4; }
+    }
+
+    .alert-info {
+      flex: 1;
+      padding: 12px 15px;
+      .alert-prod { font-weight: 700; font-size: 14px; margin-right: 10px; }
+      .alert-metric { background: #f1f3f4; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+      .alert-msg { font-size: 13px; color: #5f6368; margin-top: 4px; }
+    }
+
+    .alert-stats {
+      padding-right: 20px;
+      text-align: right;
+      .change { display: block; font-weight: bold; &.negative { color: var(--prod-critical); } }
+      .vol { font-size: 11px; color: #9aa0a6; }
+    }
+  }
+
+  .spec-group {
+    margin-bottom: 10px;
+    border: 1px solid var(--prod-border-color);
+    border-radius: 8px;
+    background: white;
+
+    .spec-header {
+      padding: 15px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      background: #f8f9fa;
+      &:hover { background: #f1f3f4; }
+
+      .chevron { margin-right: 15px; transition: 0.2s; font-size: 10px; }
+      .rotated { transform: rotate(90deg); }
+      .title { font-weight: bold; font-size: 16px; flex: 1; }
+      .badge { background: #dadce0; padding: 2px 10px; border-radius: 12px; font-size: 12px; }
+    }
+  }
+
+  .product-item {
+    border-top: 1px solid var(--prod-border-color);
+
+    .product-toggle {
+      padding: 12px 20px 12px 50px;
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+      &:hover { background: #fafafa; }
+      &.active { background: #e8f0fe; }
+
+      .prod-name { font-weight: 600; font-size: 14px; color: var(--prod-medium); }
+      .prod-meta { font-size: 12px; color: #70757a; margin-left: 15px; }
+    }
+  }
+
+  .metrics-panel {
+    padding: 20px 20px 20px 50px;
+    background: #fff;
+
+    .block-title { font-weight: bold; font-size: 13px; margin-bottom: 10px; color: #5f6368; }
+
+    .metric-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+
+      th { text-align: left; padding: 8px; color: #70757a; font-weight: 500; border-bottom: 1px solid var(--prod-border-color); }
+      td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; }
+
+      .m-name { font-weight: 500; color: #202124; width: 30%; }
+      .highlight { font-weight: bold; color: #202124; }
+
+      .improving { color: var(--prod-success); font-weight: 600; &:before { content: '↑ '; } }
+      .declining { color: var(--prod-critical); font-weight: 600; &:before { content: '↓ '; } }
     }
   }
 }
