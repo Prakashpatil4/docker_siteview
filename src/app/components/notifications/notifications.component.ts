@@ -1,4 +1,4 @@
- import {
+import {
   Component,
   effect,
   EventEmitter,
@@ -167,9 +167,9 @@ export class NotificationsComponent implements OnInit {
     // this.selectedAlert = null;
   }
   // Add this method to handle the 'unknown' conversion
-getSeverityData(value: unknown): { count: number, label: string } {
-  return value as { count: number, label: string };
-}
+  getSeverityData(value: unknown): { count: number; label: string } {
+    return value as { count: number; label: string };
+  }
   // getTrendItems(type: 'declining' | 'improving') {
 
   //  // const daily = this.digestData?.emerging_trends?.daily?.[type] || [];
@@ -182,45 +182,43 @@ getSeverityData(value: unknown): { count: number, label: string } {
   //   return [...daily, ...monthly];
   // }
 
-getTrendItems(filterDirection: string): any[] {
-  // 1. Safety check to ensure trends object exists
-  const trends = this.digestData?.trends;
-  if (!trends) return [];
+  getTrendItems(filterDirection: string): any[] {
+    // 1. Safety check to ensure trends object exists
+    const trends = this.digestData?.trends;
+    if (!trends) return [];
 
-  // 2. Extract metrics from both Daily and Monthly arrays
-  const dailyMetrics = trends.daily_trends?.metrics || [];
-  const monthlyMetrics = trends.monthly_trends?.metrics || [];
+    // 2. Extract metrics from both Daily and Monthly arrays
+    const dailyMetrics = trends.daily_trends?.metrics || [];
+    const monthlyMetrics = trends.monthly_trends?.metrics || [];
 
-  // 3. Combine both lists into one
-  const allMetrics = [...dailyMetrics, ...monthlyMetrics];
+    // 3. Combine both lists into one
+    const allMetrics = [...dailyMetrics, ...monthlyMetrics];
 
+    // 4. Filter based on the direction (case-insensitive)
+    return allMetrics.filter((item: any) => {
+      const direction = item?.site_trend?.direction?.toLowerCase();
+      return direction === filterDirection.toLowerCase();
+    });
+  }
 
+  getStatusColor(status: string): string {
+    if (!status) return 'var(--text-secondary)';
 
-  // 4. Filter based on the direction (case-insensitive)
-  return allMetrics.filter((item: any) => {
-    const direction = item?.site_trend?.direction?.toLowerCase();
-    return direction === filterDirection.toLowerCase();
-  });
-}
+    // 1. Normalize: Convert "Needs Attention" -> "NEEDS_ATTENTION"
+    // and "Critical" -> "CRITICAL"
+    const normalizedStatus = status
+      .toUpperCase() // Handles "critical" or "Critical"
+      .replace(/\s+/g, '_'); // Handles spaces by turning them into underscores
 
- getStatusColor(status: string): string {
-  if (!status) return 'var(--text-secondary)';
+    const colors: { [key: string]: string } = {
+      CRITICAL: 'var(--red-500)',
+      NEEDS_ATTENTION: 'var(--yellow-500)',
+      GOOD: 'var(--blue-500)',
+      EXCELLENT: 'var(--green-500)',
+    };
 
-  // 1. Normalize: Convert "Needs Attention" -> "NEEDS_ATTENTION"
-  // and "Critical" -> "CRITICAL"
-  const normalizedStatus = status
-    .toUpperCase()         // Handles "critical" or "Critical"
-    .replace(/\s+/g, '_'); // Handles spaces by turning them into underscores
-
-  const colors: { [key: string]: string } = {
-    CRITICAL: 'var(--red-500)',
-    NEEDS_ATTENTION: 'var(--yellow-500)',
-    GOOD: 'var(--blue-500)',
-    EXCELLENT: 'var(--green-500)',
-  };
-
-  return colors[normalizedStatus] || 'var(--text-secondary)';
-}
+    return colors[normalizedStatus] || 'var(--text-secondary)';
+  }
 
   getMetricColor(value: number): string {
     if (value >= 70) return 'var(--green-500)';
@@ -229,7 +227,7 @@ getTrendItems(filterDirection: string): any[] {
   }
 
   formatMetricName(name: string): string {
-    console.log(name)
+    console.log(name);
     // return name.replace(/_/g, ' ').replace(/Rate|Score/g, '');
     return String(name)
       .replace(/_/g, ' ')
@@ -248,6 +246,13 @@ getTrendItems(filterDirection: string): any[] {
 
   switchView(view: 'focus' | 'specializations' | 'products' | 'trends') {
     this.currentView = view;
+    this.expandedSections = {};
+    this.activeAlertKey = null;
+    if (this.digestData?.specializations?.specializations) {
+      this.digestData.specializations.specializations.forEach((spec: any) => {
+        spec.expanded = false;
+      });
+    }
   }
   toggleNotificationPanel(event?: Event) {
     if (event) event.stopPropagation();
@@ -289,6 +294,7 @@ getTrendItems(filterDirection: string): any[] {
   }
 
   async getNotificationData() {
+    console.log('Getting Notifications')
     //  this.userData.email use this user_id as a dynamic for below payload
     let siteVal = '';
 
@@ -311,7 +317,6 @@ getTrendItems(filterDirection: string): any[] {
       );
 
       this.notifications = response.map(async (item: any, i: number) => {
-
         let summaryData = {
           health_status: 'N/A',
           people_focus: 'N/A',
@@ -320,46 +325,49 @@ getTrendItems(filterDirection: string): any[] {
 
         if (item.summary) {
           try {
-  const response: any = await lastValueFrom(
-    this.svc.getNotificationData(payload)
-  );
+            const response: any = await lastValueFrom(
+              this.svc.getNotificationData(payload)
+            );
 
-  this.notifications = response.map((item: any) => {
-    let extractedHighlights = 'N/A';
-    let extractedBrightSpots = 'N/A';
+            this.notifications = response.map((item: any) => {
+              let extractedHighlights = 'N/A';
+              let extractedBrightSpots = 'N/A';
 
-    if (item.summary) {
-      // Regex to find text between **Highlights:** and the next ** header
-      const highlightsMatch = item.summary.match(/\*\*Highlights:\*\*\s*([^*]+)/);
-      // Regex to find text between **Bright Spots:** and the next ** header
-      const brightSpotsMatch = item.summary.match(/\*\*Bright Spots:\*\*\s*([^*]+)/);
+              if (item.summary) {
+                 const highlightsMatch = item.summary.match(
+                  /\*\*Highlights:\*\*\s*([^*]+)/
+                );
+                 const brightSpotsMatch = item.summary.match(
+                  /\*\*Bright Spots:\*\*\s*([^*]+)/
+                );
 
-      if (highlightsMatch) extractedHighlights = highlightsMatch[1].trim();
-      if (brightSpotsMatch) extractedBrightSpots = brightSpotsMatch[1].trim();
-    }
+                if (highlightsMatch)
+                  extractedHighlights = highlightsMatch[1].trim();
+                if (brightSpotsMatch)
+                  extractedBrightSpots = brightSpotsMatch[1].trim();
+              }
 
-    return {
-      notification_id: item.notification_id,
-      is_read: item.is_read,
-      created_at: item.report_date,
-      highlights: extractedHighlights,
-      brightSpots: extractedBrightSpots
-    };
-  });
-} catch (e) {
-  console.error("API Error", e);
-}
+              return {
+                notification_id: item.notification_id,
+                is_read: item.is_read,
+                created_at: item.report_date,
+                highlights: extractedHighlights,
+                brightSpots: extractedBrightSpots,
+              };
+            });
+          } catch (e) {
+            console.error('API Error', e);
+          }
         }
 
         const formattedItem: any = {
           notification_id: item.notification_id,
           is_read: item.is_read,
-          created_at: item.report_date, // Add created_at for the timeago pipe
+          created_at: item.report_date,
           summary: summaryData.health_status,
         };
 
         return formattedItem;
-
       });
     } catch (err) {
       console.error('Error fetching notifications:', err);
@@ -368,6 +376,58 @@ getTrendItems(filterDirection: string): any[] {
       this.loading = false;
     }
   }
+
+// async getNotificationData() {
+//   // Use dynamic user email, fallback to a default if necessary
+//   const userId = this.userData?.email || 'oladri@google.com';
+
+//   const payload = {
+//     user_id: userId,
+//     site: this.selectedSite === 'Select' ? 'ALL' : this.selectedSite,
+//     limit: 7,
+//   };
+
+//   this.loading = true;
+
+//   try {
+//     // 1. Single API Call
+//     const response: any = await lastValueFrom(
+//       this.svc.getNotificationData(payload)
+//     );
+
+//     // 2. Process data locally (No more API calls inside map)
+//     this.notifications = response.map((item: any) => {
+//       let extractedHighlights = 'N/A';
+//       let extractedBrightSpots = 'N/A';
+
+//       if (item.summary) {
+//         // Regex logic
+//         const highlightsMatch = item.summary.match(/\*\*Highlights:\*\*\s*([^*]+)/);
+//         const brightSpotsMatch = item.summary.match(/\*\*Bright Spots:\*\*\s*([^*]+)/);
+
+//         if (highlightsMatch) extractedHighlights = highlightsMatch[1].trim();
+//         if (brightSpotsMatch) extractedBrightSpots = brightSpotsMatch[1].trim();
+//       }
+
+//       // Return the formatted object
+//       return {
+//         notification_id: item.notification_id,
+//         is_read: item.is_read,
+//         created_at: item.report_date, // For timeago pipe
+//         highlights: extractedHighlights,
+//         brightSpots: extractedBrightSpots,
+//         summary_raw: item.summary // Keep raw if needed
+//       };
+//     });
+
+//   } catch (err) {
+//     console.error('Error fetching notifications:', err);
+//     this.notifications = [];
+//   } finally {
+//     this.loading = false;
+//   }
+// }
+
   trackByFn(index: number, item: any) {
     return item.notification_id; // Tells Angular to track items by ID instead of index
   }
@@ -392,7 +452,7 @@ getTrendItems(filterDirection: string): any[] {
         this.svc.getNotificationDetails(payload)
       );
 
-     this.digestData = response.payload_json;
+      this.digestData = response.payload_json;
 
       if (!note.is_read) {
         const readResponse: any = await lastValueFrom(
@@ -411,9 +471,6 @@ getTrendItems(filterDirection: string): any[] {
     }
   }
 
-
-
-
   // --- Modal Logic ---
   openDetails(item: NotificationItem) {
     this.selectedData = item.fullData;
@@ -429,96 +486,183 @@ getTrendItems(filterDirection: string): any[] {
   // }
 
   getLeadershipClass(status: string): string {
-  if (!status) return 'leadership-none';
+    if (!status) return 'leadership-none';
 
-  const s = status.toLowerCase();
+    const s = status.toLowerCase();
 
-  // 1. Positive states (Leading, Holding)
-  if (s.includes('lead') || s.includes('hold')) {
-    return 'leadership-leading';
+    // 1. Positive states (Leading, Holding)
+    if (s.includes('lead') || s.includes('hold')) {
+      return 'leadership-leading';
+    }
+
+    // 2. Negative states (Lagging, Critical)
+    if (s.includes('lag') || s.includes('crit')) {
+      return 'leadership-lagging';
+    }
+
+    // 3. Neutral/Default states
+    return 'leadership-stable';
+  }
+  // inside your component class
+  openSpec: string | null = null;
+  openProd: string | null = null;
+
+  toggleSpec(specName: string) {
+    this.openSpec = this.openSpec === specName ? null : specName;
   }
 
-  // 2. Negative states (Lagging, Critical)
-  if (s.includes('lag') || s.includes('crit')) {
-    return 'leadership-lagging';
+  // dashboard.component.ts
+
+  // To track which sections are open
+  expandedSections: { [key: string]: boolean } = {
+    CRITICAL: false, // Default open
+    HIGH: false, // Default open
+    MEDIUM: false,
+    LOW: false,
+  };
+
+  // Helper to group alerts by severity
+  get groupedAlerts() {
+    if (!this.digestData?.products?.alerts) return [];
+
+    const groups = this.digestData.products.alerts.reduce(
+      (acc: any, alert: any) => {
+        const severity = alert.severity || 'INFO';
+        if (!acc[severity]) acc[severity] = [];
+        acc[severity].push(alert);
+        return acc;
+      },
+      {}
+    );
+
+    // Convert to array of objects for easier looping and sorting
+    return Object.keys(groups)
+      .map((key) => ({
+        severity: key,
+        items: groups[key],
+        count: groups[key].length,
+      }))
+      .sort((a, b) => (a.severity === 'CRITICAL' ? -1 : 1)); // Keep Critical at top
   }
 
-  // 3. Neutral/Default states
-  return 'leadership-stable';
-}
-// inside your component class
-openSpec: string | null = null;
-openProd: string | null = null;
+  toggleSection(severity: string) {
+    this.expandedSections[severity] = !this.expandedSections[severity];
+  }
+  activeAlertKey: string | null = null;
+  expandAlerts(severity: string) {
+    this.activeAlertKey = severity;
+    const isCurrentlyExpanded = !!this.expandedSections[severity];
 
-toggleSpec(specName: string) {
-  this.openSpec = this.openSpec === specName ? null : specName;
-}
+    this.expandedSections = {};
 
-toggleProd(prodName: string) {
-  this.openProd = this.openProd === prodName ? null : prodName;
-}
+    if (!isCurrentlyExpanded) {
+      this.expandedSections[severity] = true;
+    }
+  }
+  // dashboard.component.ts
 
-getTrendIcon(trend: string): string {
-  if (trend === 'IMPROVING') return 'trending_up';
-  if (trend === 'DECLINING') return 'trending_down';
-  return 'remove';
-}
-get dailyMetricsCount(): number {
-  if (!this.digestData?.focus) return 0;
-  return Object.values(this.digestData.focus).reduce((total: number, spec: any) => {
-    const dailyCount = Object.values(spec?.metric_info || {})
-      .filter((m: any) => m.frequency === 'DAILY').length;
-    return total + dailyCount;
-  }, 0);
-}
+  hasValidDailyMetrics(metrics: any): boolean {
+    if (!metrics) return false;
 
-// dashboard.component.ts
+    return Object.values(metrics).some((m: any) => {
+      const hasTrend = m.trend !== 'NO_DATA';
+      const hasRate = m.this_week?.rate != null && m.this_week?.rate !== 0;
 
-// Getter for Daily Alerts
-get dailyAlerts() {
-  return this.digestData?.focus?.filter((item: any) =>
-    item.metric_info?.frequency === 'DAILY'
-  ) || [];
-}
+      return hasTrend && hasRate;
+    });
+  }
+  hasValidMonthlyMetrics(metrics: any): boolean {
+    if (!metrics) return false;
 
-// Getter for Monthly Alerts
-get monthlyAlerts() {
-  return this.digestData?.focus?.filter((item: any) =>
-    item.metric_info?.frequency === 'MONTHLY'
-  ) || [];
-}
+    return Object.values(metrics).some((m: any) => {
+      const hasTrend = m.trend !== 'NO_DATA';
+      const hasRate = m.this_month?.rate != null && m.this_month?.rate !== 0;
 
-hasValidBreakdown(breakdown: any[]): boolean {
-  if (!breakdown) return false;
-  // Returns true if at least one item has a score > 0
-  return breakdown.some(item => item.spec_ttm_score_pct > 0);
-}
+      return hasTrend && hasRate;
+    });
+  }
+  toggleProd(prodName: string) {
+    this.openProd = this.openProd === prodName ? null : prodName;
+  }
 
-// Assuming your object is named 'metricsDetail'
-//  get dailyMetricsCount(): number {
-//   // 1. Safety check: ensure focus exists
-//   if (!this.digestData?.focus) return 0;
+  getTrendIcon(trend: string): string {
+    if (trend === 'IMPROVING') return 'trending_up';
+    if (trend === 'DECLINING') return 'trending_down';
+    return 'remove';
+  }
+  get dailyMetricsCount(): number {
+    if (!this.digestData?.focus) return 0;
+    return Object.values(this.digestData.focus).reduce(
+      (total: number, spec: any) => {
+        const dailyCount = Object.values(spec?.metric_info || {}).filter(
+          (m: any) => m.frequency === 'DAILY'
+        ).length;
+        return total + dailyCount;
+      },
+      0
+    );
+  }
 
-//   // 2. Extract all metrics from every specialization in focus
-//   // Since 'focus' is an object where keys are spec names (AI and ML, Serverless, etc.)
-//   const allFocusItems = Object.values(this.digestData.focus);
+  // dashboard.component.ts
 
-//   let count = 0;
+  // Getter for Daily Alerts
+  get dailyAlerts() {
+    return (
+      this.digestData?.focus?.filter(
+        (item: any) => item.metric_info?.frequency === 'DAILY'
+      ) || []
+    );
+  }
 
-//   allFocusItems.forEach((spec: any) => {
-//     // 3. check if this spec has metric_info
-//     if (spec?.metric_info) {
-//       // 4. Count metrics inside this spec that are 'DAILY'
-//       const dailyInSpec = Object.values(spec.metric_info).filter((m: any) =>
-//         m.frequency === 'DAILY'
-//       ).length;
+  // Getter for Monthly Alerts
+  get monthlyAlerts() {
+    return (
+      this.digestData?.focus?.filter(
+        (item: any) => item.metric_info?.frequency === 'MONTHLY'
+      ) || []
+    );
+  }
+  getStatusClass(status: string | undefined): string {
+    if (!status) return '';
+    const s = status.toLowerCase();
+    if (s.includes('healthy') || s.includes('active') || s.includes('met'))
+      return 'status-healthy';
+    if (s.includes('warning') || s.includes('risk')) return 'status-warning';
+    if (s.includes('critical') || s.includes('unhealthy') || s.includes('low'))
+      return 'status-critical';
+    return '';
+  }
+  hasValidBreakdown(breakdown: any[]): boolean {
+    if (!breakdown) return false;
+    // Returns true if at least one item has a score > 0
+    return breakdown.some((item) => item.volume_share_pct > 0);
+  }
 
-//       count += dailyInSpec;
-//     }
-//   });
+  // Assuming your object is named 'metricsDetail'
+  //  get dailyMetricsCount(): number {
+  //   // 1. Safety check: ensure focus exists
+  //   if (!this.digestData?.focus) return 0;
 
-//   return count;
-// }
+  //   // 2. Extract all metrics from every specialization in focus
+  //   // Since 'focus' is an object where keys are spec names (AI and ML, Serverless, etc.)
+  //   const allFocusItems = Object.values(this.digestData.focus);
+
+  //   let count = 0;
+
+  //   allFocusItems.forEach((spec: any) => {
+  //     // 3. check if this spec has metric_info
+  //     if (spec?.metric_info) {
+  //       // 4. Count metrics inside this spec that are 'DAILY'
+  //       const dailyInSpec = Object.values(spec.metric_info).filter((m: any) =>
+  //         m.frequency === 'DAILY'
+  //       ).length;
+
+  //       count += dailyInSpec;
+  //     }
+  //   });
+
+  //   return count;
+  // }
   closeModal(event?: Event) {
     if (event) {
       event.stopPropagation();

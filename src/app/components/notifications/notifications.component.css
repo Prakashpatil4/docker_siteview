@@ -1575,7 +1575,8 @@ thead {
   --prod-medium: #1a73e8;
   --prod-success: #1e8e3e;
   --prod-border-color: #dadce0;
- 
+  --prod-low:#64748B;
+
 }
 .dashboard {
   padding: 20px;
@@ -1583,28 +1584,64 @@ thead {
   color: #3c4043;
 
   .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 30px;
+  display: flex;          /* Changed from grid to flex for tighter control */
+  flex-wrap: wrap;        /* Allows wrapping to next line if screen is small */
+  gap: 12px;
+  margin-bottom: 24px;
+  justify-content: flex-start; /* Keeps cards to the left */
 
-    .summary-card {
-      padding: 15px;
-      border-radius: 8px;
-      background: white;
-      border-bottom: 4px solid #ccc;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
+  .summary-card {
+    width: 100px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e0e2e6;
+    border-bottom: 4px solid #ccc;
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.1);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease;
+    margin: 0 10px;
+    height: 67px;
+    cursor:pointer;
 
-      .label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #70757a; }
-      .count { font-size: 24px; font-weight: bold; margin-top: 5px; }
-
-      &.critical { border-color: var(--prod-critical); .count { color: var(--prod-critical); } }
-      &.high { border-color: var(--prod-high); .count { color: var(--prod-high); } }
-      &.medium { border-color: var(--prod-medium); .count { color: var(--prod-medium); } }
+    &:hover {
+      transform: translateY(-2px); /* Subtle lift on hover */
     }
+    &.is-active {
+      border-color: #007bff; /* Primary color */
+      background-color: #f0f7ff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+
+
+
+    .label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #80868b;
+      letter-spacing: 0.5px;
+    }
+
+    .count {
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 4px;
+      font-family: 'Roboto Mono', monospace; /* Monospace for numbers looks more professional */
+    }
+
+    /* Severity Colors */
+    &.critical { border-bottom-color: var(--prod-critical); .count { color: var(--prod-critical); } }
+    &.high { border-bottom-color: var(--prod-high); .count { color: var(--prod-high); } }
+    &.medium { border-bottom-color: var(--prod-medium); .count { color: var(--prod-medium); } }
+    &.low { border-bottom-color: var(--prod-low); .count { color: var(--prod-low); } }
+    &.info { border-bottom-color: #009FE3; .count { color: #009FE3; } }
   }
+
+
+}
 
   .alert-row {
     display: flex;
@@ -1699,4 +1736,298 @@ thead {
       .declining { color: var(--prod-critical); font-weight: 600; &:before { content: '↓ '; } }
     }
   }
+}
+
+
+.severity-group {
+  margin-bottom: 8px;
+
+  .group-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 4px;
+    transition: background 0.2s;
+
+    &:hover { background: #f1f3f4; }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 150px;
+    }
+
+    .expand-icon { font-size: 10px; color: #5f6368; width: 12px; }
+
+    .severity-label {
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.8px;
+    }
+
+    .severity-count { color: #70757a; font-size: 12px; }
+
+    .header-line {
+      flex: 1;
+      height: 1px;
+      background: #dadce0;
+      margin-left: 15px;
+    }
+
+    /* Severity specific header colors */
+    &.critical {.expand-icon, .severity-label, .severity-count { color: #d93025; } .header-line { background: #fad2cf; } }
+    &.high { .expand-icon, .severity-label, .severity-count { color: var(--prod-high);}.header-line{ background: var(--prod-high);} }
+    &.medium { .expand-icon, .severity-label, .severity-count { color: var(--prod-medium); } .header-line { background: var(--prod-medium); } }
+    &.low { .expand-icon, .severity-label, .severity-count { color: var(--prod-low); } .header-line { background: var(--prod-low); } }
+    &.info { .expand-icon, .severity-label, .severity-count { color: #006FB4; } .header-line { background: #006FB4; } }
+
+  }
+}
+
+.alert-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px 12px 40px; /* Indent items under the arrow */
+  border-bottom: 1px solid #f1f3f4;
+
+  &:last-child { border-bottom: none; }
+
+  .alert-prod { font-weight: 600; color: #202124; margin-right: 8px; }
+  .alert-metric { color: #70757a; font-size: 12px; }
+  .alert-msg { font-size: 13px; color: #3c4043; margin-top: 2px; }
+}
+
+.alert-stats {
+  margin-left: auto;
+  text-align: right;
+  .change.negative { color: #d93025; font-weight: 700; display: block; }
+  .vol { font-size: 11px; color: #70757a; }
+}
+
+
+.enterprise-breakdown {
+  background: transparent;
+  padding: 10px 0;
+
+  .section-header-v2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    h3 { font-size: 18px; color: #202124; margin: 0; font-weight: 600; }
+  }
+
+  .spec-card-container {
+    background: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+
+    &:hover { box-shadow: 0 1px 6px rgba(32,33,36,0.1); }
+  }
+
+  .spec-header-action {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #f8f9fa;
+    cursor: pointer;
+    align-items: center;
+
+    &.is-open { border-bottom: 1px solid #dadce0; .chevron { transform: rotate(90deg); } }
+    .spec-identity { display: flex; align-items: center; gap: 12px; }
+    .chevron { font-size: 18px; transition: 0.2s; color: #5f6368; }
+    .spec-name-txt { font-weight: 600; font-size: 15px; color: #202124; }
+    .pill-count { background: #e8eaed; color: #3c4043; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+  }
+
+  /* Product Row Styling */
+  .product-wrapper {
+    border-bottom: 1px solid #f1f3f4;
+    &:last-child { border-bottom: none; }
+  }
+
+  .product-row-toggle {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px 12px 20px;
+    cursor: pointer;
+    background: #fff;
+    &:hover { background: #fafafa; }
+
+    .prod-name-bold { font-weight: 600; font-size: 14px; color: #1a73e8; }
+    .prod-secondary { font-size: 12px; color: #70757a; margin-top: 2px; }
+    .expand-indicator { font-size: 11px; font-weight: 700; color: blue; text-transform: uppercase; }
+  }
+
+  /* Metrics Panel Grid */
+  .cadence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    padding: 10px 10px 20px 20px;
+    background: #fdfdfd;
+  }
+
+  .cadence-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #5f6368;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  /* Table Styling */
+  .ops-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th { text-align: left; padding: 8px; color: #80868b; font-size: 10px; border-bottom: 1px solid #e8eaed; }
+    td { padding: 10px 8px; border-bottom: 1px solid #f1f3f4; }
+
+    .metric-name-cell { color: #3c4043; font-weight: 500; width: 40%; }
+    .val-muted { color: #80868b; }
+    .val-bold { color: #202124; font-weight: 700; }
+    .active-col { background: rgba(26, 115, 232, 0.04); }
+  }
+
+  /* Trend Statuses */
+  .trend-indicator-v2 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    &.improving { color: #1e8e3e; }
+    &.declining { color: #d93025; }
+    &.stable { color: #1a73e8; }
+  }
+
+  .text-neg { color: #c5221f; font-weight: 700; }
+  .text-pos { color: #137333; font-weight: 700; }
+}
+
+
+
+
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  padding: 8px;
+  font-family: 'Roboto', sans-serif;
+
+  .detail-card {
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+    min-height: 80px;
+
+    .card-icon {
+      font-size: 18px;
+      margin-right: 12px;
+      opacity: 0.7;
+      &.blue { color: #1a73e8; opacity: 1; }
+    }
+
+    .card-content {
+      flex: 1;
+    }
+
+    .detail-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #5f6368;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      font-size: 16px;
+      font-weight: 500;
+      color: #202124;
+    }
+  }
+
+  /* Status Pill Styling */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    gap: 6px;
+    background: #f1f3f4;
+    color: #3c4043;
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    &.status-healthy { background: #e6f4ea; color: #1e8e3e; }
+    &.status-warning { background: #fef7e0; color: #b06000; }
+    &.status-critical { background: #fce8e6; color: #d93025; }
+  }
+
+  .score-card {
+  background: #f8f9fa;
+  border: 1px solid #1a73e8; /* Google Blue accent */
+  position: relative;        /* Required for the absolute progress bar to stick to the bottom */
+  overflow: hidden;          /* Ensures the progress bar doesn't bleed out of the rounded corners */
+  padding: 8px 12px;
+  border-radius: 8px;
+  min-width: 120px;
+  height: 54px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.score-card .score-display {
+  display: flex;
+  align-items: baseline;
+  color: #1a73e8;
+}
+
+.score-card .score-display .score-number {
+  font-size: 20px; /* Adjusted to fit your smaller height */
+  font-weight: 700;
+}
+
+.score-card .score-display .score-percent {
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.score-card .score-progress-bg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: #e8f0fe;
+}
+
+.score-card .score-progress-fill {
+  height: 100%;
+  background: #1a73e8;
+  transition: width 0.5s ease-out;
+}
 }
