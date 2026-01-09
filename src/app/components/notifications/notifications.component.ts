@@ -172,17 +172,7 @@ export class NotificationsComponent implements OnInit {
   getSeverityData(value: unknown): { count: number; label: string } {
     return value as { count: number; label: string };
   }
-  // getTrendItems(type: 'declining' | 'improving') {
 
-  //  // const daily = this.digestData?.emerging_trends?.daily?.[type] || [];
-  // //  const monthly = this.digestData?.emerging_trends?.monthly?.[type] || [];
-
-  //   const daily = this.digestData?.trends?.metrics?.['DAILY'] || [];
-
-  //   const monthly = this.digestData?.trends?.frequency?.['MONTHLY'] || [];
-  //   console.log('Hiii-->'+daily, monthly);
-  //   return [...daily, ...monthly];
-  // }
 
   getTrendItems(filterDirection: string): any[] {
     // 1. Safety check to ensure trends object exists
@@ -255,6 +245,9 @@ export class NotificationsComponent implements OnInit {
         spec.expanded = false;
       });
     }
+    this.openSpec = null;
+    this.openProd = null;
+
   }
   toggleNotificationPanel(event?: Event) {
     if (event) event.stopPropagation();
@@ -295,89 +288,7 @@ export class NotificationsComponent implements OnInit {
     });
   }
 
-  // async getNotificationData() {
-  //   console.log('Getting Notifications')
-  //   //  this.userData.email use this user_id as a dynamic for below payload
-  //   let siteVal = '';
 
-  //   if (this.selectedSite == 'Select') {
-  //     siteVal = 'ALL';
-  //   } else {
-  //     siteVal = this.selectedSite;
-  //   }
-
-  //   const payload = {
-  //     user_id: 'oladri@google.com',
-  //     site: siteVal,
-  //     limit: 7,
-  //   };
-
-  //   this.loading = true;
-  //   try {
-  //     const response: any = await lastValueFrom(
-  //       this.svc.getNotificationData(payload)
-  //     );
-
-  //     this.notifications = response.map(async (item: any, i: number) => {
-  //       let summaryData = {
-  //         health_status: 'N/A',
-  //         people_focus: 'N/A',
-  //         key_areas: 'N/A',
-  //       };
-
-  //       if (item.summary) {
-  //         try {
-  //           const response: any = await lastValueFrom(
-  //             this.svc.getNotificationData(payload)
-  //           );
-
-  //           this.notifications = response.map((item: any) => {
-  //             let extractedBrightSpots = 'N/A';
-  //             let extractedStatusRisks = 'N/A';
-
-  //             if (item.summary) {
-  //                const brightSpotMatch = item.summary.match(
-  //                 /\*\*brightspots:\*\*\s*([^*]+)/
-  //               );
-  //                const statusRiskMatch = item.summary.match(
-  //                 /\*\*Bright Spots:\*\*\s*([^*]+)/
-  //               );
-
-  //               if (brightSpotMatch)
-  //                 extractedBrightSpots = brightSpotMatch[1].trim();
-  //               if (statusRiskMatch)
-  //                 extractedStatusRisks = statusRiskMatch[1].trim();
-  //             }
-
-  //             return {
-  //               notification_id: item.notification_id,
-  //               is_read: item.is_read,
-  //               created_at: item.report_date,
-  //               brightspots: extractedBrightSpots,
-  //               brightSpots: extractedStatusRisks,
-  //             };
-  //           });
-  //         } catch (e) {
-  //           console.error('API Error', e);
-  //         }
-  //       }
-
-  //       const formattedItem: any = {
-  //         notification_id: item.notification_id,
-  //         is_read: item.is_read,
-  //         created_at: item.report_date,
-  //         summary: summaryData.health_status,
-  //       };
-
-  //       return formattedItem;
-  //     });
-  //   } catch (err) {
-  //     console.error('Error fetching notifications:', err);
-  //     this.all = [];
-  //   } finally {
-  //     this.loading = false;
-  //   }
-  // }
 
   async getNotificationData() {
     // Use dynamic email if available, fallback to default
@@ -493,14 +404,7 @@ export class NotificationsComponent implements OnInit {
     this.selectedData = item.fullData;
     this.isModalOpen = true;
   }
-  // getLeadershipClass(status: string): string {
-  //   if (!status) return 'leadership-none';
 
-  //   const s = status.toLowerCase();
-  //   if (s.includes('lead')) return 'leadership-leading';
-  //   if (s.includes('lag') || s.includes('crit')) return 'leadership-lagging';
-  //   return 'leadership-stable'; // Default for "Maintaining" or "Developing"
-  // }
 
   getLeadershipClass(status: string): string {
     if (!status) return 'leadership-none';
@@ -526,6 +430,7 @@ export class NotificationsComponent implements OnInit {
 
   toggleSpec(specName: string) {
     this.openSpec = this.openSpec === specName ? null : specName;
+    this.openProd = null;
   }
 
   // dashboard.component.ts
@@ -576,7 +481,7 @@ export class NotificationsComponent implements OnInit {
       this.expandedSections[severity] = true;
     }
   }
-  // dashboard.component.ts
+
 
   hasValidDailyMetrics(metrics: any): boolean {
     if (!metrics) return false;
@@ -589,18 +494,13 @@ export class NotificationsComponent implements OnInit {
 
       // Join them with a hyphen if both exist, otherwise fallback to 'N/A'
       if (lastWeek && thisWeek) {
-        this.metricsWeekDispaly = `${lastWeek} - ${thisWeek}`;
+        this.metricsWeekDispaly = `${lastWeek} TO ${thisWeek}`;
       } else {
         this.metricsWeekDispaly = lastWeek || thisWeek || 'N/A';
       }
     }
-    console.log('this.metricsWeekDispaly', this.metricsWeekDispaly);
-    return Object.values(metrics).some((m: any) => {
-      const hasTrend = m.trend !== 'NO_DATA';
-      const hasRate = m.this_week?.rate != null && m.this_week?.rate !== 0;
+    return true;
 
-      return hasTrend && hasRate;
-    });
   }
 
   hasValidMonthlyMetrics(metrics: any): boolean {
@@ -613,17 +513,13 @@ export class NotificationsComponent implements OnInit {
 
       // Join them with a hyphen if both exist, otherwise fallback to 'N/A'
       if (lastMonth && thisMonth) {
-        this.metricsMonthDispaly = `${lastMonth} - ${thisMonth}`;
+        this.metricsMonthDispaly = `${lastMonth} TO  ${thisMonth}`;
       } else {
         this.metricsMonthDispaly = lastMonth || thisMonth || 'N/A';
       }
     }
-    return Object.values(metrics).some((m: any) => {
-      const hasTrend = m.trend !== 'NO_DATA';
-      const hasRate = m.this_month?.rate != null && m.this_month?.rate !== 0;
+    return true ;
 
-      return hasTrend && hasRate;
-    });
   }
   toggleProd(prodName: string) {
     this.openProd = this.openProd === prodName ? null : prodName;
@@ -647,9 +543,6 @@ export class NotificationsComponent implements OnInit {
     );
   }
 
-  // dashboard.component.ts
-
-  // Getter for Daily Alerts
   get dailyAlerts() {
     return (
       this.digestData?.focus?.filter(
@@ -682,31 +575,7 @@ export class NotificationsComponent implements OnInit {
     return breakdown.some((item) => item.volume_share_pct > 0);
   }
 
-  // Assuming your object is named 'metricsDetail'
-  //  get dailyMetricsCount(): number {
-  //   // 1. Safety check: ensure focus exists
-  //   if (!this.digestData?.focus) return 0;
-
-  //   // 2. Extract all metrics from every specialization in focus
-  //   // Since 'focus' is an object where keys are spec names (AI and ML, Serverless, etc.)
-  //   const allFocusItems = Object.values(this.digestData.focus);
-
-  //   let count = 0;
-
-  //   allFocusItems.forEach((spec: any) => {
-  //     // 3. check if this spec has metric_info
-  //     if (spec?.metric_info) {
-  //       // 4. Count metrics inside this spec that are 'DAILY'
-  //       const dailyInSpec = Object.values(spec.metric_info).filter((m: any) =>
-  //         m.frequency === 'DAILY'
-  //       ).length;
-
-  //       count += dailyInSpec;
-  //     }
-  //   });
-
-  //   return count;
-  // }
+   
   closeModal(event?: Event) {
     if (event) {
       event.stopPropagation();

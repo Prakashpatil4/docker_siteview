@@ -1,4 +1,4 @@
- <header class="header" (click)="closeNotificationPanel()">
+<header class="header" (click)="closeNotificationPanel()">
   <div
     class="notification-panel"
     [class.active]="showNotificationPanel"
@@ -17,31 +17,38 @@
     </div>
 
     <div class="notification-list" *ngIf="!loading">
+      <div
+        *ngFor="let note of notifications"
+        class="notification-item"
+        [class.unread]="!note.is_read"
+        [class.is-read]="note.is_read"
+        (click)="openFullReport(note)"
+      >
+        <div class="notification-content">
+          <div
+            class="notification-line highlights-text"
+            *ngIf="note.brightspots !== 'N/A'"
+          >
+            <strong>Bright Spots:</strong> {{ note.brightspots }}
+          </div>
+          <div
+            class="notification-line highlights-text"
+            *ngIf="note.statusRisks !== 'N/A'"
+          >
+            <strong>Status & Risk:</strong> {{ note.statusRisks }}
+          </div>
+          <div
+            class="notification-line highlights-text"
+            *ngIf="note.focusrAreas !== 'N/A'"
+          >
+            <strong>Focus Areas:</strong> {{ note.focusrAreas }}
+          </div>
 
-   <div
-  *ngFor="let note of notifications"
-  class="notification-item"
-  [class.unread]="!note.is_read"
-  [class.is-read]="note.is_read"
-  (click)="openFullReport(note)"
->
-  <div class="notification-content">
-    <div class="notification-line highlights-text" *ngIf="note.brightspots !== 'N/A'">
-       <strong>Bright Spots:</strong> {{ note.brightspots }}
-    </div>
-   <div class="notification-line highlights-text" *ngIf="note.statusRisks !== 'N/A'">
-       <strong>Status & Risk:</strong> {{ note.statusRisks }}
-    </div>
-    <div class="notification-line highlights-text" *ngIf="note.focusrAreas !== 'N/A'">
-       <strong>Focus Areas:</strong> {{ note.focusrAreas }}
-    </div>
-
-    <div class="notification-time time-stamp">
-      {{ note.created_at | timeAgo }}
-    </div>
-  </div>
-</div>
-
+          <div class="notification-time time-stamp">
+            {{ note.created_at | timeAgo }}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -71,7 +78,7 @@
         >
           🎯 Focus Areas
         </button>
-          <button
+        <button
           class="tab-pill"
           [class.active]="currentView === 'trends'"
           (click)="switchView('trends')"
@@ -92,147 +99,162 @@
         >
           📦 Products
         </button>
-
       </div>
 
       <!-- View: FOCUS -->
       <div *ngIf="currentView === 'focus'">
-
-        <div
-          class="focus-section"
-          *ngIf="digestData.focus?.length > 0"
-        >
+        <div class="focus-section" *ngIf="digestData.focus?.length > 0">
           <div class="section-title">
-            📅 Daily Metrics  ({{ dailyAlerts.length  }})
-
+            📅 Daily Metrics ({{ dailyAlerts.length }})
           </div>
-          <div class="focus-list"
+          <div class="focus-list">
+            <ng-container *ngFor="let alert of digestData.focus">
+              <div
+                class="focus-item"
+                [ngClass]="{
+                  'priority-critical':
+                    alert.site_overview.site_status === 'CRITICAL',
+                  'priority-high': alert.site_overview.site_status === 'HIGH',
+                  'priority-medium':
+                    alert.site_overview.site_status === 'WARNING',
+                  'priority-low': alert.site_overview.site_status === 'GOOD'
+                }"
+                *ngIf="alert.metric_info?.frequency === 'DAILY'"
+                (click)="openAlertDetail(alert)"
+              >
+                <div class="focus-item-header">
+                  <span class="focus-item-title">
+                    {{ alert.metric_info.display_name }}
+                  </span>
+                  <span class="focus-item-badge badge-daily">
+                    {{ alert.metric_info.frequency }}
+                  </span>
+                </div>
 
-           >
-           <ng-container *ngFor="let alert of digestData.focus">
+                <div class="focus-item-stats">
+                  @if (alert.compliance?.total_agents) {
+                  {{ alert.compliance.met_count ?? 0 }}/{{
+                    alert.compliance.total_agents
+                  }}
+                  TSRs • site score:
+                  {{ alert.site_overview?.site_score_pct ?? "0" }}% } @else {
+                  <span class="muted">N/A</span>
+                  }
+                </div>
 
-        <div
-          class="focus-item"
-          [ngClass]="{
-                'priority-critical': alert.site_overview.site_status === 'CRITICAL',
-                'priority-high': alert.site_overview.site_status === 'HIGH',
-                'priority-medium': alert.site_overview.site_status === 'WARNING',
-                'priority-low': alert.site_overview.site_status === 'GOOD'
-              }"
-          *ngIf="alert.metric_info?.frequency === 'DAILY'"
-          (click)="openAlertDetail(alert)"
-        >
-          <div class="focus-item-header">
-            <span class="focus-item-title">
-              {{ alert.metric_info.display_name }}
-            </span>
-            <span class="focus-item-badge badge-daily">
-              {{ alert.metric_info.frequency }}
-            </span>
+                <div class="focus-item-insight">
+                  <p class="metric-insight">
+                    <ng-container
+                      *ngIf="alert?.breakdowns?.specialization_breakdown?.[0]?.specialization; else teamAffected"
+                    >
+                      <span>💡</span> Main contributor:
+                      {{
+                        alert.breakdowns.specialization_breakdown[0]
+                          .specialization
+                      }}
+                      <span class="value-text">
+                        ({{
+                          (alert.breakdowns.specialization_breakdown[0]
+                            .volume_share_pct | number : "1.1-2") ?? "0.0"
+                        }}%)
+                      </span>
+                    </ng-container>
+
+                    <ng-template #teamAffected>
+                      @if (alert?.affected_pct !== null && alert?.affected_pct
+                      !== undefined) {
+                      {{ alert.affected_pct | number : "1.1-1" }}% of team
+                      affected } @else {
+                      <span class="text-muted">N/A</span>
+                      }
+                    </ng-template>
+                  </p>
+                </div>
+              </div>
+            </ng-container>
           </div>
 
-          <div class="focus-item-stats">
-            @if (alert.compliance?.total_agents) {
-              {{ alert.compliance.met_count ?? 0 }}/{{ alert.compliance.total_agents }} TSRs
-              • site score: {{ alert.site_overview?.site_score_pct ?? '0' }}%
-            } @else {
-              <span class="muted">N/A</span>
-            }
+          <div class="section-title align-monthly-title">
+            📅 Monthly Metrics ({{ monthlyAlerts.length }})
           </div>
+          <div class="focus-list">
+            <ng-container *ngFor="let alert of digestData.focus">
+              <div
+                class="focus-item"
+                [ngClass]="{
+                  'priority-critical':
+                    alert.site_overview.site_status === 'CRITICAL',
+                  'priority-high': alert.site_overview.site_status === 'HIGH',
+                  'priority-medium':
+                    alert.site_overview.site_status === 'WARNING',
+                  'priority-low': alert.site_overview.site_status === 'GOOD'
+                }"
+                *ngIf="alert.metric_info?.frequency === 'MONTHLY'"
+                (click)="openAlertDetail(alert)"
+              >
+                <div class="focus-item-header">
+                  <span class="focus-item-title">
+                    {{ alert.metric_info.display_name }}
+                  </span>
+                  <span class="focus-item-badge badge-daily">
+                    {{ alert.metric_info.frequency }}
+                  </span>
+                </div>
 
-          <div class="focus-item-insight">
-            <p class="metric-insight">
-              <ng-container *ngIf="alert?.breakdowns?.specialization_breakdown?.[0]?.specialization; else teamAffected">
-                <span>💡</span> Main contributor: {{ alert.breakdowns.specialization_breakdown[0].specialization }}
-                <span class="value-text">
-                  ({{ (alert.breakdowns.specialization_breakdown[0].volume_share_pct | number : "1.1-2") ?? '0.0' }}%)
-                </span>
-              </ng-container>
+                <div class="focus-item-stats">
+                  @if (alert.compliance?.total_agents) {
+                  {{ alert.compliance.met_count ?? 0 }}/{{
+                    alert.compliance.total_agents
+                  }}
+                  TSRs • site score:
+                  {{ alert.site_overview?.site_score_pct ?? "0" }}% } @else {
+                  <span class="muted">N/A</span>
+                  }
+                </div>
 
-              <ng-template #teamAffected>
-                @if (alert?.affected_pct !== null && alert?.affected_pct !== undefined) {
-                  {{ alert.affected_pct | number : "1.1-1" }}% of team affected
-                } @else {
-                  <span class="text-muted">N/A</span>
-                }
-              </ng-template>
-            </p>
+                <div class="focus-item-insight">
+                  <p class="metric-insight">
+                    <ng-container
+                      *ngIf="alert?.breakdowns?.specialization_breakdown?.[0]?.specialization; else teamAffected"
+                    >
+                      <span>💡</span> Main contributor:
+                      {{
+                        alert.breakdowns.specialization_breakdown[0]
+                          .specialization
+                      }}
+                      <span class="value-text">
+                        ({{
+                          (alert.breakdowns.specialization_breakdown[0]
+                            .volume_share_pct | number : "1.1-2") ?? "0.0"
+                        }}%)
+                      </span>
+                    </ng-container>
+
+                    <ng-template #teamAffected>
+                      @if (alert?.affected_pct !== null && alert?.affected_pct
+                      !== undefined) {
+                      {{ alert.affected_pct | number : "1.1-1" }}% of team
+                      affected } @else {
+                      <span class="text-muted">N/A</span>
+                      }
+                    </ng-template>
+                  </p>
+                </div>
+              </div>
+            </ng-container>
           </div>
         </div>
-      </ng-container>
-          </div>
-
-         <div class="section-title align-monthly-title">
-             📅 Monthly Metrics ({{ monthlyAlerts.length  }})
-
-          </div>
-          <div class="focus-list" >
-
-
-           <ng-container *ngFor="let alert of digestData.focus">
-
-        <div
-          class="focus-item"
-          [ngClass]="{
-                'priority-critical': alert.site_overview.site_status === 'CRITICAL',
-                'priority-high': alert.site_overview.site_status === 'HIGH',
-                'priority-medium': alert.site_overview.site_status === 'WARNING',
-                'priority-low': alert.site_overview.site_status === 'GOOD'
-              }"
-          *ngIf="alert.metric_info?.frequency === 'MONTHLY'"
-          (click)="openAlertDetail(alert)"
-        >
-          <div class="focus-item-header">
-            <span class="focus-item-title">
-              {{ alert.metric_info.display_name }}
-            </span>
-            <span class="focus-item-badge badge-daily">
-              {{ alert.metric_info.frequency }}
-            </span>
-          </div>
-
-          <div class="focus-item-stats">
-            @if (alert.compliance?.total_agents) {
-              {{ alert.compliance.met_count ?? 0 }}/{{ alert.compliance.total_agents }} TSRs
-              • site score: {{ alert.site_overview?.site_score_pct ?? '0' }}%
-            } @else {
-              <span class="muted">N/A</span>
-            }
-          </div>
-
-          <div class="focus-item-insight">
-            <p class="metric-insight">
-              <ng-container *ngIf="alert?.breakdowns?.specialization_breakdown?.[0]?.specialization; else teamAffected">
-                <span>💡</span> Main contributor: {{ alert.breakdowns.specialization_breakdown[0].specialization }}
-                <span class="value-text">
-                  ({{ (alert.breakdowns.specialization_breakdown[0].volume_share_pct | number : "1.1-2") ?? '0.0' }}%)
-                </span>
-              </ng-container>
-
-              <ng-template #teamAffected>
-                @if (alert?.affected_pct !== null && alert?.affected_pct !== undefined) {
-                  {{ alert.affected_pct | number : "1.1-1" }}% of team affected
-                } @else {
-                  <span class="text-muted">N/A</span>
-                }
-              </ng-template>
-            </p>
-          </div>
-        </div> </ng-container>
-          </div>
-
-
-        </div>
-
-
       </div>
 
       <!-- View: TEAMS (Specializations) -->
       <div *ngIf="currentView === 'specializations'" class="teams-focus-list">
-         <!-- {{digestData.specializations | json}} -->
+        <!-- {{digestData.specializations | json}} -->
         <div
           class="spec-card"
-          *ngFor="let spec of digestData?.specializations?.specializations;let i = index"
+          *ngFor="
+            let spec of digestData?.specializations?.specializations;
+            let i = index
+          "
           [class.expanded]="spec.expanded"
         >
           <div class="spec-header" (click)="toggleSpecCard(i)">
@@ -241,15 +263,15 @@
             </div>
             <div class="spec-health-badges">
               <div class="spec-health-item">
-
                 <div
                   class="spec-health-value"
                   [style.color]="getStatusColor(spec?.daily_health?.status)"
                 >
-                  @if (spec?.daily_health?.overall_score !== undefined && spec?.daily_health?.overall_score !== null) {
-                    {{ spec.daily_health.overall_score | number : "1.1-1" }}%
-                  } @else {
-                    <span class="text-muted" style="font-size: 0.8em;">N/A</span>
+                  @if (spec?.daily_health?.overall_score !== undefined &&
+                  spec?.daily_health?.overall_score !== null) {
+                  {{ spec.daily_health.overall_score | number : "1.1-1" }}% }
+                  @else {
+                  <span class="text-muted" style="font-size: 0.8em">N/A</span>
                   }
                 </div>
                 <div class="spec-health-label">Daily</div>
@@ -259,10 +281,11 @@
                   class="spec-health-value"
                   [style.color]="getStatusColor(spec?.monthly_health?.status)"
                 >
-                  @if (spec?.monthly_health?.overall_score !== undefined && spec?.monthly_health?.overall_score !== null) {
-                    {{ spec.monthly_health.overall_score | number : "1.1-1" }}%
-                  } @else {
-                    <span class="text-muted" style="font-size: 0.8em;">N/A</span>
+                  @if (spec?.monthly_health?.overall_score !== undefined &&
+                  spec?.monthly_health?.overall_score !== null) {
+                  {{ spec.monthly_health.overall_score | number : "1.1-1" }}% }
+                  @else {
+                  <span class="text-muted" style="font-size: 0.8em">N/A</span>
                   }
                 </div>
 
@@ -284,257 +307,327 @@
 
           <div class="spec-details">
             <div class="health-grid">
-
               <div class="health-box">
-                <div class="health-box-title">📅 Daily Health
-                 <div class="align-health">
-                  <span
-                    class=" "
-                    [style.color]="getStatusColor(spec?.daily_health?.status)"
-                  >
-                    @if (spec?.daily_health?.overall_score !== undefined && spec?.daily_health?.overall_score !== null) {
-                      {{ spec.daily_health.overall_score }}%
-                    } @else {
+                <div class="health-box-title">
+                  📅 Daily Health
+                  <div class="align-health">
+                    <span
+                      class=" "
+                      [style.color]="getStatusColor(spec?.daily_health?.status)"
+                    >
+                      @if (spec?.daily_health?.overall_score !== undefined &&
+                      spec?.daily_health?.overall_score !== null) {
+                      {{ spec.daily_health.overall_score }}% } @else {
                       <span class="text-muted">N/A</span>
-                    }
-                  </span>
-                  <span
-                  class="trend-badge"
-                  *ngIf="spec?.daily_health?.compliance?.score_change !== undefined && spec?.daily_health?.score_change !== null"
-                  [ngClass]="{
-                    'status-excellent': spec.daily_health.score_change > 0,
-                    'status-critical': spec.daily_health.score_change < 0,
-                    'status-neutral': spec.daily_health.score_change === 0
-                  }"
-                >
-                  {{ spec.daily_health.score_change > 0 ? "↑" : spec.daily_health.score_change < 0 ? "↓" : "•" }}
-                  {{ spec.daily_health.score_change | number : "1.1-1" }}%
-                </span>
-                </div>
+                      }
+                    </span>
+                    <span
+                      class="trend-badge"
+                      *ngIf="
+                        spec?.daily_health?.compliance?.score_change !==
+                          undefined && spec?.daily_health?.score_change !== null
+                      "
+                      [ngClass]="{
+                        'status-excellent': spec.daily_health.score_change > 0,
+                        'status-critical': spec.daily_health.score_change < 0,
+                        'status-neutral': spec.daily_health.score_change === 0
+                      }"
+                    >
+                      {{
+                        spec.daily_health.score_change > 0
+                          ? "↑"
+                          : spec.daily_health.score_change < 0
+                          ? "↓"
+                          : "•"
+                      }}
+                      {{ spec.daily_health.score_change | number : "1.1-1" }}%
+                    </span>
+                  </div>
                 </div>
                 <div>
-
-
-
                   <div class="comparison-grid">
                     <div class="comparison-node">
                       <span class="node-label">PREVIOUS WEEK</span>
                       <span class="node-value">
-                        {{ spec?.daily_health?.previous_score ? (spec?.daily_health?.previous_score  | number : "1.1-1") + '%' : 'N/A' }}
+                        {{
+                          spec?.daily_health?.previous_score
+                            ? (spec?.daily_health?.previous_score
+                                | number : "1.1-1") + "%"
+                            : "N/A"
+                        }}
                       </span>
-                      <span class="node-date">{{ spec?.daily_health?.period_info?.previous?.date_display ?? '---' }}</span>
+                      <span class="node-date">{{
+                        spec?.daily_health?.period_info?.previous
+                          ?.date_display ?? "---"
+                      }}</span>
                     </div>
 
                     <div class="comparison-divider">
-                      <span class="material-symbols-outlined moving-arrow">➡</span>
+                      <span class="material-symbols-outlined moving-arrow"
+                        >➡</span
+                      >
                     </div>
 
                     <div class="comparison-node">
                       <span class="node-label active">CURRENT WEEK</span>
                       <span class="node-value">
-                        {{ spec?.daily_health?.overall_score | number : "1.1-1" }}%
+                        {{
+                          spec?.daily_health?.overall_score | number : "1.1-1"
+                        }}%
                       </span>
-                      <span class="node-date">{{ spec?.daily_health?.period_info?.current?.date_display ?? '---' }}</span>
+                      <span class="node-date">{{
+                        spec?.daily_health?.period_info?.current
+                          ?.date_display ?? "---"
+                      }}</span>
                     </div>
                   </div>
 
-
                   <div class="spec-meta">
-
                     @if (spec?.daily_health?.ranking; as ranking) {
-                      <div class="pill ranking-pill" [class.top-performer]="ranking.current_rank <= 3">
-                        <span class="pill-icon">🏆</span>
-                        <span class="pill-text">
-                          Rank <strong>#{{ ranking.current_rank }}</strong>
-                          <span class="total-count">/{{ ranking.total ?? '--' }}</span>
-                        </span>
-                      </div>
-                    }
-
-                    <!-- Leadership Pill -->
-                    @if (spec?.daily_health?.leadership; as leadership) {
-                      <div class="pill leadership-pill" [ngClass]="getLeadershipClass(leadership)">
-                        <!-- <span class="status-dot"></span> -->
-                        <!-- {{spec?.monthly_health?.leadership_label}} -->
-                        <span class="pill-text">{{ leadership }}</span>
-                      </div>
+                    <div
+                      class="pill ranking-pill"
+                      [class.top-performer]="ranking.current_rank <= 3"
+                    >
+                      <span class="pill-icon">🏆</span>
+                      <span class="pill-text">
+                        Rank <strong>#{{ ranking.current_rank }}</strong>
+                        <span class="total-count"
+                          >/{{ ranking.total ?? "--" }}</span
+                        >
+                      </span>
+                    </div>
+                    } @if (spec?.daily_health?.leadership; as leadership) {
+                    <div
+                      class="pill leadership-pill"
+                      [ngClass]="getLeadershipClass(leadership)"
+                    >
+                      <span class="pill-text">{{ leadership }}</span>
+                    </div>
                     } @else {
-                      <div class="pill leadership-pill leadership-none">
-                        <span class="pill-text">Status N/A</span>
-                      </div>
+                    <div class="pill leadership-pill leadership-none">
+                      <span class="pill-text">Status N/A</span>
+                    </div>
                     }
                   </div>
-
-
-
                 </div>
 
                 <div class="metric-list">
+                  <ng-container *ngIf="spec?.daily_health?.metrics_detail">
+                    <div
+                      class="metric-row"
+                      *ngFor="
+                        let m of spec.daily_health.metrics_detail
+                          | keyvalue
+                          | slice : 0 : 4
+                      "
+                    >
+                      <span class="metric-name">
+                        {{
+                          $any(m.value)?.display_name ??
+                            formatMetricName($any(m.key))
+                        }}
+                      </span>
 
+                      <span
+                        class="metric-value"
+                        [style.color]="
+                          getMetricColor($any(m.value)?.current_period?.rate)
+                        "
+                      >
+                        @if ($any(m.value)?.current_period?.rate !== null &&
+                        $any(m.value)?.current_period?.rate !== undefined) {
+                        {{
+                          $any(m.value).current_period.rate | number : "1.0-0"
+                        }}% } @else {
+                        <span class="text-muted">N/A</span>
+                        }
+                      </span>
 
+                      <div class="contribution-bar">
+                        <div
+                          class="contribution-fill"
+                          [style.background-color]="
+                            getMetricColor($any(m.value)?.current_period?.rate)
+                          "
+                          [style.width.%]="
+                            $any(m.value)?.current_period?.rate ?? 0
+                          "
+                        ></div>
+                      </div>
+                    </div>
+                  </ng-container>
 
-
-<ng-container *ngIf="spec?.daily_health?.metrics_detail">
-  <div
-    class="metric-row"
-    *ngFor="let m of spec.daily_health.metrics_detail | keyvalue | slice : 0 : 4"
-  >
-    <span class="metric-name">
-      {{ $any(m.value)?.display_name ?? formatMetricName($any(m.key)) }}
-    </span>
-
-    <span
-      class="metric-value"
-      [style.color]="getMetricColor($any(m.value)?.current_period?.rate)"
-    >
-      @if ($any(m.value)?.current_period?.rate !== null && $any(m.value)?.current_period?.rate !== undefined) {
-        {{ $any(m.value).current_period.rate | number : "1.0-0" }}%
-      } @else {
-        <span class="text-muted">N/A</span>
-      }
-    </span>
-
-    <div class="contribution-bar">
-      <div
-        class="contribution-fill"
-        [style.background-color]="getMetricColor($any(m.value)?.current_period?.rate)"
-        [style.width.%]="$any(m.value)?.current_period?.rate ?? 0"
-      ></div>
-    </div>
-  </div>
-</ng-container>
-
-                  <div *ngIf="!spec?.daily_health?.metrics_detail" class="text-muted italic small">
+                  <div
+                    *ngIf="!spec?.daily_health?.metrics_detail"
+                    class="text-muted italic small"
+                  >
                     No pass rate metrics available for this specialization.
                   </div>
-
-
-
                 </div>
               </div>
 
-
-
-
               <div class="health-box">
-                <div class="health-box-title">📅 Monthly Health
-<div class="align-health">
-                  <span
-                    class=" "
-                    [style.color]="getStatusColor(spec?.monthly_health?.status)"
-                  >
-                    @if (spec?.monthly_health?.overall_score !== undefined && spec?.monthly_health?.overall_score !== null) {
-                      {{ spec.monthly_health.overall_score }}%
-                    } @else {
+                <div class="health-box-title">
+                  📅 Monthly Health
+                  <div class="align-health">
+                    <span
+                      class=" "
+                      [style.color]="
+                        getStatusColor(spec?.monthly_health?.status)
+                      "
+                    >
+                      @if (spec?.monthly_health?.overall_score !== undefined &&
+                      spec?.monthly_health?.overall_score !== null) {
+                      {{ spec.monthly_health.overall_score }}% } @else {
                       <span class="text-muted">N/A</span>
-                    }
-                  </span>
-                  <span
-                  class="trend-badge"
-                  *ngIf="spec?.monthly_health?.compliance?.score_change !== undefined && spec?.monthly_health?.score_change !== null"
-                  [ngClass]="{
-                    'status-excellent': spec.monthly_health.score_change > 0,
-                    'status-critical': spec.monthly_health.score_change < 0,
-                    'status-neutral': spec.monthly_health.score_change === 0
-                  }"
-                >
-                 {{ spec.monthly_health.score_change > 0 ? "↑" : spec.monthly_health.score_change < 0 ? "↓" : "•" }}
-                  {{ spec.monthly_health.score_change | number : "1.1-1" }}%
-                </span>
-                </div>
-
+                      }
+                    </span>
+                    <span
+                      class="trend-badge"
+                      *ngIf="
+                        spec?.monthly_health?.compliance?.score_change !==
+                          undefined &&
+                        spec?.monthly_health?.score_change !== null
+                      "
+                      [ngClass]="{
+                        'status-excellent':
+                          spec.monthly_health.score_change > 0,
+                        'status-critical': spec.monthly_health.score_change < 0,
+                        'status-neutral': spec.monthly_health.score_change === 0
+                      }"
+                    >
+                      {{
+                        spec.monthly_health.score_change > 0
+                          ? "↑"
+                          : spec.monthly_health.score_change < 0
+                          ? "↓"
+                          : "•"
+                      }}
+                      {{ spec.monthly_health.score_change | number : "1.1-1" }}%
+                    </span>
+                  </div>
                 </div>
                 <div>
-
                   <div class="comparison-grid">
                     <div class="comparison-node">
                       <span class="node-label">PREVIOUS MONTH</span>
                       <span class="node-value">
-                        {{ spec?.monthly_health?.previous_score ? (spec?.monthly_health?.previous_score  | number : "1.1-1") + '%' : 'N/A' }}
+                        {{
+                          spec?.monthly_health?.previous_score
+                            ? (spec?.monthly_health?.previous_score
+                                | number : "1.1-1") + "%"
+                            : "N/A"
+                        }}
                       </span>
-                      <span class="node-date">{{ spec?.monthly_health?.period_info?.previous?.date_display ?? '---' }}</span>
+                      <span class="node-date">{{
+                        spec?.monthly_health?.period_info?.previous
+                          ?.date_display ?? "---"
+                      }}</span>
                     </div>
                     <div class="comparison-divider">
-                      <span class="material-symbols-outlined moving-arrow">➡</span>
+                      <span class="material-symbols-outlined moving-arrow"
+                        >➡</span
+                      >
                     </div>
 
                     <div class="comparison-node">
                       <span class="node-label active">CURRENT MONTH</span>
                       <span class="node-value">
-                        {{ spec?.monthly_health?.overall_score | number : "1.1-1" }}%
+                        {{
+                          spec?.monthly_health?.overall_score
+                            | number : "1.1-1"
+                        }}%
                       </span>
-                      <span class="node-date">{{ spec?.monthly_health?.period_info?.current?.date_display ?? '---' }}</span>
+                      <span class="node-date">{{
+                        spec?.monthly_health?.period_info?.current
+                          ?.date_display ?? "---"
+                      }}</span>
                     </div>
                   </div>
 
-
-
-
-                <div class="spec-meta">
-
+                  <div class="spec-meta">
                     @if (spec?.monthly_health?.ranking; as ranking) {
-                      <div class="pill ranking-pill" [class.top-performer]="ranking.current_rank <= 3">
-                        <span class="pill-icon">🏆</span>
-                        <span class="pill-text">
-                          Rank <strong>#{{ ranking.current_rank }}</strong>
-                          <span class="total-count">/{{ ranking.total ?? '--' }}</span>
-                        </span>
-                      </div>
+                    <div
+                      class="pill ranking-pill"
+                      [class.top-performer]="ranking.current_rank <= 3"
+                    >
+                      <span class="pill-icon">🏆</span>
+                      <span class="pill-text">
+                        Rank <strong>#{{ ranking.current_rank }}</strong>
+                        <span class="total-count"
+                          >/{{ ranking.total ?? "--" }}</span
+                        >
+                      </span>
+                    </div>
                     }
 
                     <!-- Leadership Pill -->
                     @if (spec?.monthly_health?.leadership; as leadership) {
-                      <div class="pill leadership-pill" [ngClass]="getLeadershipClass(leadership)">
-                        <!-- <span class="status-dot"></span> -->
-                        <!-- {{spec?.monthly_health?.leadership_label}} -->
-                        <span class="pill-text">{{ leadership }}</span>
-                      </div>
+                    <div
+                      class="pill leadership-pill"
+                      [ngClass]="getLeadershipClass(leadership)"
+                    >
+                      <span class="pill-text">{{ leadership }}</span>
+                    </div>
                     } @else {
-                      <div class="pill leadership-pill leadership-none">
-                        <span class="pill-text">Status N/A</span>
-                      </div>
+                    <div class="pill leadership-pill leadership-none">
+                      <span class="pill-text">Status N/A</span>
+                    </div>
                     }
                   </div>
-
                 </div>
                 <div class="metric-list">
-
-
-
-              <ng-container *ngIf="spec?.monthly_health?.metrics_detail">
-                <div
-                  class="metric-row"
-                  *ngFor="let m of spec.monthly_health.metrics_detail | keyvalue | slice : 0 : 4"
-                >
-                  <span class="metric-name">
-                    {{ $any(m.value)?.display_name ?? formatMetricName($any(m.key)) }}
-                  </span>
-
-                  <span
-                    class="metric-value"
-                    [style.color]="getMetricColor($any(m.value)?.current_period?.rate)"
-                  >
-                    @if ($any(m.value)?.current_period?.rate !== null && $any(m.value)?.current_period?.rate !== undefined) {
-                      {{ $any(m.value).current_period.rate | number : "1.0-0" }}%
-                    } @else {
-                      <span class="text-muted">N/A</span>
-                    }
-                  </span>
-
-                  <div class="contribution-bar">
+                  <ng-container *ngIf="spec?.monthly_health?.metrics_detail">
                     <div
-                      class="contribution-fill"
-                      [style.background-color]="getMetricColor($any(m.value)?.current_period?.rate)"
-                      [style.width.%]="$any(m.value)?.current_period?.rate ?? 0"
-                    ></div>
-                  </div>
-                </div>
-              </ng-container>
+                      class="metric-row"
+                      *ngFor="
+                        let m of spec.monthly_health.metrics_detail
+                          | keyvalue
+                          | slice : 0 : 4
+                      "
+                    >
+                      <span class="metric-name">
+                        {{
+                          $any(m.value)?.display_name ??
+                            formatMetricName($any(m.key))
+                        }}
+                      </span>
 
-                  <div *ngIf="!spec?.monthly_health?.metrics_detail" class="text-muted italic small">
+                      <span
+                        class="metric-value"
+                        [style.color]="
+                          getMetricColor($any(m.value)?.current_period?.rate)
+                        "
+                      >
+                        @if ($any(m.value)?.current_period?.rate !== null &&
+                        $any(m.value)?.current_period?.rate !== undefined) {
+                        {{
+                          $any(m.value).current_period.rate | number : "1.0-0"
+                        }}% } @else {
+                        <span class="text-muted">N/A</span>
+                        }
+                      </span>
+
+                      <div class="contribution-bar">
+                        <div
+                          class="contribution-fill"
+                          [style.background-color]="
+                            getMetricColor($any(m.value)?.current_period?.rate)
+                          "
+                          [style.width.%]="
+                            $any(m.value)?.current_period?.rate ?? 0
+                          "
+                        ></div>
+                      </div>
+                    </div>
+                  </ng-container>
+
+                  <div
+                    *ngIf="!spec?.monthly_health?.metrics_detail"
+                    class="text-muted italic small"
+                  >
                     No pass rate metrics available for this specialization.
                   </div>
-
                 </div>
               </div>
             </div>
@@ -544,400 +637,266 @@
 
       <!-- View: PRODUCTS -->
       <div *ngIf="currentView === 'products'">
-          <!-- <div class="dashboard-container" *ngIf="digestData?.products">
+        <div class="dashboard" *ngIf="digestData?.products">
+          <!-- 1. TOP SUMMARY BAR -->
+          <div class="summary-grid">
+            <div
+              class="summary-card"
+              *ngFor="
+                let s of $any(digestData.products.summary.alerts_by_severity)
+                  | keyvalue
+              "
+              [ngClass]="$any(s.key).toLowerCase()"
+              (click)="expandAlerts($any(s.key))"
+              [class.is-active]="activeAlertKey === s.key"
+            >
+              <span class="label">{{ $any(s.value).label }}</span>
+              <span class="count">{{ $any(s.value).count }}</span>
+            </div>
+          </div>
 
-            <div class="section-header">
-              <h2>Performance Overview</h2>
-              <span class="total-badge">{{ digestData.products.summary.total_alerts }} Total Alerts</span>
+          <!-- 2. SIGNIFICANT DECLINES (Alerts Feed) -->
+          <div class="section-container">
+            <div class="alerts-container">
+              <div class="severity-group" *ngFor="let group of groupedAlerts">
+                <div
+                  class="alerts-list alert-data"
+                  *ngIf="expandedSections[group.severity]"
+                >
+                  <div class="alert-row" *ngFor="let alert of group.items">
+                    <div
+                      class="severity-indicator"
+                      [attr.data-severity]="alert.severity"
+                    ></div>
+                    <div class="alert-info">
+                      <div class="alert-top">
+                        <span class="alert-prod">{{ alert.product }}</span>
+                        <span class="alert-metric">{{
+                          alert.metric_display
+                        }}</span>
+                      </div>
+                      <div class="alert-msg">{{ alert.message }}</div>
+                    </div>
+                    <div class="alert-stats">
+                      <span class="change negative">
+                        {{
+                          alert.change > 0 ? "↑" : alert.change < 0 ? "↓" : "•"
+                        }}
+                        {{ alert.change | number : "1.1-1" }}%</span
+                      >
+
+                      <span class="vol">{{ alert.volume }} Cases</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="enterprise-breakdown">
+            <div class="section-header-v2">
+              <span class="header-icon">🏢</span>
+              <h3>Specialization Breakdown</h3>
             </div>
 
-            <div class="summary-grid">
-              <div class="stat-card"
-                *ngFor="let s of $any(digestData.products.summary.alerts_by_severity) | keyvalue"
-            [ngClass]="$any(s.key).toLowerCase()"
+            <div
+              class="spec-card-container"
+              *ngFor="let spec of digestData.products.specializations"
+            >
+              <div
+                class="spec-header-action"
+                (click)="toggleSpec(spec.specialization)"
+                [class.is-open]="openSpec === spec.specialization"
               >
-                <div class="stat-icon">
-                  <span *ngIf="s.key === 'CRITICAL'">🚨</span>
-                  <span *ngIf="s.key === 'HIGH'">⚠️</span>
-                  <span *ngIf="s.key === 'MEDIUM'">⚡</span>
-                  <span *ngIf="s.key === 'LOW'">🔍</span>
-                  <span *ngIf="s.key === 'INFO'">ℹ️</span>
+                <div class="spec-identity">
+                  <span class="spec-name-txt">{{ spec.specialization }}</span>
                 </div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ $any(s.value).label }}</div>
-                  <div class="stat-label">{{ $any(s.value).count }} Alerts</div>
+                <div class="spec-meta-pills">
+                  <span class="pill-count"
+                    >{{ spec.products_count }} Products</span
+                  >
                 </div>
               </div>
-            </div>
 
-            <div class="section-header mt-4">
-              <h2>Significant Declines</h2>
-              <p class="text-muted">Metrics showing significant drops across products</p>
-            </div>
-
-            <div class="alerts-feed">
-              <div class="alert-item" *ngFor="let alert of digestData.products.alerts" [attr.data-severity]="alert.severity">
-                <div class="alert-severity-bar"></div>
-                <div class="alert-main">
-                  <div class="alert-row">
-                    <span class="alert-product">{{ alert.product }}</span>
-                    <span class="alert-badge" [ngClass]="'badge-' + alert.severity.toLowerCase()">{{ alert.severity }}</span>
-                  </div>
-                  <div class="alert-message">{{ alert.message }}</div>
-                  <div class="alert-meta">
-                    <span><strong>Metric:</strong> {{ alert.metric_display }}</span>
-                    <span>•</span>
-                    <span><strong>Volume:</strong> {{ alert.volume }} cases</span>
-                    <span>•</span>
-                    <span class="specialization-tag">{{ alert.specialization }}</span>
-                  </div>
-                </div>
-                <div class="alert-trend">
-                  <span class="trend-value negative">{{ alert.change | number:'1.1-1' }}%</span>
-                  <span class="trend-label">Change</span>
-                </div>
-              </div>
-            </div>
-
-
-            <div class="section-header mt-5">
-              <h2>Metrics by Specialization</h2>
-            </div>
-
-            <div class="spec-container" *ngFor="let spec of digestData.products.specializations">
-              <h3 class="spec-title">{{ spec.specialization }} ({{ spec.products_count }} Products)</h3>
-
-              <div class="product-metrics-grid">
-                <div class="product-card" *ngFor="let prod of spec.products">
-                  <div class="product-header">
-                    <h4>{{ prod.product }}</h4>
-                    <span class="agent-count">{{ prod.tsrs_count }} Active Agents</span>
-                  </div>
-
-                  <div class="metrics-table">
-                    <div class="metric-row header">
-                      <span>Metric</span>
-                      <span>Last Week</span>
-                      <span>This Week</span>
-                      <span>Trend</span>
+              <div
+                class="spec-body-content"
+                *ngIf="openSpec === spec.specialization"
+              >
+                <div class="product-wrapper" *ngFor="let prod of spec.products">
+                  <div
+                    class="product-row-toggle"
+                    (click)="toggleProd(prod.product)"
+                    [class.expanded]="openProd === prod.product"
+                  >
+                    <div class="prod-primary">
+                      <span class="prod-name-bold">{{ prod.product }}</span>
+                      <div class="prod-secondary">
+                        <span>{{ prod.tsrs_count }} Agents</span>
+                        <span class="dot-sep">•</span>
+                        <span>{{ prod.volume.this_month }} Cases</span>
+                      </div>
                     </div>
 
-                    <div class="metric-row" *ngFor="let m of $any(prod.daily_metrics) | keyvalue">
+                    <span class="expand-indicator">{{
+                      openProd === prod.product ? "︿" : "﹀"
+                    }}</span>
+                  </div>
 
-            <span class="m-name">{{ $any(m.value).display_name }}</span>
+                  <div
+                    class="metrics-reveal-panel"
+                    *ngIf="openProd === prod.product"
+                  >
+                    <div class="cadence-grid">
+                      <div
+                        class="cadence-column"
+                        *ngIf="hasValidDailyMetrics(prod.daily_metrics)"
+                      >
+                        <h5 class="cadence-title">
+                          <span class="icon">📅</span> Daily Performance ({{
+                            this.metricsWeekDispaly
+                          }})
+                        </h5>
+                        <div class="table-container-mini">
+                          <table class="ops-table">
+                            <thead>
+                              <tr>
+                                <th>METRIC</th>
+                                <th>LAST WEEK</th>
+                                <th class="active-col">THIS WEEK</th>
+                                <th>TREND</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <ng-container
+                                *ngFor="
+                                  let m of $any(prod.daily_metrics) | keyvalue
+                                "
+                              >
+                                <tr>
+                                  <td class="metric-name-cell">
+                                    {{ $any(m.value).display_name }}
+                                  </td>
 
-            <span class="m-val">
-              {{ $any(m.value).last_week?.rate ? ($any(m.value).last_week.rate | number:'1.1-1') + '%' : 'N/A' }}
-            </span>
+                                  <td class="val-bold">
+                                    {{
+                                      $any(m.value).last_week.rate !== null &&
+                                      $any(m.value).last_week.rate !== undefined
+                                        ? ($any(m.value).last_week.rate
+                                            | number : "1.0-0") + "%"
+                                        : "--"
+                                    }}
+                                  </td>
 
+                                  <td class="val-bold">
+                                    {{
+                                      $any(m.value).this_week.rate !== null &&
+                                      $any(m.value).this_week.rate !== undefined
+                                        ? ($any(m.value).this_week.rate
+                                            | number : "1.0-0") + "%"
+                                        : "--"
+                                    }}
+                                  </td>
 
-            <span class="m-val highlight">
-              {{ $any(m.value).this_week?.rate ? ($any(m.value).this_week.rate | number:'1.1-1') + '%' : 'N/A' }}
-            </span>
+                                  <td>
+                                    <span
+                                      class="trend-indicator-v2"
+                                      [ngClass]="
+                                        $any(m.value).trend.toLowerCase()
+                                      "
+                                    >
+                                      {{
+                                        $any(m.value).trend === "NO_DATA"
+                                          ? "N/A"
+                                          : $any(m.value).trend
+                                      }}
+                                    </span>
+                                  </td>
+                                </tr>
+                              </ng-container>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
 
+                      <div
+                        class="cadence-column"
+                        *ngIf="hasValidMonthlyMetrics(prod.monthly_metrics)"
+                      >
+                        <h5 class="cadence-title">
+                          <span class="icon">📆</span> Monthly Performance ({{
+                            this.metricsMonthDispaly
+                          }})
+                        </h5>
+                        <div class="table-container-mini">
+                          <table class="ops-table">
+                            <thead>
+                              <tr>
+                                <th>METRIC</th>
+                                <th>LAST MONTH</th>
+                                <th class="active-col">THIS MONTH</th>
+                                <th>CHANGE</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <ng-container
+                                *ngFor="
+                                  let m of $any(prod.monthly_metrics) | keyvalue
+                                "
+                              >
+                                <tr>
+                                  <td class="metric-name-cell">
+                                    {{ $any(m.value).display_name }}
+                                  </td>
 
-            <span class="m-trend" [ngClass]="$any(m.value).trend?.toLowerCase()">
-              {{ $any(m.value).trend === 'IMPROVING' ? '↑' : $any(m.value).trend === 'DECLINING' ? '↓' : '—' }}
-            </span>
-          </div>
+                                  <td class="val-bold">
+                                    {{
+                                      $any(m.value).last_month.rate !== null &&
+                                      $any(m.value).last_month.rate !==
+                                        undefined
+                                        ? ($any(m.value).last_month.rate
+                                            | number : "1.0-0") + "%"
+                                        : "--"
+                                    }}
+                                  </td>
+
+                                  <td class="val-bold">
+                                    {{
+                                      $any(m.value).this_month.rate !== null &&
+                                      $any(m.value).this_month.rate !==
+                                        undefined
+                                        ? ($any(m.value).this_month.rate
+                                            | number : "1.0-0") + "%"
+                                        : "--"
+                                    }}
+                                  </td>
+
+                                  <td>
+                                    <span
+                                      class="trend-indicator-v2"
+                                      [ngClass]="
+                                        $any(m.value).trend.toLowerCase()
+                                      "
+                                    >
+                                      {{
+                                        $any(m.value).trend === "NO_DATA"
+                                          ? "N/A"
+                                          : $any(m.value).trend
+                                      }}
+                                    </span>
+                                  </td>
+                                </tr>
+                              </ng-container>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div> -->
-<div class="dashboard" *ngIf="digestData?.products">
-
-  <!-- 1. TOP SUMMARY BAR -->
-  <div class="summary-grid">
-     <div class="summary-card" *ngFor="let s of $any(digestData.products.summary.alerts_by_severity) | keyvalue"
-         [ngClass]="$any(s.key).toLowerCase()"(click)="expandAlerts($any(s.key))"
-         [class.is-active]="activeAlertKey === s.key">
-
-      <span class="label">{{ $any(s.value).label }}</span>
-      <span class="count">{{ $any(s.value).count }}</span>
-    </div>
-  </div>
-
-  <!-- 2. SIGNIFICANT DECLINES (Alerts Feed) -->
-  <div class="section-container">
-
-
-<div class="alerts-container">
-  <div class="severity-group" *ngFor="let group of groupedAlerts">
-
-    <!-- <div class="group-header"
-         (click)="toggleSection(group.severity)"
-         [ngClass]="group.severity.toLowerCase()">
-      <div class="header-left">
-        <span class="expand-icon">{{ expandedSections[group.severity] ? '▼' : '▶' }}</span>
-        <span class="severity-label">{{ group.severity }}</span>
-        <span class="severity-count">({{ group.count }})</span>
-      </div>
-      <div class="header-line"></div>
-    </div> -->
-
-    <div class="alerts-list alert-data" *ngIf="expandedSections[group.severity]">
-      <div class="alert-row" *ngFor="let alert of group.items">
-        <div class="severity-indicator" [attr.data-severity]="alert.severity"></div>
-        <div class="alert-info">
-          <div class="alert-top">
-            <span class="alert-prod">{{ alert.product }}</span>
-            <span class="alert-metric">{{ alert.metric_display }}</span>
-          </div>
-          <div class="alert-msg">{{ alert.message }}</div>
-        </div>
-        <div class="alert-stats">
-
-          <span class="change negative">
-           {{ alert.change > 0 ? "↑" : alert.change < 0 ? "↓" : "•" }}  {{ alert.change | number:'1.1-1' }}%</span>
-
-          <span class="vol">{{ alert.volume }} Cases</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-    <!-- <div class="alerts-list">
-      <div class="alert-row" *ngFor="let alert of digestData.products.alerts">
-        <div class="severity-indicator" [attr.data-severity]="alert.severity"></div>
-        <div class="alert-info">
-          <div class="alert-top">
-            <span class="alert-prod">{{ alert.product }}</span>
-            <span class="alert-metric">{{ alert.metric_display }}</span>
-          </div>
-          <div class="alert-msg">{{ alert.message }}</div>
-        </div>
-        <div class="alert-stats">
-          <span class="change negative">{{ alert.change }}%</span>
-          <span class="vol">{{ alert.volume }} Cases</span>
-        </div>
-      </div>
-    </div> -->
-  </div>
-
-
-
-<div class="enterprise-breakdown">
-  <div class="section-header-v2">
-    <span class="header-icon">🏢</span>
-    <h3>Specialization Breakdown</h3>
-  </div>
-
-  <div class="spec-card-container" *ngFor="let spec of digestData.products.specializations">
-    <div class="spec-header-action" (click)="toggleSpec(spec.specialization)" [class.is-open]="openSpec === spec.specialization">
-      <div class="spec-identity">
-         <span class="spec-name-txt">{{ spec.specialization }}</span>
-      </div>
-      <div class="spec-meta-pills">
-        <span class="pill-count">{{ spec.products_count }} Products</span>
-      </div>
-    </div>
-
-    <div class="spec-body-content" *ngIf="openSpec === spec.specialization">
-      <div class="product-wrapper" *ngFor="let prod of spec.products">
-
-        <div class="product-row-toggle" (click)="toggleProd(prod.product)" [class.expanded]="openProd === prod.product">
-          <div class="prod-primary">
-            <span class="prod-name-bold">{{ prod.product }}</span>
-            <div class="prod-secondary">
-              <span>{{ prod.tsrs_count }} Agents</span>
-              <span class="dot-sep">•</span>
-              <span>{{ prod.volume.this_month }} Cases</span>
-            </div>
-          </div>
-
-          <span class="expand-indicator">{{ openProd === prod.product ? '︿' : '﹀' }}</span>
-        </div>
-
-        <div class="metrics-reveal-panel" *ngIf="openProd === prod.product">
-          <div class="cadence-grid">
-
-            <div class="cadence-column" *ngIf="hasValidDailyMetrics(prod.daily_metrics)">
-              <h5 class="cadence-title"><span class="icon">📅</span> Daily Performance ({{this.metricsWeekDispaly}})</h5>
-               <div class="table-container-mini">
-                <table class="ops-table">
-                  <thead>
-                    <tr>
-                      <th>METRIC</th>
-                      <th>LAST WEEK</th>
-                      <th class="active-col">THIS WEEK</th>
-                      <th>TREND</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <ng-container *ngFor="let m of $any(prod.daily_metrics) | keyvalue">
-                        <tr>
-                          <td class="metric-name-cell">{{ $any(m.value).display_name }}</td>
-
-                          <td class="val-bold">
-                             {{ ($any(m.value).last_week.rate !== null && $any(m.value).last_week.rate !== undefined)
-                              ? ($any(m.value).last_week.rate | number:'1.0-0') + '%'
-                              : '--' }}
-                          </td>
-
-                          <td class="val-bold">
-                            {{ ($any(m.value).this_week.rate !== null && $any(m.value).this_week.rate !== undefined)
-                              ? ($any(m.value).this_week.rate | number:'1.0-0') + '%'
-                              : '--' }}
-                           </td>
-
-                          <td>
-                            <span class="trend-indicator-v2" [ngClass]="$any(m.value).trend.toLowerCase()">
-                               {{ $any(m.value).trend === 'NO_DATA' ? 'N/A' : $any(m.value).trend }}
-                            </span>
-                          </td>
-                        </tr>
-                      </ng-container>
-
-
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="cadence-column" *ngIf="hasValidMonthlyMetrics(prod.monthly_metrics)">
-              <h5 class="cadence-title"><span class="icon">📆</span> Monthly Performance ({{this.metricsMonthDispaly}})</h5>
-              <div class="table-container-mini">
-                <table class="ops-table">
-                  <thead>
-                    <tr>
-                      <th>METRIC</th>
-                      <th>LAST MONTH</th>
-                      <th class="active-col">THIS MONTH</th>
-                      <th>CHANGE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                     <ng-container *ngFor="let m of $any(prod.monthly_metrics) | keyvalue">
-                        <tr>
-                          <td class="metric-name-cell">{{ $any(m.value).display_name }}</td>
-
-                          <td class="val-bold">
-                              {{ ($any(m.value).last_month.rate !== null && $any(m.value).last_month.rate !== undefined)
-                              ? ($any(m.value).last_month.rate | number:'1.0-0') + '%'
-                              : '--' }}
-                            <!-- {{ $any(m.value).last_month.rate ? ($any(m.value).last_month.rate | number:'1.0-0') + '%' : '--' }} -->
-                          </td>
-
-                          <td class="val-bold">
-                             {{ ($any(m.value).this_month.rate !== null && $any(m.value).this_month.rate !== undefined)
-                              ? ($any(m.value).this_month.rate | number:'1.0-0') + '%'
-                              : '--' }}
-                            <!-- {{ $any(m.value).this_month.rate ? ($any(m.value).this_month.rate | number:'1.0-0') + '%' : '--' }} -->
-                          </td>
-
-                          <td>
-                            <span class="trend-indicator-v2" [ngClass]="$any(m.value).trend.toLowerCase()">
-                              {{ $any(m.value).trend === 'NO_DATA' ? 'N/A' : $any(m.value).trend }}
-                            </span>
-                          </td>
-                        </tr>
-                      </ng-container>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-  <!-- <div class="section-header mt-4">
-    <h3>🏢 Specialization Breakdown</h3>
-  </div>
-
-  <div class="spec-group" *ngFor="let spec of digestData.products.specializations">
-
-    <div class="spec-header" (click)="toggleSpec(spec.specialization)">
-      <div class="header-main">
-        <span class="chevron" [class.rotated]="openSpec === spec.specialization">▶</span>
-        <span class="title">{{ spec.specialization }}</span>
-        <span class="badge">{{ spec.products_count }} Products</span>
-      </div>
-    </div>
-
-
-    <div class="spec-content" *ngIf="openSpec === spec.specialization">
-      <div class="product-item" *ngFor="let prod of spec.products">
-
-        <div class="product-toggle" (click)="toggleProd(prod.product)" [class.active]="openProd === prod.product">
-          <div class="prod-info">
-            <span class="prod-name">{{ prod.product }}</span>
-            <span class="prod-meta">{{ prod.tsrs_count }} Active Agents • {{ prod.volume.this_month }} Total Cases</span>
-          </div>
-          <span class="chevron" [class.rotated]="openProd === prod.product">▼</span>
-        </div>
-
-
-        <div class="metrics-panel" *ngIf="openProd === prod.product">
-
-
-          <div class="metric-block">
-            <div class="block-title">📅 Daily Metrics (This Week vs Last Week)</div>
-            <table class="metric-table">
-              <thead>
-                <tr>
-                  <th>Metric</th>
-                  <th>Last Week</th>
-                  <th>This Week</th>
-                  <th>Yesterday</th>
-                  <th>Trend</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let m of $any(prod.daily_metrics) | keyvalue">
-                  <td class="m-name">{{ $any(m.value).display_name }}</td>
-                  <td>{{ $any(m.value).last_week.rate ? ($any(m.value).last_week.rate | number:'1.1-1') + '%' : '--' }}</td>
-                  <td class="highlight">{{ $any(m.value).this_week.rate ? ($any(m.value).this_week.rate | number:'1.1-1') + '%' : '--' }}</td>
-                  <td>{{ $any(m.value).yesterday.rate ? ($any(m.value).yesterday.rate | number:'1.1-1') + '%' : '--' }}</td>
-                  <td [ngClass]="$any(m.value).trend.toLowerCase()">
-                    {{ $any(m.value).trend }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="metric-block mt-3">
-            <div class="block-title">📆 Monthly Metrics (Dec vs Nov)</div>
-            <table class="metric-table">
-              <thead>
-                <tr>
-                  <th>Metric</th>
-                  <th>Last Month</th>
-                  <th>This Month</th>
-                  <th>Change</th>
-                  <th>Trend</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let m of $any(prod.monthly_metrics) | keyvalue">
-                  <td class="m-name">{{ $any(m.value).display_name }}</td>
-                  <td>{{ $any(m.value).last_month.rate ? ($any(m.value).last_month.rate | number:'1.1-1') + '%' : '--' }}</td>
-                  <td class="highlight">{{ $any(m.value).this_month.rate ? ($any(m.value).this_month.rate | number:'1.1-1') + '%' : '--' }}</td>
-                  <td [class.negative]="$any(m.value).change < 0" [class.positive]="$any(m.value).change > 0">
-                    {{ $any(m.value).change ? ($any(m.value).change | number:'1.1-1') + '%' : '0%' }}
-                  </td>
-                  <td [ngClass]="$any(m.value).trend.toLowerCase()">{{ $any(m.value).trend }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div> -->
-</div>
-
-
       </div>
 
       <!-- View: TRENDS -->
@@ -949,7 +908,7 @@
           <div class="focus-list">
             <div
               class="focus-item no-cursor"
-               [ngClass]="{
+              [ngClass]="{
                 'priority-critical': t.site_trend.status === 'CRITICAL',
                 'priority-high': t.site_trend.status === 'HIGH',
                 'priority-medium': t.site_trend.status === 'WARNING',
@@ -958,9 +917,8 @@
               *ngFor="let t of getTrendItems('declining')"
             >
               <div class="focus-item-header">
-
-               <span class="focus-item-title">
-                  {{ t?.metric_info.display_name || 'Unnamed Metric' }}
+                <span class="focus-item-title">
+                  {{ t?.metric_info.display_name || "Unnamed Metric" }}
                 </span>
                 <span
                   class="focus-item-badge"
@@ -970,48 +928,67 @@
                 >
               </div>
 
+              @if (t?.site_trend?.current_period?.rate !== null) {
+              <div class="comparison-grid">
+                <div class="comparison-node">
+                  <span class="node-label">PREVIOUS</span>
+                  <span class="node-value">
+                    {{
+                      t.site_trend.previous_period.rate
+                        ? (t.site_trend.previous_period.rate
+                            | number : "1.1-1") + "%"
+                        : "N/A"
+                    }}
+                  </span>
+                  <span class="node-date">{{
+                    t.site_trend.previous_period.date_display || "N/A"
+                  }}</span>
+                </div>
 
-                @if (t?.site_trend?.current_period?.rate !== null) {
-                  <div class="comparison-grid">
+                <div class="comparison-divider">
+                  <span class="arrow-color">➡</span>
+                </div>
 
-                    <div class="comparison-node">
-                      <span class="node-label">PREVIOUS</span>
-                      <span class="node-value">
-                        {{ t.site_trend.previous_period.rate ? (t.site_trend.previous_period.rate | number : "1.1-1") + '%' : 'N/A' }}
-                      </span>
-                      <span class="node-date">{{ t.site_trend.previous_period.date_display || 'N/A' }}</span>
-                    </div>
+                <div class="comparison-node">
+                  <span class="node-label active">CURRENT</span>
+                  <span class="node-value">
+                    {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
+                  </span>
+                  <span class="node-date">{{
+                    t.site_trend.current_period.date_display || "N/A"
+                  }}</span>
+                </div>
 
-                    <div class="comparison-divider">
-                      <span class="arrow-color">➡</span>
-                    </div>
-
-                    <div class="comparison-node">
-                      <span class="node-label active">CURRENT</span>
-                      <span class="node-value">
-                        {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
-                      </span>
-                      <span class="node-date">{{ t.site_trend.current_period.date_display || 'N/A' }}</span>
-                    </div>
-
-                    <div class="comparison-result">
-                      <div class="trend-badge-modern"
-                          [ngClass]="(t.site_trend.change_pct ?? 0) >= 0 ? 'bg-success' : 'bg-danger'">
-                        <span class="trend-icon">{{ (t.site_trend.change_pct ?? 0) >= 0 ? '▲' : '▼' }}</span>
-                      <span class="trend-val">
-                        {{ (t.site_trend.change_pct < 0 ? -t.site_trend.change_pct : t.site_trend.change_pct) | number : "1.1-1" }}%
-                      </span>
-                      </div>
-                    </div>
-
+                <div class="comparison-result">
+                  <div
+                    class="trend-badge-modern"
+                    [ngClass]="
+                      (t.site_trend.change_pct ?? 0) >= 0
+                        ? 'bg-success'
+                        : 'bg-danger'
+                    "
+                  >
+                    <span class="trend-icon">{{
+                      (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
+                    }}</span>
+                    <span class="trend-val">
+                      {{
+                        (t.site_trend.change_pct < 0
+                          ? -t.site_trend.change_pct
+                          : t.site_trend.change_pct
+                        ) | number : "1.1-1"
+                      }}%
+                    </span>
                   </div>
-                } @else {
-                  <div class="empty-state-mini">
-                    <span class="text-muted">No trend data available for this period</span>
-                  </div>
-                }
-
-
+                </div>
+              </div>
+              } @else {
+              <div class="empty-state-mini">
+                <span class="text-muted"
+                  >No trend data available for this period</span
+                >
+              </div>
+              }
             </div>
           </div>
         </div>
@@ -1022,7 +999,7 @@
           <div class="focus-list">
             <div
               class="focus-item no-cursor"
-               [ngClass]="{
+              [ngClass]="{
                 'priority-critical': t.site_trend.status === 'CRITICAL',
                 'priority-high': t.site_trend.status === 'HIGH',
                 'priority-medium': t.site_trend.status === 'WARNING',
@@ -1031,79 +1008,101 @@
               *ngFor="let t of getTrendItems('improving')"
             >
               <div class="focus-item-header">
-                <span class="focus-item-title">{{ t.metric_info.display_name }}</span>
+                <span class="focus-item-title">{{
+                  t.metric_info.display_name
+                }}</span>
                 <span
                   class="focus-item-badge"
                   [class.badge-daily]="t.metric_info.frequency === 'DAILY'"
                   [class.badge-monthly]="t.metric_info.frequency === 'MONTHLY'"
-
                   >{{ t.metric_info.frequency }}</span
                 >
               </div>
 
-                @if (t?.site_trend?.current_period?.rate !== null) {
-                  <div class="comparison-grid">
+              @if (t?.site_trend?.current_period?.rate !== null) {
+              <div class="comparison-grid">
+                <div class="comparison-node">
+                  <span class="node-label">PREVIOUS</span>
+                  <span class="node-value">
+                    {{
+                      t.site_trend.previous_period.rate
+                        ? (t.site_trend.previous_period.rate
+                            | number : "1.1-1") + "%"
+                        : "N/A"
+                    }}
+                  </span>
+                  <span class="node-date">{{
+                    t.site_trend.previous_period.date_display || "N/A"
+                  }}</span>
+                </div>
 
-                    <div class="comparison-node">
-                      <span class="node-label">PREVIOUS</span>
-                      <span class="node-value">
-                        {{ t.site_trend.previous_period.rate ? (t.site_trend.previous_period.rate | number : "1.1-1") + '%' : 'N/A' }}
-                      </span>
-                      <span class="node-date">{{ t.site_trend.previous_period.date_display || 'N/A' }}</span>
-                    </div>
+                <div class="comparison-divider">
+                  <span class="arrow-color">➡</span>
+                </div>
 
-                    <div class="comparison-divider">
-                      <span class="arrow-color">➡</span>
-                    </div>
+                <div class="comparison-node">
+                  <span class="node-label active">CURRENT</span>
+                  <span class="node-value">
+                    {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
+                  </span>
+                  <span class="node-date">{{
+                    t.site_trend.current_period.date_display || "N/A"
+                  }}</span>
+                </div>
 
-                    <div class="comparison-node">
-                      <span class="node-label active">CURRENT</span>
-                      <span class="node-value">
-                        {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
-                      </span>
-                      <span class="node-date">{{ t.site_trend.current_period.date_display || 'N/A' }}</span>
-                    </div>
-
-                    <div class="comparison-result">
-                      <div class="trend-badge-modern"
-                          [ngClass]="(t.site_trend.change_pct ?? 0) >= 0 ? 'bg-success' : 'bg-danger'">
-                        <span class="trend-icon">{{ (t.site_trend.change_pct ?? 0) >= 0 ? '▲' : '▼' }}</span>
-                      <span class="trend-val">
-                        {{ (t.site_trend.change_pct < 0 ? -t.site_trend.change_pct : t.site_trend.change_pct) | number : "1.1-1" }}%
-                      </span>
-                      </div>
-                    </div>
-
+                <div class="comparison-result">
+                  <div
+                    class="trend-badge-modern"
+                    [ngClass]="
+                      (t.site_trend.change_pct ?? 0) >= 0
+                        ? 'bg-success'
+                        : 'bg-danger'
+                    "
+                  >
+                    <span class="trend-icon">{{
+                      (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
+                    }}</span>
+                    <span class="trend-val">
+                      {{
+                        (t.site_trend.change_pct < 0
+                          ? -t.site_trend.change_pct
+                          : t.site_trend.change_pct
+                        ) | number : "1.1-1"
+                      }}%
+                    </span>
                   </div>
-                } @else {
-                  <div class="empty-state-mini">
-                    <span class="text-muted">No trend data available for this period</span>
-                  </div>
-                }
-
-
+                </div>
+              </div>
+              } @else {
+              <div class="empty-state-mini">
+                <span class="text-muted"
+                  >No trend data available for this period</span
+                >
+              </div>
+              }
             </div>
           </div>
         </div>
 
-         <div class="focus-section">
+        <div class="focus-section">
           <div class="section-title">
             ➡️ STABLE ({{ getTrendItems("stable").length }})
           </div>
           <div class="focus-list">
             <div
               class="focus-item no-cursor"
-            [ngClass]="{
+              [ngClass]="{
                 'priority-critical': t.site_trend.status === 'CRITICAL',
                 'priority-high': t.site_trend.status === 'HIGH',
                 'priority-medium': t.site_trend.status === 'WARNING',
                 'priority-low': t.site_trend.status === 'GOOD'
               }"
-
               *ngFor="let t of getTrendItems('stable')"
             >
               <div class="focus-item-header">
-                <span class="focus-item-title">{{ t.metric_info.display_name }}</span>
+                <span class="focus-item-title">{{
+                  t.metric_info.display_name
+                }}</span>
                 <span
                   class="focus-item-badge"
                   [class.badge-daily]="t.metric_info.frequency === 'DAILY'"
@@ -1112,55 +1111,70 @@
                 >
               </div>
 
+              @if (t?.site_trend?.current_period?.rate !== null) {
+              <div class="comparison-grid">
+                <div class="comparison-node">
+                  <span class="node-label">PREVIOUS</span>
+                  <span class="node-value">
+                    {{
+                      t.site_trend.previous_period.rate
+                        ? (t.site_trend.previous_period.rate
+                            | number : "1.1-1") + "%"
+                        : "N/A"
+                    }}
+                  </span>
+                  <span class="node-date">{{
+                    t.site_trend.previous_period.date_display || "N/A"
+                  }}</span>
+                </div>
 
-                @if (t?.site_trend?.current_period?.rate !== null) {
-                  <div class="comparison-grid">
+                <div class="comparison-divider">
+                  <span class="arrow-color">➡</span>
+                </div>
 
-                    <div class="comparison-node">
-                      <span class="node-label">PREVIOUS</span>
-                      <span class="node-value">
-                        {{ t.site_trend.previous_period.rate ? (t.site_trend.previous_period.rate | number : "1.1-1") + '%' : 'N/A' }}
-                      </span>
-                      <span class="node-date">{{ t.site_trend.previous_period.date_display || 'N/A' }}</span>
-                    </div>
+                <div class="comparison-node">
+                  <span class="node-label active">CURRENT</span>
+                  <span class="node-value">
+                    {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
+                  </span>
+                  <span class="node-date">{{
+                    t.site_trend.current_period.date_display || "N/A"
+                  }}</span>
+                </div>
 
-                    <div class="comparison-divider">
-                      <span class="arrow-color">➡</span>
-                    </div>
-
-                    <div class="comparison-node">
-                      <span class="node-label active">CURRENT</span>
-                      <span class="node-value">
-                        {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
-                      </span>
-                      <span class="node-date">{{ t.site_trend.current_period.date_display || 'N/A' }}</span>
-                    </div>
-
-                    <div class="comparison-result">
-                      <div class="trend-badge-modern"
-                          [ngClass]="(t.site_trend.change_pct ?? 0) >= 0 ? 'bg-success' : 'bg-danger'">
-                        <span class="trend-icon">{{ (t.site_trend.change_pct ?? 0) >= 0 ? '▲' : '▼' }}</span>
-                      <span class="trend-val">
-                        {{ (t.site_trend.change_pct < 0 ? -t.site_trend.change_pct : t.site_trend.change_pct) | number : "1.1-1" }}%
-                      </span>
-                      </div>
-                    </div>
-
+                <div class="comparison-result">
+                  <div
+                    class="trend-badge-modern"
+                    [ngClass]="
+                      (t.site_trend.change_pct ?? 0) >= 0
+                        ? 'bg-success'
+                        : 'bg-danger'
+                    "
+                  >
+                    <span class="trend-icon">{{
+                      (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
+                    }}</span>
+                    <span class="trend-val">
+                      {{
+                        (t.site_trend.change_pct < 0
+                          ? -t.site_trend.change_pct
+                          : t.site_trend.change_pct
+                        ) | number : "1.1-1"
+                      }}%
+                    </span>
                   </div>
-                } @else {
-                  <div class="empty-state-mini">
-                    <span class="text-muted">No trend data available for this period</span>
-                  </div>
-                }
+                </div>
               </div>
-
-
-
+              } @else {
+              <div class="empty-state-mini">
+                <span class="text-muted"
+                  >No trend data available for this period</span
+                >
+              </div>
+              }
             </div>
-
+          </div>
         </div>
-
-
       </div>
     </div>
   </div>
@@ -1174,144 +1188,191 @@
 >
   <div class="modal" (click)="$event.stopPropagation()" *ngIf="selectedAlert">
     <div class="modal-header">
-      <div class="modal-title">{{ selectedAlert.metric_info.display_name }}</div>
+      <div class="modal-title">
+        {{ selectedAlert.metric_info.display_name }}
+      </div>
       <button class="modal-close" (click)="closeDetailModal()">&times;</button>
     </div>
     <div class="modal-body">
       <div class="back-btn" (click)="closeDetailModal()">← Back to list</div>
 
-        <div class="detail-grid">
-
-
-          <!-- Status / Priority -->
-          <div class="detail-card">
-            <div class="card-icon">🚦</div>
-            <div class="card-content">
-              <div class="detail-label">Site Status</div>
-              <div class="status-pill" [ngClass]="getStatusClass(selectedAlert.site_overview?.site_status)">
-                <span class="status-dot"></span>
-                {{ selectedAlert.site_overview?.site_status || 'N/A' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Compliance Met -->
-          <div class="detail-card">
-            <div class="card-icon blue">👥</div>
-            <div class="card-content">
-              <div class="detail-label text-truncate">{{ selectedAlert.compliance?.met_count_label || 'Compliance Met' }}</div>
-              <div class="detail-value align-met-count">{{ selectedAlert.compliance?.met_count ?? 0 }}</div>
-            </div>
-          </div>
-
-          <!-- Total Agents -->
-          <div class="detail-card">
-            <div class="card-icon blue">📊</div>
-            <div class="card-content">
-              <div class="detail-label text-truncate">{{ selectedAlert.compliance?.total_agents_label || 'Total Agents' }}</div>
-              <div class="detail-value">{{ selectedAlert.compliance?.total_agents ?? 0 }}</div>
-            </div>
-          </div>
-
-          <!-- Site Score (High Impact Card) -->
-          <div class="detail-card score-card">
-            <div class="card-content">
-              <div class="detail-label">Site Score</div>
-              <div class="score-display">
-                @if (selectedAlert.compliance?.total_agents) {
-                  <span class="score-number">{{ selectedAlert.site_overview?.site_score_pct ?? '0' }}</span>
-                  <span class="score-percent">%</span>
-                } @else {
-                  <span class="detail-value muted">N/A</span>
-                }
-              </div>
-            </div>
-            <div class="score-progress-bg">
-              <!-- Dynamic progress bar at the bottom of the card -->
-              <div class="score-progress-fill" [style.width.%]="selectedAlert.site_overview?.site_score_pct"></div>
+      <div class="detail-grid">
+        <!-- Status / Priority -->
+        <div class="detail-card">
+          <div class="card-icon">🚦</div>
+          <div class="card-content">
+            <div class="detail-label">Site Status</div>
+            <div
+              class="status-pill"
+              [ngClass]="
+                getStatusClass(selectedAlert.site_overview?.site_status)
+              "
+            >
+              <span class="status-dot"></span>
+              {{ selectedAlert.site_overview?.site_status || "N/A" }}
             </div>
           </div>
         </div>
 
+        <!-- Compliance Met -->
+        <div class="detail-card">
+          <div class="card-icon blue">👥</div>
+          <div class="card-content">
+            <div class="detail-label text-truncate">
+              {{
+                selectedAlert.compliance?.met_count_label || "Compliance Met"
+              }}
+            </div>
+            <div class="detail-value align-met-count">
+              {{ selectedAlert.compliance?.met_count ?? 0 }}
+            </div>
+          </div>
+        </div>
 
+        <!-- Total Agents -->
+        <div class="detail-card">
+          <div class="card-icon blue">📊</div>
+          <div class="card-content">
+            <div class="detail-label text-truncate">
+              {{
+                selectedAlert.compliance?.total_agents_label || "Total Agents"
+              }}
+            </div>
+            <div class="detail-value">
+              {{ selectedAlert.compliance?.total_agents ?? 0 }}
+            </div>
+          </div>
+        </div>
 
-
-
-
+        <!-- Site Score (High Impact Card) -->
+        <div class="detail-card score-card">
+          <div class="card-content">
+            <div class="detail-label">Site Score</div>
+            <div class="score-display">
+              @if (selectedAlert.compliance?.total_agents) {
+              <span class="score-number">{{
+                selectedAlert.site_overview?.site_score_pct ?? "0"
+              }}</span>
+              <span class="score-percent">%</span>
+              } @else {
+              <span class="detail-value muted">N/A</span>
+              }
+            </div>
+          </div>
+          <div class="score-progress-bg">
+            <!-- Dynamic progress bar at the bottom of the card -->
+            <div
+              class="score-progress-fill"
+              [style.width.%]="selectedAlert.site_overview?.site_score_pct"
+            ></div>
+          </div>
+        </div>
+      </div>
 
       <div
         class="contribution-section"
-        *ngIf="selectedAlert?.breakdowns?.specialization_breakdown && hasValidBreakdown(selectedAlert.breakdowns.specialization_breakdown)"
-
+        *ngIf="
+          selectedAlert?.breakdowns?.specialization_breakdown &&
+          hasValidBreakdown(selectedAlert.breakdowns.specialization_breakdown)
+        "
       >
         <div class="contribution-title">🏢 Team Volume Contribution</div>
 
-          <div class="contribution-section">
-            <!-- Check if any record matches the criteria -->
-            <ng-container *ngIf="hasValidBreakdown(selectedAlert.breakdowns.specialization_breakdown); else noDataTemplate">
-
-              <ng-container *ngFor="let item of selectedAlert.breakdowns.specialization_breakdown | slice:0:5">
-                <!-- Only show the row if pct > 0 -->
-                <div class="contribution-row" *ngIf="$any(item).volume_share_pct > 0">
-                  <span class="contribution-label">{{ $any(item).specialization }}</span>
-                  <div class="contribution-bar">
-                    <div class="contribution-fill" [style.width.%]="$any(item).volume_share_pct"></div>
-                  </div>
-                  <span class="contribution-value">
-                    {{ $any(item).volume_share_pct | number : "1.0-1" }}%
-                  </span>
+        <div class="contribution-section">
+          <!-- Check if any record matches the criteria -->
+          <ng-container
+            *ngIf="
+              hasValidBreakdown(
+                selectedAlert.breakdowns.specialization_breakdown
+              );
+              else noDataTemplate
+            "
+          >
+            <ng-container
+              *ngFor="
+                let item of selectedAlert.breakdowns.specialization_breakdown
+                  | slice : 0 : 5
+              "
+            >
+              <!-- Only show the row if pct > 0 -->
+              <div
+                class="contribution-row"
+                *ngIf="$any(item).volume_share_pct > 0"
+              >
+                <span class="contribution-label">{{
+                  $any(item).specialization
+                }}</span>
+                <div class="contribution-bar">
+                  <div
+                    class="contribution-fill"
+                    [style.width.%]="$any(item).volume_share_pct"
+                  ></div>
                 </div>
-              </ng-container>
-
-            </ng-container>
-
-            <!-- Fallback Template -->
-            <ng-template #noDataTemplate>
-              <div class="no-data-msg">
-                <p>No data available</p>
+                <span class="contribution-value">
+                  {{ $any(item).volume_share_pct | number : "1.0-1" }}%
+                </span>
               </div>
-            </ng-template>
-          </div>
+            </ng-container>
+          </ng-container>
 
-
-
+          <!-- Fallback Template -->
+          <ng-template #noDataTemplate>
+            <div class="no-data-msg">
+              <p>No data available</p>
+            </div>
+          </ng-template>
+        </div>
       </div>
 
       <div
         class="contribution-section"
-        *ngIf="selectedAlert?.breakdowns?.products_breakdown && hasValidBreakdown(selectedAlert.breakdowns.products_breakdown)"
+        *ngIf="
+          selectedAlert?.breakdowns?.products_breakdown &&
+          hasValidBreakdown(selectedAlert.breakdowns.products_breakdown)
+        "
       >
         <div class="contribution-title">📦 Product Volume Contribution</div>
 
+        <div class="contribution-section">
+          <!-- Check if any record matches the criteria -->
+          <ng-container
+            *ngIf="
+              hasValidBreakdown(selectedAlert.breakdowns.products_breakdown);
+              else noDataTemplate
+            "
+          >
+            <ng-container
+              *ngFor="
+                let item of $any(selectedAlert?.breakdowns?.products_breakdown)
+                  | slice : 0 : 5
+              "
+            >
+              <!-- Only show the row if pct > 0 -->
+              <div
+                class="contribution-row"
+                *ngIf="$any(item).volume_share_pct > 0"
+              >
+                <span class="contribution-label">{{ $any(item).product }}</span>
+                <div class="contribution-bar">
+                  <div
+                    class="contribution-product-fill"
+                    [style.width.%]="$any(item).volume_share_pct"
+                  ></div>
+                </div>
+                <span class="contribution-value">
+                  {{ $any(item).volume_share_pct | number : "1.0-1" }}%
+                </span>
+              </div>
+            </ng-container>
+          </ng-container>
 
-
-<div class="contribution-section">
-  <!-- Check if any record matches the criteria -->
-  <ng-container *ngIf="hasValidBreakdown(selectedAlert.breakdowns.products_breakdown); else noDataTemplate">
-
-    <ng-container *ngFor="let item of $any(selectedAlert?.breakdowns?.products_breakdown) | slice:0:5">
-      <!-- Only show the row if pct > 0 -->
-      <div class="contribution-row" *ngIf="$any(item).volume_share_pct > 0">
-        <span class="contribution-label">{{ $any(item).product }}</span>
-        <div class="contribution-bar">
-          <div class="contribution-product-fill" [style.width.%]="$any(item).volume_share_pct"></div>
+          <!-- Fallback Template -->
+          <ng-template #noDataTemplate>
+            <div class="no-data-msg">
+              <p>No data available</p>
+            </div>
+          </ng-template>
         </div>
-        <span class="contribution-value">
-          {{ $any(item).volume_share_pct | number : "1.0-1" }}%
-        </span>
-      </div>
-    </ng-container>
-
-  </ng-container>
-
-  <!-- Fallback Template -->
-  <ng-template #noDataTemplate>
-    <div class="no-data-msg">
-      <p>No data available</p>
-    </div>
-  </ng-template>
-</div>
-
       </div>
     </div>
   </div>
