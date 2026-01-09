@@ -17,7 +17,7 @@
     </div>
 
     <div class="notification-list" *ngIf="!loading">
-       
+
    <div
   *ngFor="let note of notifications"
   class="notification-item"
@@ -687,7 +687,10 @@
           <div class="alert-msg">{{ alert.message }}</div>
         </div>
         <div class="alert-stats">
-          <span class="change negative">{{ alert.change | number:'1.1-1' }}%</span>
+
+          <span class="change negative">
+           {{ alert.change > 0 ? "↑" : alert.change < 0 ? "↓" : "•" }}  {{ alert.change | number:'1.1-1' }}%</span>
+
           <span class="vol">{{ alert.volume }} Cases</span>
         </div>
       </div>
@@ -765,22 +768,24 @@
                   </thead>
                   <tbody>
                     <ng-container *ngFor="let m of $any(prod.daily_metrics) | keyvalue">
-                        <tr *ngIf="$any(m.value).trend !== 'NO_DATA'&&
-                              $any(m.value).this_week?.rate != null &&
-                              $any(m.value).last_week?.rate !== 0">
+                        <tr>
                           <td class="metric-name-cell">{{ $any(m.value).display_name }}</td>
 
                           <td class="val-bold">
-                            {{ $any(m.value).last_week.rate ? ($any(m.value).last_week.rate | number:'1.0-0') + '%' : '--' }}
+                             {{ ($any(m.value).last_week.rate !== null && $any(m.value).last_week.rate !== undefined)
+                              ? ($any(m.value).last_week.rate | number:'1.0-0') + '%'
+                              : '--' }}
                           </td>
 
                           <td class="val-bold">
-                            {{ $any(m.value).this_week.rate ? ($any(m.value).this_week.rate | number:'1.0-0') + '%' : '--' }}
-                          </td>
+                            {{ ($any(m.value).this_week.rate !== null && $any(m.value).this_week.rate !== undefined)
+                              ? ($any(m.value).this_week.rate | number:'1.0-0') + '%'
+                              : '--' }}
+                           </td>
 
                           <td>
                             <span class="trend-indicator-v2" [ngClass]="$any(m.value).trend.toLowerCase()">
-                              {{ $any(m.value).trend }}
+                               {{ $any(m.value).trend === 'NO_DATA' ? 'N/A' : $any(m.value).trend }}
                             </span>
                           </td>
                         </tr>
@@ -806,17 +811,21 @@
                   </thead>
                   <tbody>
                      <ng-container *ngFor="let m of $any(prod.monthly_metrics) | keyvalue">
-                        <tr *ngIf="$any(m.value).trend !== 'NO_DATA' &&
-                              $any(m.value).this_month?.rate != null &&
-                              $any(m.value).last_month?.rate !== 0">
+                        <tr>
                           <td class="metric-name-cell">{{ $any(m.value).display_name }}</td>
 
                           <td class="val-bold">
-                            {{ $any(m.value).last_month.rate ? ($any(m.value).last_month.rate | number:'1.0-0') + '%' : '--' }}
+                              {{ ($any(m.value).last_month.rate !== null && $any(m.value).last_month.rate !== undefined)
+                              ? ($any(m.value).last_month.rate | number:'1.0-0') + '%'
+                              : '--' }}
+                            <!-- {{ $any(m.value).last_month.rate ? ($any(m.value).last_month.rate | number:'1.0-0') + '%' : '--' }} -->
                           </td>
 
                           <td class="val-bold">
-                            {{ $any(m.value).this_month.rate ? ($any(m.value).this_month.rate | number:'1.0-0') + '%' : '--' }}
+                             {{ ($any(m.value).this_month.rate !== null && $any(m.value).this_month.rate !== undefined)
+                              ? ($any(m.value).this_month.rate | number:'1.0-0') + '%'
+                              : '--' }}
+                            <!-- {{ $any(m.value).this_month.rate ? ($any(m.value).this_month.rate | number:'1.0-0') + '%' : '--' }} -->
                           </td>
 
                           <td>
@@ -1191,7 +1200,7 @@
             <div class="card-icon blue">👥</div>
             <div class="card-content">
               <div class="detail-label text-truncate">{{ selectedAlert.compliance?.met_count_label || 'Compliance Met' }}</div>
-              <div class="detail-value">{{ selectedAlert.compliance?.met_count ?? 0 }}</div>
+              <div class="detail-value align-met-count">{{ selectedAlert.compliance?.met_count ?? 0 }}</div>
             </div>
           </div>
 

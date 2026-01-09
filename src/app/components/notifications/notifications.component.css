@@ -2744,7 +2744,7 @@ thead {
 
     .detail-label {
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 600;
       color: #5f6368;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -2866,4 +2866,7 @@ thead {
 }
 .arrow-color {
   color: #1a73e8
+}
+.align-met-count {
+  padding-top:15px;
 }
