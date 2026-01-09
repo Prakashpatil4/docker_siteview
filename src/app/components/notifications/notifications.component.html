@@ -830,7 +830,7 @@
 
                           <td>
                             <span class="trend-indicator-v2" [ngClass]="$any(m.value).trend.toLowerCase()">
-                              {{ $any(m.value).trend }}
+                              {{ $any(m.value).trend === 'NO_DATA' ? 'N/A' : $any(m.value).trend }}
                             </span>
                           </td>
                         </tr>
