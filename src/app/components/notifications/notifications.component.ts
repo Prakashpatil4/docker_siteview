@@ -148,6 +148,8 @@ export class NotificationsComponent implements OnInit {
   @Output() unreadCountChange = new EventEmitter<number>();
   notifications: any;
   @Output() alertOccurred = new EventEmitter<string>();
+  metricsWeekDispaly: any;
+  metricsMonthDispaly: any;
   constructor(
     private svc: NotificationService,
     private filterService: FilterService
@@ -293,16 +295,96 @@ export class NotificationsComponent implements OnInit {
     });
   }
 
-  async getNotificationData() {
-    console.log('Getting Notifications')
-    //  this.userData.email use this user_id as a dynamic for below payload
-    let siteVal = '';
+  // async getNotificationData() {
+  //   console.log('Getting Notifications')
+  //   //  this.userData.email use this user_id as a dynamic for below payload
+  //   let siteVal = '';
 
-    if (this.selectedSite == 'Select') {
-      siteVal = 'ALL';
-    } else {
-      siteVal = this.selectedSite;
-    }
+  //   if (this.selectedSite == 'Select') {
+  //     siteVal = 'ALL';
+  //   } else {
+  //     siteVal = this.selectedSite;
+  //   }
+
+  //   const payload = {
+  //     user_id: 'oladri@google.com',
+  //     site: siteVal,
+  //     limit: 7,
+  //   };
+
+  //   this.loading = true;
+  //   try {
+  //     const response: any = await lastValueFrom(
+  //       this.svc.getNotificationData(payload)
+  //     );
+
+  //     this.notifications = response.map(async (item: any, i: number) => {
+  //       let summaryData = {
+  //         health_status: 'N/A',
+  //         people_focus: 'N/A',
+  //         key_areas: 'N/A',
+  //       };
+
+  //       if (item.summary) {
+  //         try {
+  //           const response: any = await lastValueFrom(
+  //             this.svc.getNotificationData(payload)
+  //           );
+
+  //           this.notifications = response.map((item: any) => {
+  //             let extractedBrightSpots = 'N/A';
+  //             let extractedStatusRisks = 'N/A';
+
+  //             if (item.summary) {
+  //                const brightSpotMatch = item.summary.match(
+  //                 /\*\*brightspots:\*\*\s*([^*]+)/
+  //               );
+  //                const statusRiskMatch = item.summary.match(
+  //                 /\*\*Bright Spots:\*\*\s*([^*]+)/
+  //               );
+
+  //               if (brightSpotMatch)
+  //                 extractedBrightSpots = brightSpotMatch[1].trim();
+  //               if (statusRiskMatch)
+  //                 extractedStatusRisks = statusRiskMatch[1].trim();
+  //             }
+
+  //             return {
+  //               notification_id: item.notification_id,
+  //               is_read: item.is_read,
+  //               created_at: item.report_date,
+  //               brightspots: extractedBrightSpots,
+  //               brightSpots: extractedStatusRisks,
+  //             };
+  //           });
+  //         } catch (e) {
+  //           console.error('API Error', e);
+  //         }
+  //       }
+
+  //       const formattedItem: any = {
+  //         notification_id: item.notification_id,
+  //         is_read: item.is_read,
+  //         created_at: item.report_date,
+  //         summary: summaryData.health_status,
+  //       };
+
+  //       return formattedItem;
+  //     });
+  //   } catch (err) {
+  //     console.error('Error fetching notifications:', err);
+  //     this.all = [];
+  //   } finally {
+  //     this.loading = false;
+  //   }
+  // }
+
+  async getNotificationData() {
+    // Use dynamic email if available, fallback to default
+    const userEmail = this.userData?.email || 'oladri@google.com';
+
+    // Site logic
+    const siteVal = this.selectedSite === 'Select' ? 'ALL' : this.selectedSite;
 
     const payload = {
       user_id: 'oladri@google.com',
@@ -311,122 +393,57 @@ export class NotificationsComponent implements OnInit {
     };
 
     this.loading = true;
+
     try {
+      // Call the API ONCE
       const response: any = await lastValueFrom(
         this.svc.getNotificationData(payload)
       );
 
-      this.notifications = response.map(async (item: any, i: number) => {
-        let summaryData = {
-          health_status: 'N/A',
-          people_focus: 'N/A',
-          key_areas: 'N/A',
-        };
+      // Process the data locally
+      this.notifications = response.map((item: any) => {
+        let extractedBrightSpots = 'N/A';
+        let extractedStatusRisks = 'N/A';
+        let extractedfocusrArea = 'N/A';
 
+        // Only perform Regex if summary exists in this specific item
         if (item.summary) {
-          try {
-            const response: any = await lastValueFrom(
-              this.svc.getNotificationData(payload)
-            );
+          // Regex to find text between **brightspots:** and the next ** header
+          const brightSpotMatch = item.summary.match(
+            /\*\*Bright Spots:\*\*\s*([^*]+)/
+          );
+          // Regex to find text between **Bright Spots:** and the next ** header
+          const statusRiskMatch = item.summary.match(
+            /\*\*Status & Risk:\*\*\s*([^*]+)/
+          );
 
-            this.notifications = response.map((item: any) => {
-              let extractedHighlights = 'N/A';
-              let extractedBrightSpots = 'N/A';
+          const focusrAreasMatch = item.summary.match(
+            /\*\*Focus Areas:\*\*\s*([^*]+)/
+          );
 
-              if (item.summary) {
-                 const highlightsMatch = item.summary.match(
-                  /\*\*Highlights:\*\*\s*([^*]+)/
-                );
-                 const brightSpotsMatch = item.summary.match(
-                  /\*\*Bright Spots:\*\*\s*([^*]+)/
-                );
-
-                if (highlightsMatch)
-                  extractedHighlights = highlightsMatch[1].trim();
-                if (brightSpotsMatch)
-                  extractedBrightSpots = brightSpotsMatch[1].trim();
-              }
-
-              return {
-                notification_id: item.notification_id,
-                is_read: item.is_read,
-                created_at: item.report_date,
-                highlights: extractedHighlights,
-                brightSpots: extractedBrightSpots,
-              };
-            });
-          } catch (e) {
-            console.error('API Error', e);
-          }
+          if (brightSpotMatch) extractedBrightSpots = brightSpotMatch[1].trim();
+          if (statusRiskMatch) extractedStatusRisks = statusRiskMatch[1].trim();
+          if (focusrAreasMatch)
+            extractedfocusrArea = focusrAreasMatch[1].trim();
         }
 
-        const formattedItem: any = {
+        // Return the clean, formatted object for the UI
+        return {
           notification_id: item.notification_id,
           is_read: item.is_read,
-          created_at: item.report_date,
-          summary: summaryData.health_status,
+          created_at: item.report_date, // For timeago pipe
+          brightspots: extractedBrightSpots,
+          statusRisks: extractedStatusRisks,
+          focusrAreas: extractedfocusrArea,
         };
-
-        return formattedItem;
       });
     } catch (err) {
       console.error('Error fetching notifications:', err);
-      this.all = [];
+      this.notifications = []; // Reset on error
     } finally {
       this.loading = false;
     }
   }
-
-// async getNotificationData() {
-//   // Use dynamic user email, fallback to a default if necessary
-//   const userId = this.userData?.email || 'oladri@google.com';
-
-//   const payload = {
-//     user_id: userId,
-//     site: this.selectedSite === 'Select' ? 'ALL' : this.selectedSite,
-//     limit: 7,
-//   };
-
-//   this.loading = true;
-
-//   try {
-//     // 1. Single API Call
-//     const response: any = await lastValueFrom(
-//       this.svc.getNotificationData(payload)
-//     );
-
-//     // 2. Process data locally (No more API calls inside map)
-//     this.notifications = response.map((item: any) => {
-//       let extractedHighlights = 'N/A';
-//       let extractedBrightSpots = 'N/A';
-
-//       if (item.summary) {
-//         // Regex logic
-//         const highlightsMatch = item.summary.match(/\*\*Highlights:\*\*\s*([^*]+)/);
-//         const brightSpotsMatch = item.summary.match(/\*\*Bright Spots:\*\*\s*([^*]+)/);
-
-//         if (highlightsMatch) extractedHighlights = highlightsMatch[1].trim();
-//         if (brightSpotsMatch) extractedBrightSpots = brightSpotsMatch[1].trim();
-//       }
-
-//       // Return the formatted object
-//       return {
-//         notification_id: item.notification_id,
-//         is_read: item.is_read,
-//         created_at: item.report_date, // For timeago pipe
-//         highlights: extractedHighlights,
-//         brightSpots: extractedBrightSpots,
-//         summary_raw: item.summary // Keep raw if needed
-//       };
-//     });
-
-//   } catch (err) {
-//     console.error('Error fetching notifications:', err);
-//     this.notifications = [];
-//   } finally {
-//     this.loading = false;
-//   }
-// }
 
   trackByFn(index: number, item: any) {
     return item.notification_id; // Tells Angular to track items by ID instead of index
@@ -564,6 +581,20 @@ export class NotificationsComponent implements OnInit {
   hasValidDailyMetrics(metrics: any): boolean {
     if (!metrics) return false;
 
+    const values = Object.values(metrics);
+    if (values.length > 0) {
+      const firstMetric: any = values[0];
+      const lastWeek = firstMetric.last_week?.date_display;
+      const thisWeek = firstMetric.this_week?.date_display;
+
+      // Join them with a hyphen if both exist, otherwise fallback to 'N/A'
+      if (lastWeek && thisWeek) {
+        this.metricsWeekDispaly = `${lastWeek} - ${thisWeek}`;
+      } else {
+        this.metricsWeekDispaly = lastWeek || thisWeek || 'N/A';
+      }
+    }
+    console.log('this.metricsWeekDispaly', this.metricsWeekDispaly);
     return Object.values(metrics).some((m: any) => {
       const hasTrend = m.trend !== 'NO_DATA';
       const hasRate = m.this_week?.rate != null && m.this_week?.rate !== 0;
@@ -571,9 +602,22 @@ export class NotificationsComponent implements OnInit {
       return hasTrend && hasRate;
     });
   }
+
   hasValidMonthlyMetrics(metrics: any): boolean {
     if (!metrics) return false;
+    const values = Object.values(metrics);
+    if (values.length > 0) {
+      const firstMetric: any = values[0];
+      const lastMonth = firstMetric.last_month?.date_display;
+      const thisMonth = firstMetric.this_month?.date_display;
 
+      // Join them with a hyphen if both exist, otherwise fallback to 'N/A'
+      if (lastMonth && thisMonth) {
+        this.metricsMonthDispaly = `${lastMonth} - ${thisMonth}`;
+      } else {
+        this.metricsMonthDispaly = lastMonth || thisMonth || 'N/A';
+      }
+    }
     return Object.values(metrics).some((m: any) => {
       const hasTrend = m.trend !== 'NO_DATA';
       const hasRate = m.this_month?.rate != null && m.this_month?.rate !== 0;

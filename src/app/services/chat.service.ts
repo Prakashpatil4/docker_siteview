@@ -20,7 +20,8 @@ export class ChatService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   readonly loading$ = this.loadingSubject.asObservable();
   private chatAPIURL =
-    'https://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com/';
+   'https://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com';
+
 
   private sessionId: string | null = null;
   private socket$?: WebSocketSubject<any>;
@@ -62,8 +63,7 @@ export class ChatService {
   }
 
   sendFeedback(payload: any): Observable<any> {
-    const apiUrl =
-      'https://e360-bot-mvp-dot-digital-sme.uc.r.appspot.com/feedback';
+    const apiUrl = `${this.chatAPIURL}/feedback`;
     return this.http.post(apiUrl, payload);
   }
 

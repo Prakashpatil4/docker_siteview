@@ -17,22 +17,7 @@
     </div>
 
     <div class="notification-list" *ngIf="!loading">
-      <!-- <div
-        *ngFor="let note of notifications"
-        class="notification-item"
-        [class.unread]="!note.is_read"
-        [class.is-read]="note.is_read"
-        (click)="openFullReport(note)"
-      >
-        <div class="notification-content">
-          <div class="notification-line" *ngIf="note.summary">
-            {{ note.summary }}
-          </div>
-          <div class="notification-time time-stamp">
-            {{ note.created_at | timeAgo }}
-          </div>
-        </div>
-      </div> -->
+       
    <div
   *ngFor="let note of notifications"
   class="notification-item"
@@ -41,12 +26,14 @@
   (click)="openFullReport(note)"
 >
   <div class="notification-content">
-    <div class="notification-line highlights-text">
-       <strong>Highlights:</strong> {{ note.highlights }}
+    <div class="notification-line highlights-text" *ngIf="note.brightspots !== 'N/A'">
+       <strong>Bright Spots:</strong> {{ note.brightspots }}
     </div>
-
-    <div class="notification-line bright-spots-text text-muted">
-       <span class="icon">✨</span> {{ note.brightSpots }}
+   <div class="notification-line highlights-text" *ngIf="note.statusRisks !== 'N/A'">
+       <strong>Status & Risk:</strong> {{ note.statusRisks }}
+    </div>
+    <div class="notification-line highlights-text" *ngIf="note.focusrAreas !== 'N/A'">
+       <strong>Focus Areas:</strong> {{ note.focusrAreas }}
     </div>
 
     <div class="notification-time time-stamp">
@@ -241,7 +228,7 @@
       </div>
 
       <!-- View: TEAMS (Specializations) -->
-      <div *ngIf="currentView === 'specializations'" class="focus-list">
+      <div *ngIf="currentView === 'specializations'" class="teams-focus-list">
          <!-- {{digestData.specializations | json}} -->
         <div
           class="spec-card"
@@ -332,14 +319,14 @@
                   <div class="comparison-grid">
                     <div class="comparison-node">
                       <span class="node-label">PREVIOUS WEEK</span>
-                      <span class="node-value muted">
+                      <span class="node-value">
                         {{ spec?.daily_health?.previous_score ? (spec?.daily_health?.previous_score  | number : "1.1-1") + '%' : 'N/A' }}
                       </span>
                       <span class="node-date">{{ spec?.daily_health?.period_info?.previous?.date_display ?? '---' }}</span>
                     </div>
 
                     <div class="comparison-divider">
-                      <span class="material-symbols-outlined">➡</span>
+                      <span class="material-symbols-outlined moving-arrow">➡</span>
                     </div>
 
                     <div class="comparison-node">
@@ -462,13 +449,13 @@
                   <div class="comparison-grid">
                     <div class="comparison-node">
                       <span class="node-label">PREVIOUS MONTH</span>
-                      <span class="node-value muted">
+                      <span class="node-value">
                         {{ spec?.monthly_health?.previous_score ? (spec?.monthly_health?.previous_score  | number : "1.1-1") + '%' : 'N/A' }}
                       </span>
                       <span class="node-date">{{ spec?.monthly_health?.period_info?.previous?.date_display ?? '---' }}</span>
                     </div>
                     <div class="comparison-divider">
-                      <span class="material-symbols-outlined">➡</span>
+                      <span class="material-symbols-outlined moving-arrow">➡</span>
                     </div>
 
                     <div class="comparison-node">
@@ -689,7 +676,7 @@
       <div class="header-line"></div>
     </div> -->
 
-    <div class="alerts-list" *ngIf="expandedSections[group.severity]">
+    <div class="alerts-list alert-data" *ngIf="expandedSections[group.severity]">
       <div class="alert-row" *ngFor="let alert of group.items">
         <div class="severity-indicator" [attr.data-severity]="alert.severity"></div>
         <div class="alert-info">
@@ -765,9 +752,9 @@
           <div class="cadence-grid">
 
             <div class="cadence-column" *ngIf="hasValidDailyMetrics(prod.daily_metrics)">
-              <h5 class="cadence-title"><span class="icon">📅</span> Daily Performance</h5>
-              <div class="table-container-mini">
-                <table class="ops-table border">
+              <h5 class="cadence-title"><span class="icon">📅</span> Daily Performance ({{this.metricsWeekDispaly}})</h5>
+               <div class="table-container-mini">
+                <table class="ops-table">
                   <thead>
                     <tr>
                       <th>METRIC</th>
@@ -783,7 +770,7 @@
                               $any(m.value).last_week?.rate !== 0">
                           <td class="metric-name-cell">{{ $any(m.value).display_name }}</td>
 
-                          <td class="val-muted">
+                          <td class="val-bold">
                             {{ $any(m.value).last_week.rate ? ($any(m.value).last_week.rate | number:'1.0-0') + '%' : '--' }}
                           </td>
 
@@ -806,9 +793,9 @@
             </div>
 
             <div class="cadence-column" *ngIf="hasValidMonthlyMetrics(prod.monthly_metrics)">
-              <h5 class="cadence-title"><span class="icon">📆</span> Monthly Performance</h5>
+              <h5 class="cadence-title"><span class="icon">📆</span> Monthly Performance ({{this.metricsMonthDispaly}})</h5>
               <div class="table-container-mini">
-                <table class="ops-table border">
+                <table class="ops-table">
                   <thead>
                     <tr>
                       <th>METRIC</th>
@@ -824,7 +811,7 @@
                               $any(m.value).last_month?.rate !== 0">
                           <td class="metric-name-cell">{{ $any(m.value).display_name }}</td>
 
-                          <td class="val-muted">
+                          <td class="val-bold">
                             {{ $any(m.value).last_month.rate ? ($any(m.value).last_month.rate | number:'1.0-0') + '%' : '--' }}
                           </td>
 
@@ -980,14 +967,14 @@
 
                     <div class="comparison-node">
                       <span class="node-label">PREVIOUS</span>
-                      <span class="node-value muted">
+                      <span class="node-value">
                         {{ t.site_trend.previous_period.rate ? (t.site_trend.previous_period.rate | number : "1.1-1") + '%' : 'N/A' }}
                       </span>
                       <span class="node-date">{{ t.site_trend.previous_period.date_display || 'N/A' }}</span>
                     </div>
 
                     <div class="comparison-divider">
-                      <span class="material-symbols-outlined">➡</span>
+                      <span class="arrow-color">➡</span>
                     </div>
 
                     <div class="comparison-node">
@@ -1050,14 +1037,14 @@
 
                     <div class="comparison-node">
                       <span class="node-label">PREVIOUS</span>
-                      <span class="node-value muted">
+                      <span class="node-value">
                         {{ t.site_trend.previous_period.rate ? (t.site_trend.previous_period.rate | number : "1.1-1") + '%' : 'N/A' }}
                       </span>
                       <span class="node-date">{{ t.site_trend.previous_period.date_display || 'N/A' }}</span>
                     </div>
 
                     <div class="comparison-divider">
-                      <span class="material-symbols-outlined">➡</span>
+                      <span class="arrow-color">➡</span>
                     </div>
 
                     <div class="comparison-node">
@@ -1122,14 +1109,14 @@
 
                     <div class="comparison-node">
                       <span class="node-label">PREVIOUS</span>
-                      <span class="node-value muted">
+                      <span class="node-value">
                         {{ t.site_trend.previous_period.rate ? (t.site_trend.previous_period.rate | number : "1.1-1") + '%' : 'N/A' }}
                       </span>
                       <span class="node-date">{{ t.site_trend.previous_period.date_display || 'N/A' }}</span>
                     </div>
 
                     <div class="comparison-divider">
-                      <span class="material-symbols-outlined">➡</span>
+                      <span class="arrow-color">➡</span>
                     </div>
 
                     <div class="comparison-node">
@@ -1185,7 +1172,7 @@
       <div class="back-btn" (click)="closeDetailModal()">← Back to list</div>
 
         <div class="detail-grid">
-          
+
 
           <!-- Status / Priority -->
           <div class="detail-card">
