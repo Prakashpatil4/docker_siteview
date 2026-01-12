@@ -49,12 +49,13 @@ export class HeaderComponent implements OnInit {
     private eRef: ElementRef
   ) {}
   ngOnInit(): void {
-    this.getUnreadNotificationCount();
     this.userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+    this.getUnreadNotificationCount();
   }
   // async loadNotifications(payload: any) {
   async getUnreadNotificationCount() {
     this.isLoading.set(true);
+    const userEmail = this.userData?.email;
     // this.userData.email  use this code for dynamic user_id
     let siteVal = '';
     if (this.selectedSite == 'Select') {
@@ -64,7 +65,7 @@ export class HeaderComponent implements OnInit {
     }
 
     const payload = {
-      user_id: 'oladri@google.com',
+      user_id: userEmail,
       site: siteVal,
     };
     try {

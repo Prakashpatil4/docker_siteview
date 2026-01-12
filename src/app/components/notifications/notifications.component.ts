@@ -292,13 +292,13 @@ export class NotificationsComponent implements OnInit {
 
   async getNotificationData() {
     // Use dynamic email if available, fallback to default
-    const userEmail = this.userData?.email || 'oladri@google.com';
+    const userEmail = this.userData?.email;
 
     // Site logic
     const siteVal = this.selectedSite === 'Select' ? 'ALL' : this.selectedSite;
 
     const payload = {
-      user_id: 'oladri@google.com',
+      user_id: userEmail,
       site: siteVal,
       limit: 7,
     };
@@ -370,7 +370,7 @@ export class NotificationsComponent implements OnInit {
     //  this.userData.email use this user_id as a dynamic for below payload
     //    "b41c862f-9dca-4d5d-bd0b-9331e27f8ce9"
     const payload = {
-      user_id: 'oladri@google.com',
+      user_id: this.userData.email,
       notification_id: note.notification_id,
     };
 
@@ -575,7 +575,7 @@ export class NotificationsComponent implements OnInit {
     return breakdown.some((item) => item.volume_share_pct > 0);
   }
 
-   
+
   closeModal(event?: Event) {
     if (event) {
       event.stopPropagation();

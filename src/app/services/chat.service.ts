@@ -37,7 +37,7 @@ export class ChatService {
 
     const apiUrl = `${this.chatAPIURL}/sessions`;
 
-    const body = { user_id: 'oladri@google.com' };
+    const body = { user_id: userData.email };
     //const body = { userid: userData.email, role: userData.role };
 
     return this.http.post<any>(apiUrl, body);
