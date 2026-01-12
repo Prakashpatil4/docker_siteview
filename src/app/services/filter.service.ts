@@ -13,6 +13,11 @@ export class FilterService {
   private siteSource = new BehaviorSubject<string>('Select');
   currentSite = this.siteSource.asObservable();
 
+  private agentButtonVisibility = new BehaviorSubject<boolean>(true);
+
+  // Observable for components to subscribe to
+  showAgentButton$ = this.agentButtonVisibility.asObservable();
+
   constructor() { }
 
   setBusinessLine(businessLine: string) {
@@ -20,5 +25,8 @@ export class FilterService {
   }
   setSite(site: string) {
     this.siteSource.next(site);
+  }
+  setAgentButtonVisibility(visible: boolean) {
+    this.agentButtonVisibility.next(visible);
   }
 }

@@ -204,33 +204,33 @@
 }
 /* filter - calendar */
 .custom-white-input.mat-mdc-form-field-appearance-fill .mat-mdc-text-field-wrapper {
-  background-color: white !important; 
+  background-color: white !important;
   border-radius: 8px !important;
-  border: 1px solid #d0d0d0 !important; 
-  box-shadow: none !important; 
-  height: 48px !important; 
-  box-sizing: border-box !important; 
+  border: 1px solid #d0d0d0 !important;
+  box-shadow: none !important;
+  height: 48px !important;
+  box-sizing: border-box !important;
   padding: 0 16px !important;
 }
 .custom-white-input.mat-mdc-form-field-appearance-fill .mat-mdc-form-field-underline {
   display: none !important;
 }
 .custom-white-input .mat-mdc-form-field-infix {
-  padding: 12px 0 !important; 
-  min-height: 48px !important; 
+  padding: 12px 0 !important;
+  min-height: 48px !important;
   display: flex !important;
   align-items: center !important;
 }
 .custom-white-input .mat-mdc-form-field-label {
   color: rgba(0, 0, 0, 0.6) !important;
-  top: 50% !important; 
-  transform: translateY(-50%) !important; 
-  left: 16px !important; 
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  left: 16px !important;
   transition: transform 0.2s ease-out, font-size 0.2s ease-out, top 0.2s ease-out !important;
 }
 .custom-white-input .mat-mdc-form-field-label.mdc-floating-label--float {
-  transform: translateY(-100%) scale(0.75) !important; 
-  top: -8px !important; 
+  transform: translateY(-100%) scale(0.75) !important;
+  top: -8px !important;
   left: 12px !important;
   background-color: white;
   padding: 0 4px;
@@ -282,91 +282,46 @@
     /* You can combine the above into a shorthand property: */
     /* animation: blinker 1s linear infinite; */
 }
-.connect-agent {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    background: linear-gradient(90deg, #ff0066, #ff8a00);
-    color: #fff;
-    border-radius: 999px;
-    cursor: pointer;
-    font-weight: 800;
-    letter-spacing: 0.2px;
-    transform-origin: center;
-    box-shadow: 0 6px 22px rgba(255, 90, 110, 0.28),
-        inset 0 -2px 0 rgba(255, 255, 255, 0.06);
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
-    position: relative;
-    z-index: 10;
-    animation: ca-bounce 1.6s cubic-bezier(0.2, 0.9, 0.3, 1) infinite,
-        ca-glow 2.2s ease-in-out infinite;
 
-    /* Prevent the animated pseudo-element from creating page overflow */
-    overflow: hidden;
+.agent-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background-color: rgba(59, 130, 246);
+  color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 28px; /* High rounding for the pill shape */
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 1000;
+
+  /* Material Design Shadow */
+  box-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+ 
+.agent-fab:active {
+  background-color: #e8f0fe;
+  transform: scale(0.95);
 }
 
-/* live pulse ring - use centered sizing + transform so it stays inside parent bounds */
-.connect-agent::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: calc(100% + 32px);
-    /* larger than the button but contained by overflow:hidden */
-    height: calc(100% + 32px);
-    transform: translate(-50%, -50%) scale(0.9);
-    border-radius: 999px;
-    background: radial-gradient(circle at center,
-            rgba(255, 140, 90, 0.1),
-            transparent 40%);
-    opacity: 0.95;
-    z-index: -1;
-    pointer-events: none;
-    animation: ca-ring 1.8s ease-out infinite;
+.agent-fab .icon {
+  font-size: 18px;
 }
 
-/* --- Floating Button Core Styles --- */
-.connect-agent-btn {
-    /* Core Positioning */
-    position: fixed;
-    bottom: 20px;
-    /* Distance from the bottom edge */
-    right: 20px;
-    /* Distance from the right edge */
-    z-index: 10000;
-    /* Ensure it stays above all other content */
-
-    /* Appearance and Functionality */
-    background-color: #4a90e2;
-    /* Accent Color (e.g., primary blue) */
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 30px;
-    /* Pill shape for a modern look */
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 600;
-
-    /* Subtle Effects */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    /* Soft shadow for lift */
-    transition: background-color 0.3s ease, transform 0.2s ease,
-        box-shadow 0.3s ease;
-}
-
-/* Hover Effect for Engagement */
-.connect-agent-btn:hover {
-    background-color: #3a7acb;
-    /* Slightly darker blue on hover */
-    transform: translateY(-2px);
-    /* Slight lift effect */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* Optional: Focus effect for accessibility */
-.connect-agent-btn:focus {
-    outline: 2px solid #285e9b;
-    outline-offset: 2px;
+/* Optional: Make it just an icon on very small screens */
+@media (max-width: 600px) {
+  .agent-fab .label {
+    display: none;
+  }
+  .agent-fab {
+    padding: 12px;
+    border-radius: 50%;
+  }
 }

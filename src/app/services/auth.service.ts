@@ -2,62 +2,106 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { tap, delay } from 'rxjs/operators';
-
+export interface User {
+  email: string;
+  role: string;
+}
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
-  
+
   // This is where your real backend URL would go later
-private apiUrl = 'http://localhost:8080/api/auth/login';
-  constructor() { }
+  private apiUrl = 'http://localhost:8080/api/auth/login';
+  private storageKey = 'currentUser';
+  
+  constructor() {}
 
   login(credentials: any): Observable<any> {
     const REQUIRED_ROLE = 'Operations Manager';
 
     const validUsers = [
-      { name: 'Shirisha', email: 'singamshirisha@google.com', password: 'user@123', role: 'Technical Troubleshooting Agent' },
-      { name: 'Saachi', email: 'sshrikhande@google.com', password: 'user@123', role: 'Technical Troubleshooting Agent' },
-      { name: 'Prakash Patil', email: 'pspatil@google.com', password: 'user@123', role: 'Team Lead' },
-      { name: 'Swaranna Srikanth Reddy', email: 'reddysw@google.com', password: 'user@123', role: 'Team Lead' },
-      { name: 'Suma Oladri', email: 'oladri@google.com', password: 'user@123', role: 'Operations Manager' },
-      { name: 'Harisankar PN', email: 'harisankar@google.com', password: 'user@123', role: 'Operations Manager' },
-
+      {
+        name: 'Shirisha',
+        email: 'singamshirisha@google.com',
+        password: 'user@123',
+        role: 'Technical Troubleshooting Agent',
+      },
+      {
+        name: 'Saachi',
+        email: 'sshrikhande@google.com',
+        password: 'user@123',
+        role: 'Technical Troubleshooting Agent',
+      },
+      {
+        name: 'Prakash Patil',
+        email: 'pspatil@google.com',
+        password: 'user@123',
+        role: 'Team Lead',
+      },
+      {
+        name: 'Swaranna Srikanth Reddy',
+        email: 'reddysw@google.com',
+        password: 'user@123',
+        role: 'Team Lead',
+      },
+      {
+        name: 'Suma Oladri',
+        email: 'oladri@google.com',
+        password: 'user@123',
+        role: 'Operations Manager',
+      },
+      {
+        name: 'Harisankar PN',
+        email: 'harisankar@google.com',
+        password: 'user@123',
+        role: 'Operations Manager',
+      },
     ];
 
-    const foundUser = validUsers.find(user => 
-      user.email === credentials.email && 
-      user.password === credentials.password &&
-      user.name === credentials.name 
+    const foundUser = validUsers.find(
+      (user) =>
+        user.email === credentials.email &&
+        user.password === credentials.password &&
+        user.name === credentials.name
       // && user.role === credentials.role
     );
-    
+
     if (foundUser) {
       // User found! Now WE check the role (User doesn't get to choose)
-      
+
       if (foundUser.role === REQUIRED_ROLE) {
         // SUCCESS
+        const userDetails: User = {
+          email: foundUser.email,
+          role: 'siteops',
+        };
+
+        // Only set it if it doesn't exist yet
+        if (!localStorage.getItem(this.storageKey)) {
+          localStorage.setItem(this.storageKey, JSON.stringify(userDetails));
+        }
+
         return of({ token: 'fake-jwt', user: foundUser.name }).pipe(
-          delay(1000), 
-          tap(res => localStorage.setItem('token', res.token))
+          delay(1000),
+          tap((res) => localStorage.setItem('token', res.token))
         );
       } else {
         // FOUND, BUT WRONG ROLE
-        return new Observable(observer => {
+        return new Observable((observer) => {
           setTimeout(() => {
-            observer.error({ 
-              status: 403, 
+            observer.error({
+              status: 403,
               // This error explains exactly why they failed
-              message: `Access Denied. You are a ${foundUser.role}, but this page is for ${REQUIRED_ROLE}s only.` 
+              message: `Access Denied. You are a ${foundUser.role}, but this page is for ${REQUIRED_ROLE}s only.`,
             });
           }, 1000);
         });
       }
-
     } else {
       // NOT FOUND (Wrong Email/Pass/Name)
-      return new Observable(observer => {
+      return new Observable((observer) => {
         setTimeout(() => {
           observer.error({ status: 401, message: 'Invalid Credentials' });
         }, 1000);
