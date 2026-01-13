@@ -20,9 +20,8 @@ export class ChatService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   readonly loading$ = this.loadingSubject.asObservable();
   private chatAPIURL =
-   'https://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com';
-
-
+    'https://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com';
+  private readonly BASE_URL = 'wss://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com/ws';
   private sessionId: string | null = null;
   private socket$?: WebSocketSubject<any>;
 
@@ -75,7 +74,6 @@ export class ChatService {
   }
 
   connect(sessionId: string, selectedSite: any): void {
-    console.log('selected site-->' + selectedSite);
     if (this.socket$ && !this.socket$.closed) {
       return; // Already connected
     }
@@ -86,9 +84,9 @@ export class ChatService {
       return;
     }
 
-    // --- FIX 1: Corrected syntax with backticks (`) --- e360-bot-mvp-dot-digital-sme.uc.r.appspot.com
-    const wsUrl = `wss://e360-siteops-bot-dot-digital-sme.uc.r.appspot.com/ws/${this.sessionId}?owner_team=${selectedSite}`;
-
+    //const wsUrl = `{{this.BASE_URL}}/ws/${this.sessionId}?owner_team=${selectedSite}`;
+    const wsUrl = `${this.BASE_URL}/${this.sessionId}?owner_team=${selectedSite}`;
+ 
     this.socket$ = new WebSocketSubject(wsUrl);
     console.log('socket-->' + JSON.stringify(this.socket$));
     // --- FIX 2: Added full message handling logic ---
