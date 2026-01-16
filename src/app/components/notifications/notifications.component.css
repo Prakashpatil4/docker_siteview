@@ -83,7 +83,7 @@
 .notification-panel {
   display: none;
   position: absolute;
-  top: calc(100% -6px);
+  top: calc(100% - 6px);
   right: 0;
   width: 380px;
   right: -50px;
