@@ -1,0 +1,16 @@
+service: e360-siteops-ui
+runtime: custom
+env: flex
+
+# Resources for the VM
+resources:
+  cpu: 1
+  memory_gb: 1.5
+  disk_size_gb: 10
+
+# Scaling settings (keeps 1 instance running to avoid 502s)
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 2
+
+

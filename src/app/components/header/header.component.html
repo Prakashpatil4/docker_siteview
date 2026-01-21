@@ -31,20 +31,21 @@
       </div>
     </div>
   </div>
-
-  <div class="flex items-center space-x-4">
-    
-    <div class="notification-container">
-  <button (click)="toggleNotification()" class="bell-button">
-    <span class="icon-wrapper">
-      <i class="fa-solid fa-bell"></i>
-      <div *ngIf="!showNotification" class="notification-badge"></div>
-    </span>
-  </button>
-
-  <div *ngIf="showNotification" class="notification-box">
-You are all caught up!
-  </div>
+<div class="loader-overlay" *ngIf="isLoading()">
+  <div class="spinner"></div>
 </div>
+  <div class="flex items-center space-x-4">
+    <div class="notification-container">
+      <button (click)="toggleNotification($event)" class="bell-button">
+        <span class="icon-wrapper">
+          <i class="fa-solid fa-bell"></i>
+            <div *ngIf="unreadCount > 0" class="notification-read-count-wrapper notification-read-count" id="notificationBadge">{{unreadCount}}</div>
+        </span>
+      </button>
+
+      <div *ngIf="showNotification" class="notification-new-dropdown-wrapper">
+        <app-notifications (alertOccurred)="handleChildAlert()"    [unreadCount] = "unreadCount" (close)="closeNotification()"></app-notifications>
+      </div>
+    </div>
   </div>
 </header>

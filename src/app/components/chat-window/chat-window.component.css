@@ -1,0 +1,671 @@
+ /* --- Global & Centering (Modified for fixed position) --- */
+
+.chat-wrapper {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 100%;
+  max-width: 500px;
+  height: 80vh;
+  min-height: 400px; /* default fixed height */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1),
+    /* Largest shadow */ 0 6px 10px rgba(0, 0, 0, 0.08),
+    /* Medium shadow */ 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  z-index: 10000;
+  font-family: Arial, sans-serif;
+}
+.chat-wrapper.minimized {
+  width: 500px;
+  height: 40px;
+  min-height: 0;
+}
+
+button {
+  color: white;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  height: 30px;
+  background: #007bff;
+  color: #fff;
+  border-bottom: 1px solid #e6e9ee;
+}
+.chat-header .title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.chat-header .controls button {
+  margin-left: 20px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.chat-body {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 44px);
+  box-sizing: border-box;
+}
+.messages {
+  overflow: auto;
+  /* let messages grow to fill available body height */
+  flex: 1 1 auto;
+  padding-right: 4px;
+}
+
+.msg-user .msg-text {
+  background: linear-gradient(45deg, #ff7e5f, #feb47b);
+  color: white;
+  align-self: flex-end;
+  border-top-right-radius: 4px;
+  font-weight: 500;
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.composer input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+.composer button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 0;
+  background: #007bff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.loader-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50px; /* below header */
+  bottom: 86px; /* leave space for composer */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 5;
+  pointer-events: none; /* allow clicks to pass (optional) */
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid rgba(0, 0, 0, 0.12);
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  pointer-events: auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ensure chat-wrapper is position:relative so overlay positions correctly */
+
+/* Fancy chat hint */
+.chat-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin: 8px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #eef2ff 100%);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: #0f1724;
+  font-size: 13px;
+  line-height: 1.2;
+  position: relative;
+  overflow: hidden;
+  animation: hintSlideIn 300ms ease;
+}
+
+/* Soft chat message styles */
+:root {
+  --user-bg: #e6f0ff;
+  --user-border: #c7ddff;
+  --bot-bg: #f7fafc;
+  --bot-border: #e6eef5;
+  --text-color: #0f1724;
+  --muted: #6b7280;
+  --accent: #2563eb;
+}
+
+/* message row */
+.messages {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.messages .msg-user {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+/* bot (left) */
+.messages .msg-bot {
+  margin-right: auto;
+  flex-direction: row;
+}
+
+/* bubble text */
+.msg-text {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.25;
+  color: var(--text-color);
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.04);
+  border: 1px solid transparent;
+  word-break: break-word;
+  max-width: 480px;
+}
+
+/* bot bubble look */
+.msg-bot .msg-text {
+  background: #e9ecef;
+  color: black;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 14px;
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+/* subtle entrance */
+@keyframes fadeInUp {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* place timestamp under each bubble */
+.messages .msg-user,
+.messages .msg-bot {
+  display: flex;
+  flex-direction: column; /* stack bubble and time vertically */
+  max-width: 90%;
+  animation: fadeInUp 160ms ease;
+  align-items: flex-start; /* default; overridden for user below */
+}
+
+/* bot messages align to the left */
+.messages .msg-bot {
+  margin-right: auto;
+  align-items: flex-start; /* bubble and time align to left edge */
+}
+
+/* timestamp shown below the bubble */
+.msg-time {
+  font-size: 11px;
+  color: var(--muted, #6b7280);
+  opacity: 0.9;
+  margin-top: 5px;
+  padding: 0 4px;
+  align-self: flex-end; /* default for user; overridden for bot */
+}
+
+/* small-screen tweaks */
+@media (max-width: 420px) {
+  .msg-text {
+    max-width: calc(100vw - 140px);
+  } /* avoid overflow on small devices */
+}
+
+.message {
+  padding: 10px 15px;
+  border-radius: 18px;
+  max-width: 80%; /* Ensures message bubbles don't stretch too far */
+  line-height: 1.4;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.timestamp {
+  display: block;
+  font-size: 0.7em;
+  color: #888;
+  margin-top: 5px;
+}
+
+.message.received {
+  background-color: #e9ecef; /* Light gray */
+  align-self: flex-start; /* Aligns to the left */
+}
+
+.message.sent {
+  background-color: #007bff; /* Primary color */
+  color: white;
+  align-self: flex-end; /* Aligns to the right */
+}
+
+.message.sent .timestamp {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Header Styling (No Change) --- */
+.chat-header {
+  background-color: #3f51b5;
+  color: white;
+  padding: 15px 20px;
+  text-align: left;
+  font-weight: 600;
+  height: 45px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header h3 {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+/* --- Messages Area Styling (No Change) --- */
+.chat-messages {
+  flex-grow: 1;
+  padding: 20px 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Scrollbar Styling */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: #aeb4c6;
+  border-radius: 3px;
+}
+
+/* --- Individual Message Styling (No Change) --- */
+.message {
+  padding: 14px 18px;
+  border-radius: 20px;
+  max-width: 80%;
+  line-height: 1.4;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.timestamp {
+  display: block;
+  font-size: 0.7em;
+  color: #777;
+  margin-top: 5px;
+  text-align: right;
+  opacity: 0.9;
+}
+
+.message.received {
+  background-color: #f0f4f7;
+  color: #333;
+  align-self: flex-start;
+  border-top-left-radius: 4px;
+}
+
+.message.sent {
+  background: linear-gradient(45deg, #ff7e5f, #feb47b);
+  color: white;
+  align-self: flex-end;
+  border-top-right-radius: 4px;
+  font-weight: 500;
+}
+
+/* --- Input Area Styling (No Change) --- */
+.chat-input { 
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f7f7f7;
+}
+
+.input-main {
+  flex-grow: 1;
+  height: 38px;
+  padding: 12px 15px;
+  border: 1px solid #cfdef3;
+  border-radius: 25px;
+  font-size: 1em;
+  margin-right: 10px;
+  background-color: white;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.input-main:focus {
+  outline: none;
+  border-color: #ff7e5f;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08),
+    0 0 5px rgba(255, 126, 95, 0.5);
+}
+
+.send-button {
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s, transform 0.1s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+ 
+  margin: 0 5px;
+}
+
+.send-button:hover:enabled {
+  background-color: #3f51b5;
+  transform: translateY(-1px);
+}
+/* --- New Typing Indicator Styling --- */
+
+/* The actual message bubble for the 'typing' state */
+.typing-indicator {
+    /* Ensure it aligns like a received message */
+    align-self: flex-start;
+    background-color: #e0e0e0;
+    padding: 8px 12px;
+    border-radius: 18px;
+    /* Optional: Remove the timestamp from this bubble */
+    min-height: 20px;
+    max-width: fit-content;
+}
+
+/* Container for the animated dots */
+.typing-dots {
+    display: flex;
+    align-items: center;
+    height: 10px; /* Space for the dots to move */
+}
+
+/* Individual dots */
+.typing-dots span {
+    width: 6px;
+    height: 6px;
+    margin: 0 2px;
+    background-color: #555; /* Dot color */
+    border-radius: 50%;
+    opacity: 0;
+    animation: bounce 1.2s infinite ease-in-out;
+}
+
+/* Delay for each dot to create the "wave" effect */
+.typing-dots span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* The bounce animation itself */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translateY(-5px); /* Move dot up */
+        opacity: 1;
+    }
+}
+
+/* Hide the .msg-time content for this specific indicator if it were present */
+.typing-indicator .msg-time {
+    display: none;
+}
+
+/* --- Modal Background and Overlay --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20000; /* High z-index to ensure it sits on top of the chat window */
+}
+
+/* --- Modal Content Box --- */
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.4em;
+  color: #333;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #999;
+}
+
+/* --- Form and Text Area --- */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+  min-height: 100px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.validation-error {
+  color: #d9534f;
+  font-size: 0.85em;
+  margin-top: 5px;
+}
+
+/* --- Action Buttons --- */
+.form-actions {
+  text-align: center;
+}
+
+.submit-button {
+  padding: 10px 20px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover:enabled {
+  background-color: #3a7acb;
+}
+
+.submit-button:disabled {
+  background-color: #a0c3ec; /* Lighter blue when disabled */
+  cursor: not-allowed;
+}
+
+/* --- Base Chat Header Styles (Existing) --- */
+.chat-header {
+    background-color: #4a90e2; /* VIP Support Blue */
+    color: white;
+    padding: 12px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    /* Adjusted alignment to fit the new button */
+    justify-content: space-between;
+    align-items: center;
+    cursor: default; /* Remove cursor: pointer from header if we only want controls to be clickable */
+}
+
+.chat-header .title {
+    /* Keep title on the left */
+    flex-grow: 1;
+}
+
+.feedback-button {
+  background: #3f51b5;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  color: #fff;
+  font-size: 18px;
+}
+
+.feedback-button:hover {
+  background-color: #e0e0e0; /* Light grey hover for contrast */
+}
+
+/* --- Controls Styling (Existing, but ensures right alignment) --- */
+.chat-header .controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Ensure the control buttons don't inherit the feedback-button styling */
+.chat-header .controls button {
+    /* Ensure styles from previous example are here: */
+    font-size: 18px;
+    margin-left: 8px;
+    padding: 2px 5px;
+    line-height: 1;
+}
+/* --- Rating Group Styling --- */
+.rating-group {
+    margin-bottom: 25px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.rating-group label {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.star-rating {
+    font-size: 30px; /* Size of the star characters */
+    display: inline-block;
+}
+
+.star {
+    cursor: pointer;
+    color: #ccc; /* Unfilled star color (light gray) */
+    transition: color 0.2s;
+    user-select: none; /* Prevent selection */
+    padding: 0 2px;
+}
+
+/* Filled star color (Typically gold/yellow) */
+.star.filled {
+    color: #ffc107;
+}
+
+/* Hover effect on stars */
+.star-rating:hover .star {
+    /* When hovering over the container, all stars turn filled */
+    color: #ffc107;
+}
+
+/* Clear the filled state when hovering *over a star* to allow the rating to be selected */
+.star-rating .star:hover ~ .star {
+    color: #ccc;
+}
+
+/* --- Success Message Styling --- */
+.success-message {
+  background-color: #d4edda; /* Light green */
+  color: #155724; /* Dark green text */
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  padding: 15px;
+  text-align: center;
+  font-size: 1.1em;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

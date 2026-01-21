@@ -14,6 +14,14 @@
        <!-- <i class="fa-solid fa-user-secret fa-8x"></i> -->
     </div>
   </section>
+
+<button *ngIf="!showAgentButton || !isShowChatWindow" (click)="showChatWindow()" class="agent-fab">
+  <span class="icon">💬</span>
+  <span class="label">Digital Agent Assist</span>
+</button>
+<div *ngIf="isShowChatWindow">
+  <app-chat-window [userId]="selectedUserId" (closed)="isShowChatWindow = false"></app-chat-window>
+</div>
   <!-- calender filter -->
   <div class="flex items-center justify-between w-full px-4 py-2">
 

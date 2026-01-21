@@ -204,33 +204,33 @@
 }
 /* filter - calendar */
 .custom-white-input.mat-mdc-form-field-appearance-fill .mat-mdc-text-field-wrapper {
-  background-color: white !important; 
+  background-color: white !important;
   border-radius: 8px !important;
-  border: 1px solid #d0d0d0 !important; 
-  box-shadow: none !important; 
-  height: 48px !important; 
-  box-sizing: border-box !important; 
+  border: 1px solid #d0d0d0 !important;
+  box-shadow: none !important;
+  height: 48px !important;
+  box-sizing: border-box !important;
   padding: 0 16px !important;
 }
 .custom-white-input.mat-mdc-form-field-appearance-fill .mat-mdc-form-field-underline {
   display: none !important;
 }
 .custom-white-input .mat-mdc-form-field-infix {
-  padding: 12px 0 !important; 
-  min-height: 48px !important; 
+  padding: 12px 0 !important;
+  min-height: 48px !important;
   display: flex !important;
   align-items: center !important;
 }
 .custom-white-input .mat-mdc-form-field-label {
   color: rgba(0, 0, 0, 0.6) !important;
-  top: 50% !important; 
-  transform: translateY(-50%) !important; 
-  left: 16px !important; 
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  left: 16px !important;
   transition: transform 0.2s ease-out, font-size 0.2s ease-out, top 0.2s ease-out !important;
 }
 .custom-white-input .mat-mdc-form-field-label.mdc-floating-label--float {
-  transform: translateY(-100%) scale(0.75) !important; 
-  top: -8px !important; 
+  transform: translateY(-100%) scale(0.75) !important;
+  top: -8px !important;
   left: 12px !important;
   background-color: white;
   padding: 0 4px;
@@ -262,4 +262,66 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+}
+.attention-message {
+    /* You can blink other properties like background-color or border as well */
+    background-color: #ffdddd;
+    /* Optional: A background color for better visual cue */
+    border: 1px solid red;
+    /* Optional: A border to highlight it */
+
+    /* Animation properties: */
+    animation-name: blinker;
+    animation-duration: 1s;
+    /* The total time for one cycle (on/off/on) */
+    animation-timing-function: linear;
+    /* Constant speed */
+    animation-iteration-count: infinite;
+    /* Keeps repeating forever */
+
+    /* You can combine the above into a shorthand property: */
+    /* animation: blinker 1s linear infinite; */
+}
+
+.agent-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background-color: rgba(59, 130, 246);
+  color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 28px; /* High rounding for the pill shape */
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 1000;
+
+  /* Material Design Shadow */
+  box-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+ 
+.agent-fab:active {
+  background-color: #e8f0fe;
+  transform: scale(0.95);
+}
+
+.agent-fab .icon {
+  font-size: 18px;
+}
+
+/* Optional: Make it just an icon on very small screens */
+@media (max-width: 600px) {
+  .agent-fab .label {
+    display: none;
+  }
+  .agent-fab {
+    padding: 12px;
+    border-radius: 50%;
+  }
 }
