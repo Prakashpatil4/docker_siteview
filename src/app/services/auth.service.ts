@@ -15,7 +15,7 @@ export class AuthService {
   // This is where your real backend URL would go later
   private apiUrl = 'http://localhost:8080/api/auth/login';
   private storageKey = 'currentUser';
-  
+
   constructor() {}
 
   login(credentials: any): Observable<any> {
@@ -70,18 +70,16 @@ export class AuthService {
 
     if (foundUser) {
       // User found! Now WE check the role (User doesn't get to choose)
-
-      if (foundUser.role === REQUIRED_ROLE) {
+       if (foundUser.role === REQUIRED_ROLE) {
         // SUCCESS
-        const userDetails: User = {
+         const userDetails: User = {
           email: foundUser.email,
           role: 'siteops',
         };
-
-        // Only set it if it doesn't exist yet
-        if (!localStorage.getItem(this.storageKey)) {
+         // Only set it if it doesn't exist yet
+       // if (!localStorage.getItem(this.storageKey)) {
           localStorage.setItem(this.storageKey, JSON.stringify(userDetails));
-        }
+      //  }
 
         return of({ token: 'fake-jwt', user: foundUser.name }).pipe(
           delay(1000),
@@ -108,7 +106,7 @@ export class AuthService {
       });
     }
   }
-  
+
 
   // Helper to remove token on logout
   logout() {
