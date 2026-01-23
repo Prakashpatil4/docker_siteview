@@ -530,6 +530,14 @@ export class NotificationsComponent implements OnInit {
     if (trend === 'DECLINING') return 'trending_down';
     return 'remove';
   }
+ // Generic function to find a record by frequency type
+getRecordByFrequency(freqType: string) {
+  if (!this.digestData || !this.digestData.focus) return null;
+
+  return this.digestData.focus.find((item: { metric_info: { frequency: string; }; }) =>
+    item.metric_info?.frequency === freqType
+  );
+}
   get dailyMetricsCount(): number {
     if (!this.digestData?.focus) return 0;
     return Object.values(this.digestData.focus).reduce(

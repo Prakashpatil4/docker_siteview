@@ -106,6 +106,12 @@
         <div class="focus-section" *ngIf="digestData.focus?.length > 0">
           <div class="section-title">
             📅 Daily Metrics ({{ dailyAlerts.length }})
+            <div
+              class="focus-item-badge badge-daily"
+              *ngIf="getRecordByFrequency('DAILY') as daily"
+            >
+              <div>{{ daily.metric_info.time_range.date_display }}</div>
+            </div>
           </div>
           <div class="focus-list">
             <ng-container *ngFor="let alert of digestData.focus">
@@ -117,7 +123,7 @@
                   'priority-high': alert.site_overview.site_status === 'HIGH',
                   'priority-medium':
                     alert.site_overview.site_status === 'WARNING',
-                  'priority-low': alert.site_overview.site_status === 'GOOD'
+                  'priority-low': alert.site_overview.site_status === 'GOOD',
                 }"
                 *ngIf="alert.metric_info?.frequency === 'DAILY'"
                 (click)="openAlertDetail(alert)"
@@ -133,19 +139,24 @@
 
                 <div class="focus-item-stats">
                   @if (alert.compliance?.total_agents) {
-                  {{ alert.compliance.met_count ?? 0 }}/{{
-                    alert.compliance.total_agents
-                  }}
-                  TSRs • site score:
-                  {{ alert.site_overview?.site_score_pct ?? "0" }}% } @else {
-                  <span class="muted">N/A</span>
+                    {{ alert.compliance.met_count ?? 0 }}/{{
+                      alert.compliance.total_agents
+                    }}
+                    TSRs • site score:
+                    {{ alert.site_overview?.site_score_pct ?? "0" }}%
+                  } @else {
+                    <span class="muted">N/A</span>
                   }
                 </div>
 
                 <div class="focus-item-insight">
                   <p class="metric-insight">
                     <ng-container
-                      *ngIf="alert?.breakdowns?.specialization_breakdown?.[0]?.specialization; else teamAffected"
+                      *ngIf="
+                        alert?.breakdowns?.specialization_breakdown?.[0]
+                          ?.specialization;
+                        else teamAffected
+                      "
                     >
                       <span>💡</span> Main contributor:
                       {{
@@ -155,17 +166,20 @@
                       <span class="value-text">
                         ({{
                           (alert.breakdowns.specialization_breakdown[0]
-                            .volume_share_pct | number : "1.1-2") ?? "0.0"
+                            .volume_share_pct | number: "1.1-2") ?? "0.0"
                         }}%)
                       </span>
                     </ng-container>
 
                     <ng-template #teamAffected>
-                      @if (alert?.affected_pct !== null && alert?.affected_pct
-                      !== undefined) {
-                      {{ alert.affected_pct | number : "1.1-1" }}% of team
-                      affected } @else {
-                      <span class="text-muted">N/A</span>
+                      @if (
+                        alert?.affected_pct !== null &&
+                        alert?.affected_pct !== undefined
+                      ) {
+                        {{ alert.affected_pct | number: "1.1-1" }}% of team
+                        affected
+                      } @else {
+                        <span class="text-muted">N/A</span>
                       }
                     </ng-template>
                   </p>
@@ -176,6 +190,12 @@
 
           <div class="section-title align-monthly-title">
             📅 Monthly Metrics ({{ monthlyAlerts.length }})
+              <div
+              class="focus-item-badge badge-monthly"
+              *ngIf="getRecordByFrequency('MONTHLY') as monthly"
+            >
+              <div>{{ monthly.metric_info.time_range.date_display }}</div>
+            </div>
           </div>
           <div class="focus-list">
             <ng-container *ngFor="let alert of digestData.focus">
@@ -187,7 +207,7 @@
                   'priority-high': alert.site_overview.site_status === 'HIGH',
                   'priority-medium':
                     alert.site_overview.site_status === 'WARNING',
-                  'priority-low': alert.site_overview.site_status === 'GOOD'
+                  'priority-low': alert.site_overview.site_status === 'GOOD',
                 }"
                 *ngIf="alert.metric_info?.frequency === 'MONTHLY'"
                 (click)="openAlertDetail(alert)"
@@ -196,26 +216,31 @@
                   <span class="focus-item-title">
                     {{ alert.metric_info.display_name }}
                   </span>
-                  <span class="focus-item-badge badge-daily">
+                  <span class="focus-item-badge badge-monthly">
                     {{ alert.metric_info.frequency }}
                   </span>
                 </div>
 
                 <div class="focus-item-stats">
                   @if (alert.compliance?.total_agents) {
-                  {{ alert.compliance.met_count ?? 0 }}/{{
-                    alert.compliance.total_agents
-                  }}
-                  TSRs • site score:
-                  {{ alert.site_overview?.site_score_pct ?? "0" }}% } @else {
-                  <span class="muted">N/A</span>
+                    {{ alert.compliance.met_count ?? 0 }}/{{
+                      alert.compliance.total_agents
+                    }}
+                    TSRs • site score:
+                    {{ alert.site_overview?.site_score_pct ?? "0" }}%
+                  } @else {
+                    <span class="muted">N/A</span>
                   }
                 </div>
 
                 <div class="focus-item-insight">
                   <p class="metric-insight">
                     <ng-container
-                      *ngIf="alert?.breakdowns?.specialization_breakdown?.[0]?.specialization; else teamAffected"
+                      *ngIf="
+                        alert?.breakdowns?.specialization_breakdown?.[0]
+                          ?.specialization;
+                        else teamAffected
+                      "
                     >
                       <span>💡</span> Main contributor:
                       {{
@@ -225,17 +250,20 @@
                       <span class="value-text">
                         ({{
                           (alert.breakdowns.specialization_breakdown[0]
-                            .volume_share_pct | number : "1.1-2") ?? "0.0"
+                            .volume_share_pct | number: "1.1-2") ?? "0.0"
                         }}%)
                       </span>
                     </ng-container>
 
                     <ng-template #teamAffected>
-                      @if (alert?.affected_pct !== null && alert?.affected_pct
-                      !== undefined) {
-                      {{ alert.affected_pct | number : "1.1-1" }}% of team
-                      affected } @else {
-                      <span class="text-muted">N/A</span>
+                      @if (
+                        alert?.affected_pct !== null &&
+                        alert?.affected_pct !== undefined
+                      ) {
+                        {{ alert.affected_pct | number: "1.1-1" }}% of team
+                        affected
+                      } @else {
+                        <span class="text-muted">N/A</span>
                       }
                     </ng-template>
                   </p>
@@ -267,11 +295,13 @@
                   class="spec-health-value"
                   [style.color]="getStatusColor(spec?.daily_health?.status)"
                 >
-                  @if (spec?.daily_health?.overall_score !== undefined &&
-                  spec?.daily_health?.overall_score !== null) {
-                  {{ spec.daily_health.overall_score | number : "1.1-1" }}% }
-                  @else {
-                  <span class="text-muted" style="font-size: 0.8em">N/A</span>
+                  @if (
+                    spec?.daily_health?.overall_score !== undefined &&
+                    spec?.daily_health?.overall_score !== null
+                  ) {
+                    {{ spec.daily_health.overall_score | number: "1.1-1" }}%
+                  } @else {
+                    <span class="text-muted" style="font-size: 0.8em">N/A</span>
                   }
                 </div>
                 <div class="spec-health-label">Daily</div>
@@ -281,11 +311,13 @@
                   class="spec-health-value"
                   [style.color]="getStatusColor(spec?.monthly_health?.status)"
                 >
-                  @if (spec?.monthly_health?.overall_score !== undefined &&
-                  spec?.monthly_health?.overall_score !== null) {
-                  {{ spec.monthly_health.overall_score | number : "1.1-1" }}% }
-                  @else {
-                  <span class="text-muted" style="font-size: 0.8em">N/A</span>
+                  @if (
+                    spec?.monthly_health?.overall_score !== undefined &&
+                    spec?.monthly_health?.overall_score !== null
+                  ) {
+                    {{ spec.monthly_health.overall_score | number: "1.1-1" }}%
+                  } @else {
+                    <span class="text-muted" style="font-size: 0.8em">N/A</span>
                   }
                 </div>
 
@@ -315,10 +347,13 @@
                       class=" "
                       [style.color]="getStatusColor(spec?.daily_health?.status)"
                     >
-                      @if (spec?.daily_health?.overall_score !== undefined &&
-                      spec?.daily_health?.overall_score !== null) {
-                      {{ spec.daily_health.overall_score }}% } @else {
-                      <span class="text-muted">N/A</span>
+                      @if (
+                        spec?.daily_health?.overall_score !== undefined &&
+                        spec?.daily_health?.overall_score !== null
+                      ) {
+                        {{ spec.daily_health.overall_score }}%
+                      } @else {
+                        <span class="text-muted">N/A</span>
                       }
                     </span>
                     <span
@@ -330,17 +365,17 @@
                       [ngClass]="{
                         'status-excellent': spec.daily_health.score_change > 0,
                         'status-critical': spec.daily_health.score_change < 0,
-                        'status-neutral': spec.daily_health.score_change === 0
+                        'status-neutral': spec.daily_health.score_change === 0,
                       }"
                     >
                       {{
                         spec.daily_health.score_change > 0
                           ? "↑"
                           : spec.daily_health.score_change < 0
-                          ? "↓"
-                          : "•"
+                            ? "↓"
+                            : "•"
                       }}
-                      {{ spec.daily_health.score_change | number : "1.1-1" }}%
+                      {{ spec.daily_health.score_change | number: "1.1-1" }}%
                     </span>
                   </div>
                 </div>
@@ -352,7 +387,7 @@
                         {{
                           spec?.daily_health?.previous_score
                             ? (spec?.daily_health?.previous_score
-                                | number : "1.1-1") + "%"
+                                | number: "1.1-1") + "%"
                             : "N/A"
                         }}
                       </span>
@@ -372,7 +407,7 @@
                       <span class="node-label active">CURRENT WEEK</span>
                       <span class="node-value">
                         {{
-                          spec?.daily_health?.overall_score | number : "1.1-1"
+                          spec?.daily_health?.overall_score | number: "1.1-1"
                         }}%
                       </span>
                       <span class="node-date">{{
@@ -384,29 +419,30 @@
 
                   <div class="spec-meta">
                     @if (spec?.daily_health?.ranking; as ranking) {
-                    <div
-                      class="pill ranking-pill"
-                      [class.top-performer]="ranking.current_rank <= 3"
-                    >
-                      <span class="pill-icon">🏆</span>
-                      <span class="pill-text">
-                        Rank <strong>#{{ ranking.current_rank }}</strong>
-                        <span class="total-count"
-                          >/{{ ranking.total ?? "--" }}</span
-                        >
-                      </span>
-                    </div>
-                    } @if (spec?.daily_health?.leadership; as leadership) {
-                    <div
-                      class="pill leadership-pill"
-                      [ngClass]="getLeadershipClass(leadership)"
-                    >
-                      <span class="pill-text">{{ leadership }}</span>
-                    </div>
+                      <div
+                        class="pill ranking-pill"
+                        [class.top-performer]="ranking.current_rank <= 3"
+                      >
+                        <span class="pill-icon">🏆</span>
+                        <span class="pill-text">
+                          Rank <strong>#{{ ranking.current_rank }}</strong>
+                          <span class="total-count"
+                            >/{{ ranking.total ?? "--" }}</span
+                          >
+                        </span>
+                      </div>
+                    }
+                    @if (spec?.daily_health?.leadership; as leadership) {
+                      <div
+                        class="pill leadership-pill"
+                        [ngClass]="getLeadershipClass(leadership)"
+                      >
+                        <span class="pill-text">{{ leadership }}</span>
+                      </div>
                     } @else {
-                    <div class="pill leadership-pill leadership-none">
-                      <span class="pill-text">Status N/A</span>
-                    </div>
+                      <div class="pill leadership-pill leadership-none">
+                        <span class="pill-text">Status N/A</span>
+                      </div>
                     }
                   </div>
                 </div>
@@ -418,7 +454,7 @@
                       *ngFor="
                         let m of spec.daily_health.metrics_detail
                           | keyvalue
-                          | slice : 0 : 4
+                          | slice: 0 : 4
                       "
                     >
                       <span class="metric-name">
@@ -434,12 +470,15 @@
                           getMetricColor($any(m.value)?.current_period?.rate)
                         "
                       >
-                        @if ($any(m.value)?.current_period?.rate !== null &&
-                        $any(m.value)?.current_period?.rate !== undefined) {
-                        {{
-                          $any(m.value).current_period.rate | number : "1.0-0"
-                        }}% } @else {
-                        <span class="text-muted">N/A</span>
+                        @if (
+                          $any(m.value)?.current_period?.rate !== null &&
+                          $any(m.value)?.current_period?.rate !== undefined
+                        ) {
+                          {{
+                            $any(m.value).current_period.rate | number: "1.0-0"
+                          }}%
+                        } @else {
+                          <span class="text-muted">N/A</span>
                         }
                       </span>
 
@@ -476,10 +515,13 @@
                         getStatusColor(spec?.monthly_health?.status)
                       "
                     >
-                      @if (spec?.monthly_health?.overall_score !== undefined &&
-                      spec?.monthly_health?.overall_score !== null) {
-                      {{ spec.monthly_health.overall_score }}% } @else {
-                      <span class="text-muted">N/A</span>
+                      @if (
+                        spec?.monthly_health?.overall_score !== undefined &&
+                        spec?.monthly_health?.overall_score !== null
+                      ) {
+                        {{ spec.monthly_health.overall_score }}%
+                      } @else {
+                        <span class="text-muted">N/A</span>
                       }
                     </span>
                     <span
@@ -493,17 +535,18 @@
                         'status-excellent':
                           spec.monthly_health.score_change > 0,
                         'status-critical': spec.monthly_health.score_change < 0,
-                        'status-neutral': spec.monthly_health.score_change === 0
+                        'status-neutral':
+                          spec.monthly_health.score_change === 0,
                       }"
                     >
                       {{
                         spec.monthly_health.score_change > 0
                           ? "↑"
                           : spec.monthly_health.score_change < 0
-                          ? "↓"
-                          : "•"
+                            ? "↓"
+                            : "•"
                       }}
-                      {{ spec.monthly_health.score_change | number : "1.1-1" }}%
+                      {{ spec.monthly_health.score_change | number: "1.1-1" }}%
                     </span>
                   </div>
                 </div>
@@ -515,7 +558,7 @@
                         {{
                           spec?.monthly_health?.previous_score
                             ? (spec?.monthly_health?.previous_score
-                                | number : "1.1-1") + "%"
+                                | number: "1.1-1") + "%"
                             : "N/A"
                         }}
                       </span>
@@ -534,8 +577,7 @@
                       <span class="node-label active">CURRENT MONTH</span>
                       <span class="node-value">
                         {{
-                          spec?.monthly_health?.overall_score
-                            | number : "1.1-1"
+                          spec?.monthly_health?.overall_score | number: "1.1-1"
                         }}%
                       </span>
                       <span class="node-date">{{
@@ -547,32 +589,32 @@
 
                   <div class="spec-meta">
                     @if (spec?.monthly_health?.ranking; as ranking) {
-                    <div
-                      class="pill ranking-pill"
-                      [class.top-performer]="ranking.current_rank <= 3"
-                    >
-                      <span class="pill-icon">🏆</span>
-                      <span class="pill-text">
-                        Rank <strong>#{{ ranking.current_rank }}</strong>
-                        <span class="total-count"
-                          >/{{ ranking.total ?? "--" }}</span
-                        >
-                      </span>
-                    </div>
+                      <div
+                        class="pill ranking-pill"
+                        [class.top-performer]="ranking.current_rank <= 3"
+                      >
+                        <span class="pill-icon">🏆</span>
+                        <span class="pill-text">
+                          Rank <strong>#{{ ranking.current_rank }}</strong>
+                          <span class="total-count"
+                            >/{{ ranking.total ?? "--" }}</span
+                          >
+                        </span>
+                      </div>
                     }
 
                     <!-- Leadership Pill -->
                     @if (spec?.monthly_health?.leadership; as leadership) {
-                    <div
-                      class="pill leadership-pill"
-                      [ngClass]="getLeadershipClass(leadership)"
-                    >
-                      <span class="pill-text">{{ leadership }}</span>
-                    </div>
+                      <div
+                        class="pill leadership-pill"
+                        [ngClass]="getLeadershipClass(leadership)"
+                      >
+                        <span class="pill-text">{{ leadership }}</span>
+                      </div>
                     } @else {
-                    <div class="pill leadership-pill leadership-none">
-                      <span class="pill-text">Status N/A</span>
-                    </div>
+                      <div class="pill leadership-pill leadership-none">
+                        <span class="pill-text">Status N/A</span>
+                      </div>
                     }
                   </div>
                 </div>
@@ -583,7 +625,7 @@
                       *ngFor="
                         let m of spec.monthly_health.metrics_detail
                           | keyvalue
-                          | slice : 0 : 4
+                          | slice: 0 : 4
                       "
                     >
                       <span class="metric-name">
@@ -599,12 +641,15 @@
                           getMetricColor($any(m.value)?.current_period?.rate)
                         "
                       >
-                        @if ($any(m.value)?.current_period?.rate !== null &&
-                        $any(m.value)?.current_period?.rate !== undefined) {
-                        {{
-                          $any(m.value).current_period.rate | number : "1.0-0"
-                        }}% } @else {
-                        <span class="text-muted">N/A</span>
+                        @if (
+                          $any(m.value)?.current_period?.rate !== null &&
+                          $any(m.value)?.current_period?.rate !== undefined
+                        ) {
+                          {{
+                            $any(m.value).current_period.rate | number: "1.0-0"
+                          }}%
+                        } @else {
+                          <span class="text-muted">N/A</span>
                         }
                       </span>
 
@@ -682,7 +727,7 @@
                         {{
                           alert.change > 0 ? "↑" : alert.change < 0 ? "↓" : "•"
                         }}
-                        {{ alert.change | number : "1.1-1" }}%</span
+                        {{ alert.change | number: "1.1-1" }}%</span
                       >
 
                       <span class="vol">{{ alert.volume }} Cases</span>
@@ -782,7 +827,7 @@
                                       $any(m.value).last_week.rate !== null &&
                                       $any(m.value).last_week.rate !== undefined
                                         ? ($any(m.value).last_week.rate
-                                            | number : "1.0-0") + "%"
+                                            | number: "1.0-0") + "%"
                                         : "--"
                                     }}
                                   </td>
@@ -792,7 +837,7 @@
                                       $any(m.value).this_week.rate !== null &&
                                       $any(m.value).this_week.rate !== undefined
                                         ? ($any(m.value).this_week.rate
-                                            | number : "1.0-0") + "%"
+                                            | number: "1.0-0") + "%"
                                         : "--"
                                     }}
                                   </td>
@@ -854,7 +899,7 @@
                                       $any(m.value).last_month.rate !==
                                         undefined
                                         ? ($any(m.value).last_month.rate
-                                            | number : "1.0-0") + "%"
+                                            | number: "1.0-0") + "%"
                                         : "--"
                                     }}
                                   </td>
@@ -865,7 +910,7 @@
                                       $any(m.value).this_month.rate !==
                                         undefined
                                         ? ($any(m.value).this_month.rate
-                                            | number : "1.0-0") + "%"
+                                            | number: "1.0-0") + "%"
                                         : "--"
                                     }}
                                   </td>
@@ -912,7 +957,7 @@
                 'priority-critical': t.site_trend.status === 'CRITICAL',
                 'priority-high': t.site_trend.status === 'HIGH',
                 'priority-medium': t.site_trend.status === 'WARNING',
-                'priority-low': t.site_trend.status === 'GOOD'
+                'priority-low': t.site_trend.status === 'GOOD',
               }"
               *ngFor="let t of getTrendItems('declining')"
             >
@@ -929,65 +974,65 @@
               </div>
 
               @if (t?.site_trend?.current_period?.rate !== null) {
-              <div class="comparison-grid">
-                <div class="comparison-node">
-                  <span class="node-label">PREVIOUS</span>
-                  <span class="node-value">
-                    {{
-                      t.site_trend.previous_period.rate
-                        ? (t.site_trend.previous_period.rate
-                            | number : "1.1-1") + "%"
-                        : "N/A"
-                    }}
-                  </span>
-                  <span class="node-date">{{
-                    t.site_trend.previous_period.date_display || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="comparison-divider">
-                  <span class="arrow-color">➡</span>
-                </div>
-
-                <div class="comparison-node">
-                  <span class="node-label active">CURRENT</span>
-                  <span class="node-value">
-                    {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
-                  </span>
-                  <span class="node-date">{{
-                    t.site_trend.current_period.date_display || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="comparison-result">
-                  <div
-                    class="trend-badge-modern"
-                    [ngClass]="
-                      (t.site_trend.change_pct ?? 0) >= 0
-                        ? 'bg-success'
-                        : 'bg-danger'
-                    "
-                  >
-                    <span class="trend-icon">{{
-                      (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
-                    }}</span>
-                    <span class="trend-val">
+                <div class="comparison-grid">
+                  <div class="comparison-node">
+                    <span class="node-label">PREVIOUS</span>
+                    <span class="node-value">
                       {{
-                        (t.site_trend.change_pct < 0
-                          ? -t.site_trend.change_pct
-                          : t.site_trend.change_pct
-                        ) | number : "1.1-1"
-                      }}%
+                        t.site_trend.previous_period.rate
+                          ? (t.site_trend.previous_period.rate
+                              | number: "1.1-1") + "%"
+                          : "N/A"
+                      }}
                     </span>
+                    <span class="node-date">{{
+                      t.site_trend.previous_period.date_display || "N/A"
+                    }}</span>
+                  </div>
+
+                  <div class="comparison-divider">
+                    <span class="arrow-color">➡</span>
+                  </div>
+
+                  <div class="comparison-node">
+                    <span class="node-label active">CURRENT</span>
+                    <span class="node-value">
+                      {{ t.site_trend.current_period.rate | number: "1.1-1" }}%
+                    </span>
+                    <span class="node-date">{{
+                      t.site_trend.current_period.date_display || "N/A"
+                    }}</span>
+                  </div>
+
+                  <div class="comparison-result">
+                    <div
+                      class="trend-badge-modern"
+                      [ngClass]="
+                        (t.site_trend.change_pct ?? 0) >= 0
+                          ? 'bg-success'
+                          : 'bg-danger'
+                      "
+                    >
+                      <span class="trend-icon">{{
+                        (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
+                      }}</span>
+                      <span class="trend-val">
+                        {{
+                          (t.site_trend.change_pct < 0
+                            ? -t.site_trend.change_pct
+                            : t.site_trend.change_pct
+                          ) | number: "1.1-1"
+                        }}%
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
               } @else {
-              <div class="empty-state-mini">
-                <span class="text-muted"
-                  >No trend data available for this period</span
-                >
-              </div>
+                <div class="empty-state-mini">
+                  <span class="text-muted"
+                    >No trend data available for this period</span
+                  >
+                </div>
               }
             </div>
           </div>
@@ -1003,7 +1048,7 @@
                 'priority-critical': t.site_trend.status === 'CRITICAL',
                 'priority-high': t.site_trend.status === 'HIGH',
                 'priority-medium': t.site_trend.status === 'WARNING',
-                'priority-low': t.site_trend.status === 'GOOD'
+                'priority-low': t.site_trend.status === 'GOOD',
               }"
               *ngFor="let t of getTrendItems('improving')"
             >
@@ -1020,65 +1065,65 @@
               </div>
 
               @if (t?.site_trend?.current_period?.rate !== null) {
-              <div class="comparison-grid">
-                <div class="comparison-node">
-                  <span class="node-label">PREVIOUS</span>
-                  <span class="node-value">
-                    {{
-                      t.site_trend.previous_period.rate
-                        ? (t.site_trend.previous_period.rate
-                            | number : "1.1-1") + "%"
-                        : "N/A"
-                    }}
-                  </span>
-                  <span class="node-date">{{
-                    t.site_trend.previous_period.date_display || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="comparison-divider">
-                  <span class="arrow-color">➡</span>
-                </div>
-
-                <div class="comparison-node">
-                  <span class="node-label active">CURRENT</span>
-                  <span class="node-value">
-                    {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
-                  </span>
-                  <span class="node-date">{{
-                    t.site_trend.current_period.date_display || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="comparison-result">
-                  <div
-                    class="trend-badge-modern"
-                    [ngClass]="
-                      (t.site_trend.change_pct ?? 0) >= 0
-                        ? 'bg-success'
-                        : 'bg-danger'
-                    "
-                  >
-                    <span class="trend-icon">{{
-                      (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
-                    }}</span>
-                    <span class="trend-val">
+                <div class="comparison-grid">
+                  <div class="comparison-node">
+                    <span class="node-label">PREVIOUS</span>
+                    <span class="node-value">
                       {{
-                        (t.site_trend.change_pct < 0
-                          ? -t.site_trend.change_pct
-                          : t.site_trend.change_pct
-                        ) | number : "1.1-1"
-                      }}%
+                        t.site_trend.previous_period.rate
+                          ? (t.site_trend.previous_period.rate
+                              | number: "1.1-1") + "%"
+                          : "N/A"
+                      }}
                     </span>
+                    <span class="node-date">{{
+                      t.site_trend.previous_period.date_display || "N/A"
+                    }}</span>
+                  </div>
+
+                  <div class="comparison-divider">
+                    <span class="arrow-color">➡</span>
+                  </div>
+
+                  <div class="comparison-node">
+                    <span class="node-label active">CURRENT</span>
+                    <span class="node-value">
+                      {{ t.site_trend.current_period.rate | number: "1.1-1" }}%
+                    </span>
+                    <span class="node-date">{{
+                      t.site_trend.current_period.date_display || "N/A"
+                    }}</span>
+                  </div>
+
+                  <div class="comparison-result">
+                    <div
+                      class="trend-badge-modern"
+                      [ngClass]="
+                        (t.site_trend.change_pct ?? 0) >= 0
+                          ? 'bg-success'
+                          : 'bg-danger'
+                      "
+                    >
+                      <span class="trend-icon">{{
+                        (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
+                      }}</span>
+                      <span class="trend-val">
+                        {{
+                          (t.site_trend.change_pct < 0
+                            ? -t.site_trend.change_pct
+                            : t.site_trend.change_pct
+                          ) | number: "1.1-1"
+                        }}%
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
               } @else {
-              <div class="empty-state-mini">
-                <span class="text-muted"
-                  >No trend data available for this period</span
-                >
-              </div>
+                <div class="empty-state-mini">
+                  <span class="text-muted"
+                    >No trend data available for this period</span
+                  >
+                </div>
               }
             </div>
           </div>
@@ -1095,7 +1140,7 @@
                 'priority-critical': t.site_trend.status === 'CRITICAL',
                 'priority-high': t.site_trend.status === 'HIGH',
                 'priority-medium': t.site_trend.status === 'WARNING',
-                'priority-low': t.site_trend.status === 'GOOD'
+                'priority-low': t.site_trend.status === 'GOOD',
               }"
               *ngFor="let t of getTrendItems('stable')"
             >
@@ -1112,65 +1157,65 @@
               </div>
 
               @if (t?.site_trend?.current_period?.rate !== null) {
-              <div class="comparison-grid">
-                <div class="comparison-node">
-                  <span class="node-label">PREVIOUS</span>
-                  <span class="node-value">
-                    {{
-                      t.site_trend.previous_period.rate
-                        ? (t.site_trend.previous_period.rate
-                            | number : "1.1-1") + "%"
-                        : "N/A"
-                    }}
-                  </span>
-                  <span class="node-date">{{
-                    t.site_trend.previous_period.date_display || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="comparison-divider">
-                  <span class="arrow-color">➡</span>
-                </div>
-
-                <div class="comparison-node">
-                  <span class="node-label active">CURRENT</span>
-                  <span class="node-value">
-                    {{ t.site_trend.current_period.rate | number : "1.1-1" }}%
-                  </span>
-                  <span class="node-date">{{
-                    t.site_trend.current_period.date_display || "N/A"
-                  }}</span>
-                </div>
-
-                <div class="comparison-result">
-                  <div
-                    class="trend-badge-modern"
-                    [ngClass]="
-                      (t.site_trend.change_pct ?? 0) >= 0
-                        ? 'bg-success'
-                        : 'bg-danger'
-                    "
-                  >
-                    <span class="trend-icon">{{
-                      (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
-                    }}</span>
-                    <span class="trend-val">
+                <div class="comparison-grid">
+                  <div class="comparison-node">
+                    <span class="node-label">PREVIOUS</span>
+                    <span class="node-value">
                       {{
-                        (t.site_trend.change_pct < 0
-                          ? -t.site_trend.change_pct
-                          : t.site_trend.change_pct
-                        ) | number : "1.1-1"
-                      }}%
+                        t.site_trend.previous_period.rate
+                          ? (t.site_trend.previous_period.rate
+                              | number: "1.1-1") + "%"
+                          : "N/A"
+                      }}
                     </span>
+                    <span class="node-date">{{
+                      t.site_trend.previous_period.date_display || "N/A"
+                    }}</span>
+                  </div>
+
+                  <div class="comparison-divider">
+                    <span class="arrow-color">➡</span>
+                  </div>
+
+                  <div class="comparison-node">
+                    <span class="node-label active">CURRENT</span>
+                    <span class="node-value">
+                      {{ t.site_trend.current_period.rate | number: "1.1-1" }}%
+                    </span>
+                    <span class="node-date">{{
+                      t.site_trend.current_period.date_display || "N/A"
+                    }}</span>
+                  </div>
+
+                  <div class="comparison-result">
+                    <div
+                      class="trend-badge-modern"
+                      [ngClass]="
+                        (t.site_trend.change_pct ?? 0) >= 0
+                          ? 'bg-success'
+                          : 'bg-danger'
+                      "
+                    >
+                      <span class="trend-icon">{{
+                        (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
+                      }}</span>
+                      <span class="trend-val">
+                        {{
+                          (t.site_trend.change_pct < 0
+                            ? -t.site_trend.change_pct
+                            : t.site_trend.change_pct
+                          ) | number: "1.1-1"
+                        }}%
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
               } @else {
-              <div class="empty-state-mini">
-                <span class="text-muted"
-                  >No trend data available for this period</span
-                >
-              </div>
+                <div class="empty-state-mini">
+                  <span class="text-muted"
+                    >No trend data available for this period</span
+                  >
+                </div>
               }
             </div>
           </div>
@@ -1250,12 +1295,12 @@
             <div class="detail-label">Site Score</div>
             <div class="score-display">
               @if (selectedAlert.compliance?.total_agents) {
-              <span class="score-number">{{
-                selectedAlert.site_overview?.site_score_pct ?? "0"
-              }}</span>
-              <span class="score-percent">%</span>
+                <span class="score-number">{{
+                  selectedAlert.site_overview?.site_score_pct ?? "0"
+                }}</span>
+                <span class="score-percent">%</span>
               } @else {
-              <span class="detail-value muted">N/A</span>
+                <span class="detail-value muted">N/A</span>
               }
             </div>
           </div>
@@ -1291,7 +1336,7 @@
             <ng-container
               *ngFor="
                 let item of selectedAlert.breakdowns.specialization_breakdown
-                  | slice : 0 : 5
+                  | slice: 0 : 5
               "
             >
               <!-- Only show the row if pct > 0 -->
@@ -1309,7 +1354,7 @@
                   ></div>
                 </div>
                 <span class="contribution-value">
-                  {{ $any(item).volume_share_pct | number : "1.0-1" }}%
+                  {{ $any(item).volume_share_pct | number: "1.0-1" }}%
                 </span>
               </div>
             </ng-container>
@@ -1344,7 +1389,7 @@
             <ng-container
               *ngFor="
                 let item of $any(selectedAlert?.breakdowns?.products_breakdown)
-                  | slice : 0 : 5
+                  | slice: 0 : 5
               "
             >
               <!-- Only show the row if pct > 0 -->
@@ -1360,7 +1405,7 @@
                   ></div>
                 </div>
                 <span class="contribution-value">
-                  {{ $any(item).volume_share_pct | number : "1.0-1" }}%
+                  {{ $any(item).volume_share_pct | number: "1.0-1" }}%
                 </span>
               </div>
             </ng-container>
