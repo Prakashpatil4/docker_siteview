@@ -616,4 +616,18 @@ getRecordByFrequency(freqType: string) {
     if (count > 100) return 'orange';
     return 'green';
   }
+    getTrendClass(t: any): string {
+  const name = t?.metric_info?.display_name;
+  const current = t?.site_trend?.current_period?.rate ?? 0;
+  const previous = t?.site_trend?.previous_period?.rate ?? 0;
+  const changePct = t?.site_trend?.change_pct ?? 0;
+
+  // 1. Check for specific metrics
+  if (name === 'Reopen Rate' || name === 'Escalation Rate') {
+    return (previous - current >= 0) ? 'bg-success' : 'bg-danger';
+  }
+
+  // 3. Default fallback
+  return changePct >= 0 ? 'bg-success' : 'bg-danger';
+}
 }

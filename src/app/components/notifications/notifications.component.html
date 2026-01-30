@@ -176,7 +176,7 @@
                         alert?.affected_pct !== null &&
                         alert?.affected_pct !== undefined
                       ) {
-                        {{ alert.affected_pct | number: "1.1-1" }}% of team
+                        {{ alert.affected_pct | number: "1.1-2" }}% of team
                         affected
                       } @else {
                         <span class="text-muted">N/A</span>
@@ -260,7 +260,7 @@
                         alert?.affected_pct !== null &&
                         alert?.affected_pct !== undefined
                       ) {
-                        {{ alert.affected_pct | number: "1.1-1" }}% of team
+                        {{ alert.affected_pct | number: "1.1-2" }}% of team
                         affected
                       } @else {
                         <span class="text-muted">N/A</span>
@@ -299,7 +299,7 @@
                     spec?.daily_health?.overall_score !== undefined &&
                     spec?.daily_health?.overall_score !== null
                   ) {
-                    {{ spec.daily_health.overall_score | number: "1.1-1" }}%
+                    {{ spec.daily_health.overall_score | number: "1.1-2" }}%
                   } @else {
                     <span class="text-muted" style="font-size: 0.8em">N/A</span>
                   }
@@ -315,7 +315,7 @@
                     spec?.monthly_health?.overall_score !== undefined &&
                     spec?.monthly_health?.overall_score !== null
                   ) {
-                    {{ spec.monthly_health.overall_score | number: "1.1-1" }}%
+                    {{ spec.monthly_health.overall_score | number: "1.1-2" }}%
                   } @else {
                     <span class="text-muted" style="font-size: 0.8em">N/A</span>
                   }
@@ -375,7 +375,7 @@
                             ? "↓"
                             : "•"
                       }}
-                      {{ spec.daily_health.score_change | number: "1.1-1" }}%
+                      {{ spec.daily_health.score_change | number: "1.1-2" }}%
                     </span>
                   </div>
                 </div>
@@ -387,7 +387,7 @@
                         {{
                           spec?.daily_health?.previous_score
                             ? (spec?.daily_health?.previous_score
-                                | number: "1.1-1") + "%"
+                                | number: "1.1-2") + "%"
                             : "N/A"
                         }}
                       </span>
@@ -407,7 +407,7 @@
                       <span class="node-label active">CURRENT WEEK</span>
                       <span class="node-value">
                         {{
-                          spec?.daily_health?.overall_score | number: "1.1-1"
+                          spec?.daily_health?.overall_score | number: "1.1-2"
                         }}%
                       </span>
                       <span class="node-date">{{
@@ -454,7 +454,6 @@
                       *ngFor="
                         let m of spec.daily_health.metrics_detail
                           | keyvalue
-                          | slice: 0 : 4
                       "
                     >
                       <span class="metric-name">
@@ -470,12 +469,13 @@
                           getMetricColor($any(m.value)?.current_period?.rate)
                         "
                       >
+
                         @if (
                           $any(m.value)?.current_period?.rate !== null &&
                           $any(m.value)?.current_period?.rate !== undefined
                         ) {
                           {{
-                            $any(m.value).current_period.rate | number: "1.0-0"
+                            $any(m.value).current_period.rate | number: "1.1-2"
                           }}%
                         } @else {
                           <span class="text-muted">N/A</span>
@@ -546,7 +546,7 @@
                             ? "↓"
                             : "•"
                       }}
-                      {{ spec.monthly_health.score_change | number: "1.1-1" }}%
+                      {{ spec.monthly_health.score_change | number: "1.1-2" }}%
                     </span>
                   </div>
                 </div>
@@ -558,7 +558,7 @@
                         {{
                           spec?.monthly_health?.previous_score
                             ? (spec?.monthly_health?.previous_score
-                                | number: "1.1-1") + "%"
+                                | number: "1.1-2") + "%"
                             : "N/A"
                         }}
                       </span>
@@ -577,7 +577,7 @@
                       <span class="node-label active">CURRENT MONTH</span>
                       <span class="node-value">
                         {{
-                          spec?.monthly_health?.overall_score | number: "1.1-1"
+                          spec?.monthly_health?.overall_score | number: "1.1-2"
                         }}%
                       </span>
                       <span class="node-date">{{
@@ -625,7 +625,6 @@
                       *ngFor="
                         let m of spec.monthly_health.metrics_detail
                           | keyvalue
-                          | slice: 0 : 4
                       "
                     >
                       <span class="metric-name">
@@ -646,7 +645,7 @@
                           $any(m.value)?.current_period?.rate !== undefined
                         ) {
                           {{
-                            $any(m.value).current_period.rate | number: "1.0-0"
+                            $any(m.value).current_period.rate | number: "1.1-2"
                           }}%
                         } @else {
                           <span class="text-muted">N/A</span>
@@ -727,7 +726,7 @@
                         {{
                           alert.change > 0 ? "↑" : alert.change < 0 ? "↓" : "•"
                         }}
-                        {{ alert.change | number: "1.1-1" }}%</span
+                        {{ alert.change | number: "1.1-2" }}%</span
                       >
 
                       <span class="vol">{{ alert.volume }} Cases</span>
@@ -827,7 +826,7 @@
                                       $any(m.value).last_week.rate !== null &&
                                       $any(m.value).last_week.rate !== undefined
                                         ? ($any(m.value).last_week.rate
-                                            | number: "1.0-0") + "%"
+                                            | number: "1.0-2") + "%"
                                         : "--"
                                     }}
                                   </td>
@@ -837,7 +836,7 @@
                                       $any(m.value).this_week.rate !== null &&
                                       $any(m.value).this_week.rate !== undefined
                                         ? ($any(m.value).this_week.rate
-                                            | number: "1.0-0") + "%"
+                                            | number: "1.0-2") + "%"
                                         : "--"
                                     }}
                                   </td>
@@ -849,11 +848,18 @@
                                         $any(m.value).trend.toLowerCase()
                                       "
                                     >
-                                      {{
-                                        $any(m.value).trend === "NO_DATA"
-                                          ? "N/A"
-                                          : $any(m.value).trend
-                                      }}
+
+                                        {{
+                                          $any(m.value).trend === "NO_DATA"
+                                            ? "N/A"
+                                            : ($any(m.value).last_week?.rate != null && $any(m.value).this_week?.rate != null)
+                                              ? ($any(m.value).last_week.rate === $any(m.value).this_week.rate
+                                                  ? "STABLE"
+                                                  : ($any(m.value).last_week.rate < $any(m.value).this_week.rate ? "INCREASING" : "DECREASING"))
+                                              : $any(m.value).trend
+                                        }}
+
+
                                     </span>
                                   </td>
                                 </tr>
@@ -899,7 +905,7 @@
                                       $any(m.value).last_month.rate !==
                                         undefined
                                         ? ($any(m.value).last_month.rate
-                                            | number: "1.0-0") + "%"
+                                            | number: "1.0-2") + "%"
                                         : "--"
                                     }}
                                   </td>
@@ -910,7 +916,7 @@
                                       $any(m.value).this_month.rate !==
                                         undefined
                                         ? ($any(m.value).this_month.rate
-                                            | number: "1.0-0") + "%"
+                                            | number: "1.0-2") + "%"
                                         : "--"
                                     }}
                                   </td>
@@ -922,10 +928,14 @@
                                         $any(m.value).trend.toLowerCase()
                                       "
                                     >
-                                      {{
+                                        {{
                                         $any(m.value).trend === "NO_DATA"
                                           ? "N/A"
-                                          : $any(m.value).trend
+                                          : ($any(m.value).last_month?.rate != null && $any(m.value).this_month?.rate != null)
+                                            ? ($any(m.value).last_month.rate === $any(m.value).this_month.rate
+                                                ? "STABLE"
+                                                : ($any(m.value).last_month.rate < $any(m.value).this_month.rate ? "INCREASING" : "DECREASING"))
+                                            : $any(m.value).trend
                                       }}
                                     </span>
                                   </td>
@@ -981,7 +991,7 @@
                       {{
                         t.site_trend.previous_period.rate
                           ? (t.site_trend.previous_period.rate
-                              | number: "1.1-1") + "%"
+                              | number: "1.1-2") + "%"
                           : "N/A"
                       }}
                     </span>
@@ -997,7 +1007,7 @@
                   <div class="comparison-node">
                     <span class="node-label active">CURRENT</span>
                     <span class="node-value">
-                      {{ t.site_trend.current_period.rate | number: "1.1-1" }}%
+                      {{ t.site_trend.current_period.rate | number: "1.1-2" }}%
                     </span>
                     <span class="node-date">{{
                       t.site_trend.current_period.date_display || "N/A"
@@ -1007,11 +1017,7 @@
                   <div class="comparison-result">
                     <div
                       class="trend-badge-modern"
-                      [ngClass]="
-                        (t.site_trend.change_pct ?? 0) >= 0
-                          ? 'bg-success'
-                          : 'bg-danger'
-                      "
+                      [ngClass]="getTrendClass(t)"
                     >
                       <span class="trend-icon">{{
                         (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
@@ -1021,7 +1027,7 @@
                           (t.site_trend.change_pct < 0
                             ? -t.site_trend.change_pct
                             : t.site_trend.change_pct
-                          ) | number: "1.1-1"
+                          ) | number: "1.1-2"
                         }}%
                       </span>
                     </div>
@@ -1072,7 +1078,7 @@
                       {{
                         t.site_trend.previous_period.rate
                           ? (t.site_trend.previous_period.rate
-                              | number: "1.1-1") + "%"
+                              | number: "1.1-2") + "%"
                           : "N/A"
                       }}
                     </span>
@@ -1088,7 +1094,7 @@
                   <div class="comparison-node">
                     <span class="node-label active">CURRENT</span>
                     <span class="node-value">
-                      {{ t.site_trend.current_period.rate | number: "1.1-1" }}%
+                      {{ t.site_trend.current_period.rate | number: "1.1-2" }}%
                     </span>
                     <span class="node-date">{{
                       t.site_trend.current_period.date_display || "N/A"
@@ -1098,11 +1104,7 @@
                   <div class="comparison-result">
                     <div
                       class="trend-badge-modern"
-                      [ngClass]="
-                        (t.site_trend.change_pct ?? 0) >= 0
-                          ? 'bg-success'
-                          : 'bg-danger'
-                      "
+                      [ngClass]="getTrendClass(t)"
                     >
                       <span class="trend-icon">{{
                         (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
@@ -1112,7 +1114,7 @@
                           (t.site_trend.change_pct < 0
                             ? -t.site_trend.change_pct
                             : t.site_trend.change_pct
-                          ) | number: "1.1-1"
+                          ) | number: "1.1-2"
                         }}%
                       </span>
                     </div>
@@ -1164,7 +1166,7 @@
                       {{
                         t.site_trend.previous_period.rate
                           ? (t.site_trend.previous_period.rate
-                              | number: "1.1-1") + "%"
+                              | number: "1.1-2") + "%"
                           : "N/A"
                       }}
                     </span>
@@ -1180,7 +1182,7 @@
                   <div class="comparison-node">
                     <span class="node-label active">CURRENT</span>
                     <span class="node-value">
-                      {{ t.site_trend.current_period.rate | number: "1.1-1" }}%
+                      {{ t.site_trend.current_period.rate | number: "1.1-2" }}%
                     </span>
                     <span class="node-date">{{
                       t.site_trend.current_period.date_display || "N/A"
@@ -1190,11 +1192,7 @@
                   <div class="comparison-result">
                     <div
                       class="trend-badge-modern"
-                      [ngClass]="
-                        (t.site_trend.change_pct ?? 0) >= 0
-                          ? 'bg-success'
-                          : 'bg-danger'
-                      "
+                      [ngClass]="getTrendClass(t)"
                     >
                       <span class="trend-icon">{{
                         (t.site_trend.change_pct ?? 0) >= 0 ? "▲" : "▼"
@@ -1204,7 +1202,7 @@
                           (t.site_trend.change_pct < 0
                             ? -t.site_trend.change_pct
                             : t.site_trend.change_pct
-                          ) | number: "1.1-1"
+                          ) | number: "1.1-2"
                         }}%
                       </span>
                     </div>

@@ -252,7 +252,13 @@ export class DashboardComponent implements OnInit {
     }
     const formattedStart = this.formatDate(this.startDate);
     const formattedEnd = this.formatDate(this.endDate);
-
+    this.filterService.setDateRange(formattedStart,formattedEnd);
+    this.filterService.setAgentButtonVisibility(true);
+    const isVisible = this.filterService.isAgentButtonVisible;
+    if (isVisible) {
+     this.filterService.setAgentButtonVisibility(true);
+     this.filterService.connectWithAgent();
+    }
     console.log(
       'API CALL: Preparing to send these params:' +
         ` Start Date: ${formattedStart}, End Date: ${formattedEnd}, Business Line: ${this.selectedBusinessline}, Site: ${this.selectedSite}`
@@ -628,6 +634,7 @@ export class DashboardComponent implements OnInit {
 
   showChatWindow() {
     this.filterService.setAgentButtonVisibility(true);
+    this.filterService.setChatWindowOpenVisibility(true)
     this.isShowChatWindow = true;
     this.showAgentButton = true;
     this.showAgent = false;

@@ -27,7 +27,9 @@ import { Subscription } from 'rxjs';
 import { ChatMessage, ChatService } from '../../services/chat.service';
 import { FormatMessagePipe } from './format-html.pipe';
 import { FilterService } from '../../services/filter.service';
-//import { ChatService, ChatMessage } from '../../chat';
+import { combineLatest } from 'rxjs';
+import { map, distinctUntilChanged } from 'rxjs/operators';
+
 @Component({
   selector: 'app-chat-window',
   standalone: true,
@@ -68,29 +70,79 @@ export class ChatWindowComponent
   private lastActivity = 0;
   private subscriptions = new Subscription();
   selectedSite: string | undefined;
+  startDate: string | undefined;
+  endDate: string | undefined;
+  selectedBusinessLine: string | undefined;
   constructor(
     public chat: ChatService,
     private filterService: FilterService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
   ) {}
   ngOnInit(): void {
+    //   this.filterService.currentDateRange.subscribe(async (dateRange) => {
+    //     const dates = dateRange ? dateRange.split(',') : [];
+    //     this.startDate = (dates[0] || '').trim();
+    //     this.endDate = (dates[1] || '').trim();
+    //   });
+
+    //  this.filterService.currentBusinessLine.subscribe(async (businessLine) => {
+    //     if (businessLine == 'Select') {
+    //       this.selectedBusinessLine = 'ALL';
+    //     } else {
+    //       this.selectedBusinessLine = businessLine;
+    //     }
+    //   });
+
+    //   this.filterService.showAgentButton$.subscribe((visible) => {
+    //     // this.clear();
+    //     if (!visible) {
+    //       this.clear();
+    //     }
+    //   });
+
+    //   this.filterService.currentSite.subscribe(async (site) => {
+    //     this.selectedSite = site;
+
+    //     if (this.selectedSite == 'Select') {
+    //       this.selectedSite = 'ALL';
+    //     } else {
+    //       this.selectedSite = this.selectedSite;
+    //     }
+    //   });
+
+    // ... inside your component ...
+
+    // 1. Group related filters using combineLatest
+    combineLatest([
+      this.filterService.currentDateRange,
+      this.filterService.currentBusinessLine,
+      this.filterService.currentSite,
+    ])
+      .pipe(
+        distinctUntilChanged(
+          (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
+        ),
+      )
+      .subscribe(([dateRange, businessLine, site]) => {
+        // Handle Dates
+        const [start = '', end = ''] = (dateRange || '')
+          .split(',')
+          .map((d) => d.trim());
+        this.startDate = start;
+        this.endDate = end;
+
+        // Handle Business Line (using Ternary for brevity)
+        this.selectedBusinessLine =
+          businessLine === 'Select' ? 'ALL' : businessLine;
+
+        // Handle Site
+        this.selectedSite = site === 'Select' ? 'ALL' : site;
+      });
+
+    // 2. Keep specialized logic separate
     this.filterService.showAgentButton$.subscribe((visible) => {
-      // this.clear();
-      if (!visible) {
-        this.clear();
-      }
+      if (!visible) this.clear();
     });
-
-    this.filterService.currentSite.subscribe(async (site) => {
-      this.selectedSite = site;
-
-      if (this.selectedSite == 'Select') {
-        this.selectedSite = 'ALL';
-      } else {
-        this.selectedSite = this.selectedSite;
-      }
-    });
-
     const messagesSub = this.chat.messages$.subscribe((msgs) => {
       if (msgs && msgs.length > 0) {
         this.showHint = false; // hide hint on first message
@@ -99,11 +151,24 @@ export class ChatWindowComponent
       this.onUserActivity();
     });
     this.subscriptions.add(messagesSub);
-    const sessionSub = this.chat.getSessions().subscribe((response: any) => {
-      if (response?.session_id) {
-        this.chat.connect(response.session_id, this.selectedSite);
-      }
-    });
+    const sessionSub = this.chat
+      .getSessions(
+        this.startDate ?? '',
+        this.endDate ?? '',
+        this.selectedSite ?? '',
+        this.selectedBusinessLine ?? '',
+      )
+      .subscribe((response: any) => {
+        if (response?.session_id) {
+          this.chat.connect(
+            // this.startDate ?? '',
+            // this.endDate ?? '',
+            response.session_id,
+            // this.selectedSite,
+            // this.selectedBusinessLine ?? '',
+          );
+        }
+      });
     this.subscriptions.add(sessionSub);
 
     if (this.isShowChatWindow) {

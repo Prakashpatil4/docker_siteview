@@ -84,7 +84,12 @@ export class HeaderComponent implements OnInit {
     console.log(`HEADER: Sending site to service: '${this.selectedSite}'`);
     this.filterService.setSite(this.selectedSite);
     this.getUnreadNotificationCount();
-    this.filterService.setAgentButtonVisibility(false);
+    const isVisible = this.filterService.isAgentButtonVisible;
+    if (isVisible) {
+     this.filterService.setAgentButtonVisibility(true);
+     this.filterService.connectWithAgent();
+    }
+
   }
 
   onBusinessLineChange() {
@@ -93,6 +98,11 @@ export class HeaderComponent implements OnInit {
     );
 
     this.filterService.setBusinessLine(this.selectedBusinessline);
+     const isVisible = this.filterService.isAgentButtonVisible;
+    if (isVisible) {
+     this.filterService.setAgentButtonVisibility(true);
+     this.filterService.connectWithAgent();
+    }
   }
   handleChildAlert() {
     //this.parentMessage = message;

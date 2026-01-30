@@ -1621,6 +1621,7 @@ thead {
     font-weight: 700;
     text-transform: uppercase;
 
+    &.increasing,
     &.improving {
       color: #1e8e3e;
     }
