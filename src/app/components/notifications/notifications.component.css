@@ -124,6 +124,10 @@
 .panel-title {
   font-size: 1rem;
   font-weight: 500;
+  border-bottom: 1px solid;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  text-align: center;
   color: var(--bg-primary);
 }
 
@@ -1806,4 +1810,8 @@ thead {
 }
 .align-met-count {
   padding-top: 15px;
+}
+.notification-subtitle {
+  font-size: small;
+  color: var(--bg-primary);
 }

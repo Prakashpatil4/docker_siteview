@@ -56,7 +56,10 @@ export class HeaderComponent implements OnInit {
   async getUnreadNotificationCount() {
     this.isLoading.set(true);
     const userEmail = this.userData?.email;
-    // this.userData.email  use this code for dynamic user_id
+    const business_line = this.selectedBusinessline === 'Select'
+  ? 'ALL'
+  : this.selectedBusinessline;
+
     let siteVal = '';
     if (this.selectedSite == 'Select') {
       siteVal = 'ALL';
@@ -67,6 +70,7 @@ export class HeaderComponent implements OnInit {
     const payload = {
       user_id: userEmail,
       site: siteVal,
+     business_line
     };
     try {
       const response: any = await lastValueFrom(
@@ -98,7 +102,8 @@ export class HeaderComponent implements OnInit {
     );
 
     this.filterService.setBusinessLine(this.selectedBusinessline);
-     const isVisible = this.filterService.isAgentButtonVisible;
+    this.getUnreadNotificationCount();
+    const isVisible = this.filterService.isAgentButtonVisible;
     if (isVisible) {
      this.filterService.setAgentButtonVisibility(true);
      this.filterService.connectWithAgent();

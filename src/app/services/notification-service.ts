@@ -23,22 +23,20 @@ export interface NotificationItem {
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private readonly url = 'https://jsonplaceholder.typicode.com/posts';
-  private notificationApiUrl =
-    'https://elevate360-notification-service-803836599959.us-central1.run.app';
-
+  //  UAT API URL
+  // private siteOpsnotificationApiUrl =
+  //   'https://siteops-notif-service-v2-dot-digital-sme.uc.r.appspot.com';
+  // Dev  API URL
   private siteOpsnotificationApiUrl =
-    'https://siteops-notif-service-v2-dot-digital-sme.uc.r.appspot.com';
+  'https://siteops-notif-service-dev-dot-digital-sme.uc.r.appspot.com/';
 
   constructor(private http: HttpClient) {}
-  fetchNotificationSummary(payload: any): Observable<any> {
-    // The payload is now passed from the component
-    return this.http.post(this.notificationApiUrl, payload);
-  }
+
   getNotificationUnreadCount(payload: any) {
+    const business_line = payload.business_line
     const encodedSite = encodeURIComponent(payload.site);
     const userEmail = payload.user_id;
-    const url = `${this.siteOpsnotificationApiUrl}/notifications/unread-count/${encodedSite}?user_id=${userEmail}`;
+    const url = `${this.siteOpsnotificationApiUrl}/notifications/unread-count/${encodedSite}?business_line=${business_line}&user_id=${userEmail}`;
     return this.http.get<any>(url);
   }
 
@@ -46,8 +44,8 @@ export class NotificationService {
     const encodedSite = encodeURIComponent(payload.site);
     const userEmail = payload.user_id;
     const datalimit = payload.limit;
-
-    const url = `${this.siteOpsnotificationApiUrl}/notifications/${encodedSite}?user_id=${userEmail}&limit=${datalimit}`;
+    const business_line = payload.business_line
+    const url = `${this.siteOpsnotificationApiUrl}/notifications/${encodedSite}?business_line=${business_line}&user_id=${userEmail}&limit=${datalimit}`;
     return this.http.get<any>(url);
   }
   getNotificationDetails(payload: any) {

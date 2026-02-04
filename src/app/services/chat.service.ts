@@ -427,7 +427,7 @@ export class ChatService {
   // private readonly BASE_URL = 'wss://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com/ws';
 
 
-    private chatAPIURL =
+   private chatAPIURL =
       'https://e360-siteops-bot-dev-dot-digital-sme.uc.r.appspot.com';
    private readonly BASE_URL = 'wss://e360-siteops-bot-dev-dot-digital-sme.uc.r.appspot.com/ws';
 
@@ -533,6 +533,7 @@ export class ChatService {
             break;
 
           case 'progress':
+            this.loadingSubject.next(true);
             console.log(
               `TOOL: ${msg.tool}, STATUS: ${msg.status}, ARGS:`,
               msg.args

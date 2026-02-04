@@ -8,7 +8,7 @@ import {
   Output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { lastValueFrom } from 'rxjs';
+import { combineLatest, lastValueFrom } from 'rxjs';
 import { TimeAgoPipe } from './timeago';
 import {
   NotificationItem,
@@ -150,9 +150,11 @@ export class NotificationsComponent implements OnInit {
   @Output() alertOccurred = new EventEmitter<string>();
   metricsWeekDispaly: any;
   metricsMonthDispaly: any;
+  selectedBusinessLine: string | undefined;
+  selectedBusinessline: string | undefined;
   constructor(
     private svc: NotificationService,
-    private filterService: FilterService
+    private filterService: FilterService,
   ) {}
 
   closeReportModal() {
@@ -172,7 +174,6 @@ export class NotificationsComponent implements OnInit {
   getSeverityData(value: unknown): { count: number; label: string } {
     return value as { count: number; label: string };
   }
-
 
   getTrendItems(filterDirection: string): any[] {
     // 1. Safety check to ensure trends object exists
@@ -247,7 +248,6 @@ export class NotificationsComponent implements OnInit {
     }
     this.openSpec = null;
     this.openProd = null;
-
   }
   toggleNotificationPanel(event?: Event) {
     if (event) event.stopPropagation();
@@ -258,9 +258,14 @@ export class NotificationsComponent implements OnInit {
     this.showNotificationPanel = false;
   }
   toggleSpecCard(index: number) {
-    // We add a transient property to the spec object for UI toggling
-    const spec = this.digestData.specializations.specializations[index];
-    spec.expanded = !spec.expanded;
+    const spec = this.digestData.specializations.specializations;
+    spec.forEach((spec: any, i: number) => {
+      if (i === index) {
+        spec.expanded = !spec.expanded;
+      } else {
+        spec.expanded = false;
+      }
+    });
   }
   openFullReport(note: any) {
     this.currentView = 'focus';
@@ -276,31 +281,32 @@ export class NotificationsComponent implements OnInit {
     this.userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
 
     this.notifications = '';
-    this.filterService.currentSite.subscribe(async (site) => {
-      this.selectedSite = site;
+    combineLatest([
+      this.filterService.currentSite,
+      this.filterService.currentBusinessLine,
+    ]).subscribe(async ([site, businessLine]) => {
+      // 1. Apply your 'Select' -> 'ALL' logic
+      this.selectedSite = site === 'Select' ? 'ALL' : site;
+      this.selectedBusinessline =
+        businessLine === 'Select' ? 'ALL' : businessLine;
 
-      const payload = {
-        action: 'fetch_summary',
-        role: 'SITEOPS',
-        site: this.selectedSite,
-      };
+      // 2. Now call your API with both updated values
+      console.log(
+        `Fetching notifications for ${this.selectedSite} and ${this.selectedBusinessline}`,
+      );
       await this.getNotificationData();
     });
   }
 
-
-
   async getNotificationData() {
-    // Use dynamic email if available, fallback to default
     const userEmail = this.userData?.email;
-
-    // Site logic
     const siteVal = this.selectedSite === 'Select' ? 'ALL' : this.selectedSite;
 
     const payload = {
       user_id: userEmail,
       site: siteVal,
       limit: 7,
+      business_line: this.selectedBusinessline,
     };
 
     this.loading = true;
@@ -308,7 +314,7 @@ export class NotificationsComponent implements OnInit {
     try {
       // Call the API ONCE
       const response: any = await lastValueFrom(
-        this.svc.getNotificationData(payload)
+        this.svc.getNotificationData(payload),
       );
 
       // Process the data locally
@@ -321,15 +327,15 @@ export class NotificationsComponent implements OnInit {
         if (item.summary) {
           // Regex to find text between **brightspots:** and the next ** header
           const brightSpotMatch = item.summary.match(
-            /\*\*Bright Spots:\*\*\s*([^*]+)/
+            /\*\*Bright Spots:\*\*\s*([^*]+)/,
           );
           // Regex to find text between **Bright Spots:** and the next ** header
           const statusRiskMatch = item.summary.match(
-            /\*\*Status & Risk:\*\*\s*([^*]+)/
+            /\*\*Status & Risk:\*\*\s*([^*]+)/,
           );
 
           const focusrAreasMatch = item.summary.match(
-            /\*\*Focus Areas:\*\*\s*([^*]+)/
+            /\*\*Focus Areas:\*\*\s*([^*]+)/,
           );
 
           if (brightSpotMatch) extractedBrightSpots = brightSpotMatch[1].trim();
@@ -377,14 +383,14 @@ export class NotificationsComponent implements OnInit {
     // this.loading = true;
     try {
       const response: any = await lastValueFrom(
-        this.svc.getNotificationDetails(payload)
+        this.svc.getNotificationDetails(payload),
       );
 
       this.digestData = response.payload_json;
 
       if (!note.is_read) {
         const readResponse: any = await lastValueFrom(
-          this.svc.markNotificationRead(payload)
+          this.svc.markNotificationRead(payload),
         );
         if (readResponse.status == 'success') {
           note.is_read = true;
@@ -404,7 +410,6 @@ export class NotificationsComponent implements OnInit {
     this.selectedData = item.fullData;
     this.isModalOpen = true;
   }
-
 
   getLeadershipClass(status: string): string {
     if (!status) return 'leadership-none';
@@ -454,7 +459,7 @@ export class NotificationsComponent implements OnInit {
         acc[severity].push(alert);
         return acc;
       },
-      {}
+      {},
     );
 
     // Convert to array of objects for easier looping and sorting
@@ -482,7 +487,6 @@ export class NotificationsComponent implements OnInit {
     }
   }
 
-
   hasValidDailyMetrics(metrics: any): boolean {
     if (!metrics) return false;
 
@@ -500,7 +504,6 @@ export class NotificationsComponent implements OnInit {
       }
     }
     return true;
-
   }
 
   hasValidMonthlyMetrics(metrics: any): boolean {
@@ -518,8 +521,7 @@ export class NotificationsComponent implements OnInit {
         this.metricsMonthDispaly = lastMonth || thisMonth || 'N/A';
       }
     }
-    return true ;
-
+    return true;
   }
   toggleProd(prodName: string) {
     this.openProd = this.openProd === prodName ? null : prodName;
@@ -530,31 +532,32 @@ export class NotificationsComponent implements OnInit {
     if (trend === 'DECLINING') return 'trending_down';
     return 'remove';
   }
- // Generic function to find a record by frequency type
-getRecordByFrequency(freqType: string) {
-  if (!this.digestData || !this.digestData.focus) return null;
+  // Generic function to find a record by frequency type
+  getRecordByFrequency(freqType: string) {
+    if (!this.digestData || !this.digestData.focus) return null;
 
-  return this.digestData.focus.find((item: { metric_info: { frequency: string; }; }) =>
-    item.metric_info?.frequency === freqType
-  );
-}
+    return this.digestData.focus.find(
+      (item: { metric_info: { frequency: string } }) =>
+        item.metric_info?.frequency === freqType,
+    );
+  }
   get dailyMetricsCount(): number {
     if (!this.digestData?.focus) return 0;
     return Object.values(this.digestData.focus).reduce(
       (total: number, spec: any) => {
         const dailyCount = Object.values(spec?.metric_info || {}).filter(
-          (m: any) => m.frequency === 'DAILY'
+          (m: any) => m.frequency === 'DAILY',
         ).length;
         return total + dailyCount;
       },
-      0
+      0,
     );
   }
 
   get dailyAlerts() {
     return (
       this.digestData?.focus?.filter(
-        (item: any) => item.metric_info?.frequency === 'DAILY'
+        (item: any) => item.metric_info?.frequency === 'DAILY',
       ) || []
     );
   }
@@ -563,7 +566,7 @@ getRecordByFrequency(freqType: string) {
   get monthlyAlerts() {
     return (
       this.digestData?.focus?.filter(
-        (item: any) => item.metric_info?.frequency === 'MONTHLY'
+        (item: any) => item.metric_info?.frequency === 'MONTHLY',
       ) || []
     );
   }
@@ -582,7 +585,6 @@ getRecordByFrequency(freqType: string) {
     // Returns true if at least one item has a score > 0
     return breakdown.some((item) => item.volume_share_pct > 0);
   }
-
 
   closeModal(event?: Event) {
     if (event) {
@@ -605,7 +607,7 @@ getRecordByFrequency(freqType: string) {
     // Find max value to normalize bars (prevent overflow)
     const max = Math.max(
       ...this.selectedData.metric_insights.map((m: any) => m.alert_count),
-      100
+      100,
     );
     return Math.min((count / max) * 100, 100) + '%';
   }
@@ -616,18 +618,55 @@ getRecordByFrequency(freqType: string) {
     if (count > 100) return 'orange';
     return 'green';
   }
-    getTrendClass(t: any): string {
-  const name = t?.metric_info?.display_name;
-  const current = t?.site_trend?.current_period?.rate ?? 0;
-  const previous = t?.site_trend?.previous_period?.rate ?? 0;
-  const changePct = t?.site_trend?.change_pct ?? 0;
+  getTrendClass(t: any): string {
+    const name = t?.metric_info?.display_name;
+    const current = t?.site_trend?.current_period?.rate ?? 0;
+    const previous = t?.site_trend?.previous_period?.rate ?? 0;
+    const changePct = t?.site_trend?.change_pct ?? 0;
 
-  // 1. Check for specific metrics
-  if (name === 'Reopen Rate' || name === 'Escalation Rate') {
-    return (previous - current >= 0) ? 'bg-success' : 'bg-danger';
+    // 1. Check for specific metrics
+    if (name === 'Reopen Rate' || name === 'Escalation Rate') {
+      return previous - current >= 0 ? 'bg-success' : 'bg-danger';
+    }
+
+    // 3. Default fallback
+    return changePct >= 0 ? 'bg-success' : 'bg-danger';
   }
 
-  // 3. Default fallback
-  return changePct >= 0 ? 'bg-success' : 'bg-danger';
+  getTrendText(m: any): string {
+  const val = m.value;
+  if (val.trend === "NO_DATA") return "N/A";
+
+  const last = val.last_week?.rate;
+  const current = val.this_week?.rate;
+
+  if (last != null && current != null) {
+    if (last === current) return "STABLE";
+    // Logic: If last week was 5 and this week is 10, it's INCREASING
+    return last < current ? "INCREASING" : "DECREASING";
+  }
+  return val.trend;
 }
+
+getMetricTrend(m: any): string {
+    const name = m.value.display_name;
+    let className = ''; // Initialize as empty string
+
+    if (name === 'Reopen Rate' || name === 'Escalation Rate') {
+        // Safe check for null/undefined before comparing
+        if (m.value.last_month?.rate != null && m.value.this_month?.rate != null) {
+            if (m.value.last_month.rate < m.value.this_month.rate) {
+                console.log('Class assigned: declining');
+                className = 'declining';
+            } else if (m.value.last_month.rate > m.value.this_month.rate) {
+                className = 'improving'; // Or whatever your 'good' class is
+            } else {
+                className = 'stable';
+            }
+        }
+    }
+    return className;
+}
+
+
 }

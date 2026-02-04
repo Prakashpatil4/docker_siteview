@@ -6,6 +6,7 @@
   >
     <div class="panel-header">
       <div class="panel-title">Daily Digest</div>
+      <div class="notification-subtitle">Site:{{selectedSite}} | Business Line:{{selectedBusinessline}}</div>
     </div>
     <!-- {{ note.notification_id }}  -->
     <div *ngIf="loading" class="state-msg">
@@ -842,7 +843,7 @@
                                   </td>
 
                                   <td>
-                                    <span
+                                  <span
                                       class="trend-indicator-v2"
                                       [ngClass]="
                                         $any(m.value).trend.toLowerCase()
@@ -861,6 +862,9 @@
 
 
                                     </span>
+
+
+
                                   </td>
                                 </tr>
                               </ng-container>
@@ -922,22 +926,19 @@
                                   </td>
 
                                   <td>
-                                    <span
-                                      class="trend-indicator-v2"
-                                      [ngClass]="
-                                        $any(m.value).trend.toLowerCase()
-                                      "
-                                    >
-                                        {{
-                                        $any(m.value).trend === "NO_DATA"
-                                          ? "N/A"
-                                          : ($any(m.value).last_month?.rate != null && $any(m.value).this_month?.rate != null)
-                                            ? ($any(m.value).last_month.rate === $any(m.value).this_month.rate
-                                                ? "STABLE"
-                                                : ($any(m.value).last_month.rate < $any(m.value).this_month.rate ? "INCREASING" : "DECREASING"))
-                                            : $any(m.value).trend
-                                      }}
-                                    </span>
+
+                          <span *ngIf="$any(m.value).display_name === 'Reopen Rate' || $any(m.value).display_name === 'Escalation Rate'"
+                                class="trend-indicator-v2"
+                                [ngClass]="getMetricTrend(m)">
+                              {{ getTrendText(m) }}
+                          </span>
+
+                          <span *ngIf="$any(m.value).display_name !== 'Reopen Rate' && $any(m.value).display_name !== 'Escalation Rate'"
+                                class="trend-indicator-v2"
+                                [ngClass]="$any(m.value).trend?.toLowerCase()">
+                              {{ $any(m.value).trend === 'NO_DATA' ? 'N/A' : $any(m.value).trend }}
+                          </span>
+
                                   </td>
                                 </tr>
                               </ng-container>
