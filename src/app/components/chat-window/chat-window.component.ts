@@ -1,4 +1,4 @@
-import {
+ import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
@@ -28,7 +28,7 @@ import { ChatMessage, ChatService } from '../../services/chat.service';
 import { FormatMessagePipe } from './format-html.pipe';
 import { FilterService } from '../../services/filter.service';
 import { combineLatest } from 'rxjs';
-import { map, distinctUntilChanged } from 'rxjs/operators';
+import { map, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-chat-window',
@@ -78,104 +78,169 @@ export class ChatWindowComponent
     private filterService: FilterService,
     private fb: FormBuilder,
   ) {}
-  ngOnInit(): void {
-    //   this.filterService.currentDateRange.subscribe(async (dateRange) => {
-    //     const dates = dateRange ? dateRange.split(',') : [];
-    //     this.startDate = (dates[0] || '').trim();
-    //     this.endDate = (dates[1] || '').trim();
-    //   });
 
-    //  this.filterService.currentBusinessLine.subscribe(async (businessLine) => {
-    //     if (businessLine == 'Select') {
-    //       this.selectedBusinessLine = 'ALL';
-    //     } else {
-    //       this.selectedBusinessLine = businessLine;
-    //     }
-    //   });
+ngOnInit(): void {
+  // 1. Initialize the UI form
+  this.initForm();
 
-    //   this.filterService.showAgentButton$.subscribe((visible) => {
-    //     // this.clear();
-    //     if (!visible) {
-    //       this.clear();
-    //     }
-    //   });
-
-    //   this.filterService.currentSite.subscribe(async (site) => {
-    //     this.selectedSite = site;
-
-    //     if (this.selectedSite == 'Select') {
-    //       this.selectedSite = 'ALL';
-    //     } else {
-    //       this.selectedSite = this.selectedSite;
-    //     }
-    //   });
-
-    // ... inside your component ...
-
-    // 1. Group related filters using combineLatest
-    combineLatest([
-      this.filterService.currentDateRange,
-      this.filterService.currentBusinessLine,
-      this.filterService.currentSite,
-    ])
-      .pipe(
-        distinctUntilChanged(
-          (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
-        ),
+  // 2. Main Filter Subscription (Single Source of Truth)
+  // This replaces the 3 individual subscriptions and the combineLatest block
+  const filterSub = combineLatest([
+    this.filterService.currentDateRange,
+    this.filterService.currentBusinessLine,
+    this.filterService.currentSite,
+  ])
+    .pipe(
+      debounceTime(200), // Wait for dropdown changes to settle
+      distinctUntilChanged(
+        (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)
       )
-      .subscribe(([dateRange, businessLine, site]) => {
-        // Handle Dates
-        const [start = '', end = ''] = (dateRange || '')
-          .split(',')
-          .map((d) => d.trim());
-        this.startDate = start;
-        this.endDate = end;
+    )
+    .subscribe(([dateRange, businessLine, site]) => {
+      console.log('🔄 Filter Change Detected: Syncing UI and Session');
 
-        // Handle Business Line (using Ternary for brevity)
-        this.selectedBusinessLine =
-          businessLine === 'Select' ? 'ALL' : businessLine;
+      // Update local variables first
+      const dates = dateRange ? dateRange.split(',') : [];
+      this.startDate = (dates[0] || '').trim();
+      this.endDate = (dates[1] || '').trim();
+      this.selectedBusinessLine = businessLine === 'Select' ? 'All' : businessLine;
+      this.selectedSite = site === 'Select' ? 'ALL' : site;
 
-        // Handle Site
-        this.selectedSite = site === 'Select' ? 'ALL' : site;
-      });
+      // Update Chat Session only if we have valid data
+      this.initializeChatSession();
 
-    // 2. Keep specialized logic separate
-    this.filterService.showAgentButton$.subscribe((visible) => {
-      if (!visible) this.clear();
-    });
-    const messagesSub = this.chat.messages$.subscribe((msgs) => {
-      if (msgs && msgs.length > 0) {
-        this.showHint = false; // hide hint on first message
-        this.chatHistory = msgs;
+      // Notify the service/socket if the agent panel is already active
+      if (this.filterService.isAgentButtonVisible) {
+        this.filterService.connectWithAgent();
       }
-      this.onUserActivity();
     });
-    this.subscriptions.add(messagesSub);
-    const sessionSub = this.chat
-      .getSessions(
-        this.startDate ?? '',
-        this.endDate ?? '',
-        this.selectedSite ?? '',
-        this.selectedBusinessLine ?? '',
-      )
-      .subscribe((response: any) => {
-        if (response?.session_id) {
-          this.chat.connect(
-            // this.startDate ?? '',
-            // this.endDate ?? '',
-            response.session_id,
-            // this.selectedSite,
-            // this.selectedBusinessLine ?? '',
-          );
-        }
-      });
-    this.subscriptions.add(sessionSub);
 
-    if (this.isShowChatWindow) {
-      this.onUserActivity();
+  // Track the subscription for cleanup
+  this.subscriptions.add(filterSub);
+
+  // 3. Message Stream Subscription
+  const messagesSub = this.chat.messages$.subscribe((msgs) => {
+    if (msgs && msgs.length > 0) {
+      this.showHint = false;
+      this.chatHistory = msgs;
     }
-    this.initForm();
-  } // 1. Initialize the form with Reactive Forms
+    this.onUserActivity();
+  });
+  this.subscriptions.add(messagesSub);
+
+  // 4. Handle Idle Timer if window is already shown
+  if (this.isShowChatWindow) {
+    this.onUserActivity();
+  }
+}
+
+/**
+ * Helper to handle session creation and socket connection
+ * This ensures parameters are never empty.
+ */
+private initializeChatSession(): void {
+  const sessionSub = this.chat
+    .getSessions(
+      this.startDate ?? '',
+      this.endDate ?? '',
+      this.selectedSite ?? '',
+      this.selectedBusinessLine ?? ''
+    )
+    .subscribe({
+      next: (response: any) => {
+        if (response?.session_id) {
+          console.log('✅ Session Created:', response.session_id);
+          this.chat.connect(response.session_id);
+        }
+      },
+      error: (err) => console.error('❌ Session API Error:', err)
+    });
+
+  this.subscriptions.add(sessionSub);
+}
+
+
+
+
+  // ngOnInit(): void {
+  //     this.filterService.currentDateRange.subscribe(async (dateRange) => {
+  //       const dates = dateRange ? dateRange.split(',') : [];
+  //       this.startDate = (dates[0] || '').trim();
+  //       this.endDate = (dates[1] || '').trim();
+  //     });
+
+  //    this.filterService.currentBusinessLine.subscribe(async (businessLine) => {
+  //       if (businessLine == 'Select') {
+  //         this.selectedBusinessLine = 'All';
+  //       } else {
+  //         this.selectedBusinessLine = businessLine;
+  //       }
+  //     });
+
+
+  //     this.filterService.currentSite.subscribe(async (site) => {
+  //       this.selectedSite = site;
+
+  //       if (this.selectedSite == 'Select') {
+  //         this.selectedSite = 'ALL';
+  //       } else {
+  //         this.selectedSite = this.selectedSite;
+  //       }
+  //     });
+
+  //     combineLatest([
+  //       this.filterService.currentDateRange,
+  //       this.filterService.currentBusinessLine,
+  //       this.filterService.currentSite,
+  //     ])
+  //       .pipe(
+  //         debounceTime(100), // Wait 100ms for all potential changes to settle
+  //         distinctUntilChanged(
+  //           (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
+  //         ),
+  //       )
+  //       .subscribe(([dateRange, businessLine, site]) => {
+  //         console.log('Reactive update: Re-syncing filters');
+
+  //         // Perform your logic here
+  //         const isVisible = this.filterService.isAgentButtonVisible;
+  //        console.log('window is-->'+isVisible)
+  //         if(isVisible) {
+  //           this.filterService.connectWithAgent();
+  //         }
+
+  //       });
+
+
+  //   const messagesSub = this.chat.messages$.subscribe((msgs) => {
+  //     if (msgs && msgs.length > 0) {
+  //       this.showHint = false; // hide hint on first message
+  //       this.chatHistory = msgs;
+  //     }
+  //     this.onUserActivity();
+  //   });
+  //   this.subscriptions.add(messagesSub);
+  //   const sessionSub = this.chat
+  //     .getSessions(
+  //       this.startDate ?? '',
+  //       this.endDate ?? '',
+  //       this.selectedSite ?? '',
+  //       this.selectedBusinessLine ?? '',
+  //     )
+  //     .subscribe((response: any) => {
+  //       if (response?.session_id) {
+  //         this.chat.connect(
+  //           response.session_id,
+  //         );
+  //       }
+  //     });
+  //   this.subscriptions.add(sessionSub);
+
+  //   if (this.isShowChatWindow) {
+  //     this.onUserActivity();
+  //   }
+  //   this.initForm();
+  // } // 1. Initialize the form with Reactive Forms
   initForm(): void {
     this.feedbackForm = this.fb.group({
       // The 'feedbackText' control is required (must not be empty)
@@ -207,11 +272,21 @@ export class ChatWindowComponent
     this.onUserActivity(); // start/reset timer when opened
   }
   clear() {
-    this.chat.clear();
+
+  // if (!this.isShowChatWindow) {
+  //   console.log('im if')
+  //   return;
+  // }
     this.isShowChatWindow = false;
+    this.chat.clear();
+
+   // this.isShowChatWindow = false;
     this.clearIdleTimer();
     this.showHint = true;
     this.closed.emit();
+    this.filterService.setChatWindowOpenVisibility(false)
+    // console.log(this.filterService.isAgentButtonVisible)
+    //  this.filterService.setAgentButtonVisibility(false);
   }
   toggle() {
     this.isOpen = !this.isOpen;

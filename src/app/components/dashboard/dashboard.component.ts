@@ -257,7 +257,6 @@ export class DashboardComponent implements OnInit {
     const isVisible = this.filterService.isAgentButtonVisible;
     if (isVisible) {
      this.filterService.setAgentButtonVisibility(true);
-     this.filterService.connectWithAgent();
     }
     console.log(
       'API CALL: Preparing to send these params:' +

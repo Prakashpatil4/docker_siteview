@@ -89,9 +89,10 @@ export class HeaderComponent implements OnInit {
     this.filterService.setSite(this.selectedSite);
     this.getUnreadNotificationCount();
     const isVisible = this.filterService.isAgentButtonVisible;
+
     if (isVisible) {
+      console.log('on site change if conddition')
      this.filterService.setAgentButtonVisibility(true);
-     this.filterService.connectWithAgent();
     }
 
   }
@@ -106,7 +107,6 @@ export class HeaderComponent implements OnInit {
     const isVisible = this.filterService.isAgentButtonVisible;
     if (isVisible) {
      this.filterService.setAgentButtonVisibility(true);
-     this.filterService.connectWithAgent();
     }
   }
   handleChildAlert() {

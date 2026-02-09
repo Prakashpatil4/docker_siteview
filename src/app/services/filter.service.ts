@@ -16,7 +16,7 @@ export class FilterService {
   private dateRangeSource = new BehaviorSubject<string>('Select');
   currentDateRange = this.dateRangeSource.asObservable();
 
-  private agentButtonVisibility = new BehaviorSubject<boolean>(true);
+  private agentButtonVisibility = new BehaviorSubject<boolean>(false);
 
   // Observable for components to subscribe to
   showAgentButton$ = this.agentButtonVisibility.asObservable();
@@ -42,15 +42,13 @@ export class FilterService {
   }
   setChatWindowOpenVisibility(visible: boolean) {
     this.chatWindowOpenVisibility.next(visible);
+    console.log('setChatWindowOpenVisibility--->'+this.chatWindowOpenVisibility.value)
   }
   get isAgentButtonVisible(): boolean {
-  return this.chatWindowOpenVisibility.value;
-}
+     console.log('isAgentButtonVisible--->'+this.chatWindowOpenVisibility.value)
+    return this.chatWindowOpenVisibility.value;
+  }
   connectWithAgent() {
-
-
-
-
     const currentSite =
       this.siteSource.value === 'Select' || !this.siteSource.value
         ? 'ALL'
@@ -58,7 +56,7 @@ export class FilterService {
     const currentBusinessLine =
       this.businessLineSource.value === 'Select' ||
       !this.businessLineSource.value
-        ? 'ALL'
+        ? 'All'
         : this.businessLineSource.value;
     const currentDateRange = this.dateRangeSource.value;
 
@@ -67,33 +65,11 @@ export class FilterService {
     const startDate = (dates[0] || '').trim();
     const endDate = (dates[1] || '').trim();
 
-
-
-   this.chat.updateFilters({
+    this.chat.updateFilters({
       owner_team: currentSite,
       business_line: currentBusinessLine,
       timeframe_start: startDate,
-      timeframe_end: endDate
+      timeframe_end: endDate,
     });
-
-
-    // this.chat
-    //   .getSessions(
-    //     startDate ?? '',
-    //     endDate ?? '',
-    //     currentSite ?? '',
-    //     currentBusinessLine ?? '',
-    //   )
-    //   .subscribe((response: any) => {
-    //     if (response?.session_id) {
-    //       this.chat.connect(
-    //         startDate ?? '',
-    //         endDate ?? '',
-    //         response.session_id,
-    //         currentSite,
-    //         currentBusinessLine ?? '',
-    //       );
-    //     }
-    //   });
   }
 }

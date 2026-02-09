@@ -350,8 +350,8 @@
 // New code 30 jan
 
 
- import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, filter, Observable, Subject, take } from 'rxjs';
 import { WebSocketSubject } from 'rxjs/webSocket';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
@@ -412,7 +412,7 @@ export class ChatService {
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
   readonly loading$ = this.loadingSubject.asObservable();
-
+  
   // =====================================================
   // Filter state management
   // =====================================================
@@ -421,12 +421,12 @@ export class ChatService {
 
   private filterUpdateSubject = new Subject<FilterUpdateResponse>();
   readonly filterUpdate$ = this.filterUpdateSubject.asObservable();
-
+  // UAT API URL
   // private chatAPIURL =
   //   'https://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com';
   // private readonly BASE_URL = 'wss://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com/ws';
 
-
+   // Dev API URL
    private chatAPIURL =
       'https://e360-siteops-bot-dev-dot-digital-sme.uc.r.appspot.com';
    private readonly BASE_URL = 'wss://e360-siteops-bot-dev-dot-digital-sme.uc.r.appspot.com/ws';
@@ -498,6 +498,26 @@ export class ChatService {
   // 2. CONNECT WEBSOCKET
   // =====================================================
   connect(sessionId: string): void {
+
+    //   const currentSite =
+    //   this.siteSource.value === 'Select' || !this.siteSource.value
+    //     ? 'ALL'
+    //     : this.siteSource.value;
+    // const currentBusinessLine =
+    //   this.businessLineSource.value === 'Select' ||
+    //   !this.businessLineSource.value
+    //     ? 'ALL'
+    //     : this.businessLineSource.value;
+    // const currentDateRange = this.dateRangeSource.value;
+
+    // // 2. Clean Data Extraction
+    // const dates = (currentDateRange || '').split(',');
+    // const startDate = (dates[0] || '').trim();
+    // const endDate = (dates[1] || '').trim();
+
+
+
+
     if (this.socket$ && !this.socket$.closed) {
       return; // Already connected
     }
@@ -509,7 +529,7 @@ export class ChatService {
     }
 
     // Simple WebSocket URL - filters already set during session creation
-    const wsUrl = `${this.BASE_URL}/${this.sessionId}?owner_team=${this.ownerTeam}&start_date=${this.startDate}&end_date=${this.endDate}&business_line=${this.businessLine}}`;
+    const wsUrl = `${this.BASE_URL}/${this.sessionId}?owner_team=${this.ownerTeam}&start_date=${this.startDate}&end_date=${this.endDate}&business_line=${this.businessLine}`;
 
     console.log('WebSocket connecting to:', wsUrl);
 
@@ -552,14 +572,19 @@ export class ChatService {
             this.addBotMessage(`Sorry, an error occurred: ${msg.error}`, true);
             break;
 
+
+
           // =====================================================
           // Handle filter update response (from WebSocket)
           // =====================================================
-          case 'filters_updated':
+          case 'updated_filters':
             console.log('Filter update response:', msg);
-
-            if (msg.success && msg.context) {
+            this.loadingSubject.next(true);
+            if (msg.context) {
               this.filtersSubject.next(msg.context);
+            }
+            if (msg.message || msg.response) {
+              this.addBotMessage(msg.message || msg.response, true);
             }
 
             this.filterUpdateSubject.next({
@@ -611,26 +636,106 @@ export class ChatService {
   // =====================================================
   // 4. UPDATE FILTERS (via WebSocket - after session created)
   // =====================================================
-  updateFilters(filters: Partial<SessionFilters>): void {
-    console.log('Updating filters:', filters);
 
-    if (!this.socket$ || this.socket$.closed) {
-      console.error('WebSocket is not connected. Cannot update filters.');
-      this.filterUpdateSubject.next({
-        type: 'filters_updated',
-        success: false,
-        message: 'WebSocket not connected'
+
+
+
+updateFilters(filters: Partial<SessionFilters>): void {
+  console.log('Updating filters:', filters);
+
+  // 1. Check if the socket is truly ready
+  if (!this.socket$ || this.socket$.closed) {
+    console.warn('Socket not ready. Queuing filters...');
+
+    this.loadingSubject.next(true);
+
+    // 2. Wait for the FIRST successful connection message
+    // We listen to filters$ because your connect() method calls .next() on 'connected'
+    this.filters$.pipe(
+      filter(ctx => Object.keys(ctx).length > 0), // Wait until context exists
+      take(1) // Execute only once then unsubscribe
+    ).subscribe(() => {
+      console.log('Socket now ready! Sending queued filters:', filters);
+      this.socket$?.next({
+        type: 'update_filters',
+        filters: filters
       });
-      return;
-    }
-
-    console.log('Sending filter update via WebSocket:', filters);
-
-    this.socket$.next({
-      type: 'update_filters',
-      filters: filters
     });
+    return;
   }
+
+  // 3. Normal flow if already connected
+  this.loadingSubject.next(true);
+  this.socket$.next({
+    type: 'update_filters',
+    filters: filters
+  });
+}
+
+
+// 6 feb code
+
+  // updateFilters(filters: Partial<SessionFilters>): void {
+  //   console.log('Updating filters:', filters);
+
+  //   if (!this.socket$ || this.socket$.closed) {
+  //     console.error('WebSocket is not connected. Cannot update filters.');
+  //     this.filterUpdateSubject.next({
+  //       type: 'filters_updated',
+  //       success: false,
+  //       message: 'WebSocket not connected'
+  //     });
+  //     return;
+  //   }
+  //   this.loadingSubject.next(true);
+  //   console.log('Sending filter update via WebSocket:', filters);
+
+  //   this.socket$.next({
+  //     type: 'update_filters',
+  //     filters: filters
+  //   });
+  // }
+
+
+
+
+
+
+// updateFilters(filters: Partial<SessionFilters>): void {
+//   console.log('Updating filters:', filters);
+
+//   // 1. Check if the socket is ready
+//   if (!this.socket$ || this.socket$.closed) {
+//     console.warn('WebSocket not connected. Queuing filter update...');
+
+//     this.loadingSubject.next(true);
+
+//     // 2. Wait for the FIRST successful connection message
+//     // We listen to filters$ because your 'connect' method updates it on type: 'connected'
+//     this.filters$.pipe(
+//       filter((currentFilters: {}) => Object.keys(currentFilters).length > 0), // Wait until we have a context
+//       take(1) // Only do this once
+//     ).subscribe(() => {
+//       console.log('Connection established! Sending queued filters:', filters);
+//       this.socket$?.next({
+//         type: 'update_filters',
+//         filters: filters
+//       });
+//     });
+
+//     // We return here because the actual send is now handled by the subscription above
+//     return;
+//   }
+
+//   // 3. Standard flow if socket is already open
+//   this.loadingSubject.next(true);
+//   console.log('Sending filter update via WebSocket:', filters);
+
+//   this.socket$.next({
+//     type: 'update_filters',
+//     filters: filters
+//   });
+// }
 
   // =====================================================
   // 5. SEND FEEDBACK
