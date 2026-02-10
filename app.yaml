@@ -1,8 +1,8 @@
 #Dev service
-#service: e360-siteops-ui-dev
+service: e360-siteops-ui-dev
 
 #UAT service
-service: e360-siteops-ui
+#service: e360-siteops-ui
 runtime: custom
 env: flex
 

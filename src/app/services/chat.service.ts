@@ -1,360 +1,9 @@
-// import { Injectable } from '@angular/core';
-// import {
-//   BehaviorSubject,
-//   EMPTY,
-//   Observable,
-//   Subject,
-//   Subscription,
-//   timer,
-// } from 'rxjs';
-// import { catchError, switchMap, tap } from 'rxjs/operators';
-// import { WebSocketSubject } from 'rxjs/webSocket';
-// import { HttpClient } from '@angular/common/http';
-// import { AuthService } from './auth.service';
-
-// export interface ChatMessage {
-//   from: 'user' | 'bot';
-//   text: string;
-//   time: number;
-// }
-
-// @Injectable({ providedIn: 'root' })
-// export class ChatService {
-//   private socketSubscription?: any;
-//   private storageKey = 'currentUser';
-//   private messagesSubject = new BehaviorSubject<ChatMessage[]>([]);
-//   readonly messages$ = this.messagesSubject.asObservable();
-//   private loadingSubject = new BehaviorSubject<boolean>(false);
-//   readonly loading$ = this.loadingSubject.asObservable();
-//   private chatAPIURL =
-//     'https://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com';
-//   private readonly BASE_URL =
-//     'wss://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com/ws';
-
-//   //   private chatAPIURL =
-//   //   'https://e360-siteops-bot-dev-dot-digital-sme.uc.r.appspot.com';
-//   // private readonly BASE_URL = 'wss://e360-siteops-bot-dev-dot-digital-sme.uc.r.appspot.com/ws';
-
-//   private sessionId: string | null = null;
-//   private socket$?: WebSocketSubject<any>;
-
-//   private connectionRequest$ = new Subject<string>();
-
-//   constructor(
-//     private http: HttpClient,
-//     private authService: AuthService,
-//   ) {
-//     // This is the ONLY place where subscriptions are managed
-//     this.connectionRequest$
-//       .pipe(
-//         // switchMap is the magic: it automatically unsubscribes/cancels
-//         // the previous connection if a new URL comes in.
-//         switchMap((url) => {
-//           this.cleanup();
-//           // 300ms debounce to ensure the browser has time to clear the socket
-//           return timer(300).pipe(tap(() => this.establishConnection(url)));
-//         }),
-//       )
-//       .subscribe();
-//   }
-
-//   // 1. Modified connect: It just builds the URL and pushes to the stream
-//   connect(
-//     startDate: string,
-//     endDate: string,
-//     sessionId: string,
-//     site: any,
-//     businessLine: string,
-//   ): void {
-//     if (!sessionId) {
-//       console.error('❌ No session ID to connect to WebSocket');
-//       return;
-//     }
-
-//     // const query = new URLSearchParams({
-//     //   owner_team: site || 'ALL',
-//     //   start_date: startDate,
-//     //   end_date: endDate,
-//     //   business_line: 'ALL', // Or pass bl
-//     // }).toString();
-
-//     // const wsUrl = `${this.BASE_URL}/${sessionId}?${query}`;
-//     const wsUrl = `${this.BASE_URL}/${this.sessionId}?owner_team=${site}&start_date=${startDate}&end_date=${endDate}&business_line=${businessLine}`;
-
-//     // Trigger the queue
-//     this.connectionRequest$.next(wsUrl);
-//   }
-
-//   private establishConnection(url: string) {
-//     console.log('🚀 Establishing Connection to:', url);
-//     // this.loadingSubject.next(true);
-
-//     this.socket$ = new WebSocketSubject({
-//       url: url,
-//       // Prevents the "closed before established" error by ensuring
-//       // the browser has a clean slate
-//       openObserver: {
-//         next: () => console.log('✅ Connected to Server'),
-//       },
-//       closeObserver: {
-//         next: () => {
-//           console.log('⚠️ Connection Closed');
-//           this.loadingSubject.next(false);
-//         },
-//       },
-//     });
-
-//     this.socketSubscription = this.socket$.subscribe({
-//       next: (msg) => this.handleSocketMessages(msg),
-//       error: (err) => {
-//         console.error('❌ WebSocket Error Callback:', err);
-//         this.loadingSubject.next(false);
-//       },
-//     });
-//   }
-
-//   private cleanup() {
-//     console.log('🧹 Performing Cleanup...');
-//     if (this.socketSubscription) {
-//       this.socketSubscription.unsubscribe();
-//       this.socketSubscription = undefined;
-//     }
-//     if (this.socket$) {
-//       this.socket$.complete();
-//       this.socket$ = undefined;
-//     }
-//   }
-
-//   public get currentSessionId(): string | null {
-//     return this.sessionId;
-//   }
-
-//   getSessions(
-//     startDate: string,
-//     endDate: string,
-//     site: string,
-//     businessLine: string,
-//   ): Observable<any> {
-//     const userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
-//     const apiUrl = `${this.chatAPIURL}/sessions?owner_team=${site}&start_date=${startDate}&end_date=${endDate}&business_line=${businessLine}`;
-//     const body = { user_id: userData.email };
-
-//     return this.http.post<any>(apiUrl, body).pipe(
-//       tap((response) => {
-//         // Logic to extract ID from the whole response
-//         if (response && response.length > 0) {
-//           // Assuming response is an array, taking the first one
-//           this.sessionId = response[0].session_id;
-//         } else if (response && response.session_id) {
-//           // Assuming response is a single object
-//           this.sessionId = response.session_id;
-//         }
-//         console.log('Session ID captured in service:', this.currentSessionId);
-//       }),
-//     );
-//   }
-
-//   // getSessions(startDate:string,endDate:string,site: string, businessLine: string): Observable<any> {
-//   //   const userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
-//   //   const apiUrl = `${this.chatAPIURL}/sessions?owner_team=${site}&start_date=${startDate}&end_date=${endDate}&business_line=${businessLine}`;
-
-//   //   const body = { user_id: userData.email };
-//   //   //const body = { userid: userData.email, role: userData.role };
-
-//   //   return this.http.post<any>(apiUrl, body);
-//   // }
-
-//   sendMessage(text: string) {
-//     const trimmed = text?.trim();
-//     if (!trimmed) return;
-
-//     const userMsg: ChatMessage = {
-//       from: 'user',
-//       text: text.trim(),
-//       time: Date.now(),
-//     };
-//     this.messagesSubject.next([...this.messagesSubject.value, userMsg]);
-
-//     if (this.socket$) {
-//       this.socket$.next({ message: trimmed });
-//     } else {
-//       console.error('WebSocket is not connected.');
-//       this.addBotMessage('Error: Not connected to the server.', false);
-//     }
-//   }
-
-//   sendFeedback(payload: any): Observable<any> {
-//     const apiUrl = `${this.chatAPIURL}/feedback`;
-//     return this.http.post(apiUrl, payload);
-//   }
-
-//   clear() {
-//     this.socket$?.complete(); // Close the WebSocket connection
-//     this.socket$ = undefined;
-//     this.messagesSubject.next([]);
-//     this.sessionId = null;
-//   }
-
-//   private handleSocketMessages(msg: any): void {
-//     // 1. Centralized logging for easier debugging
-//     console.log('📩 Incoming Server Message:', msg);
-
-//     // 2. Clear loading state unless the message type explicitly requires it (like 'typing')
-//     if (msg.type !== 'typing') {
-//       this.loadingSubject.next(false);
-//     }
-
-//     // 3. Handle specific message types
-//     switch (msg.type) {
-//       case 'connected':
-//         console.log('System: Handshake successful.');
-//         break;
-
-//       case 'typing':
-//         // Show the "Bot is thinking..." animation
-//         this.loadingSubject.next(true);
-//         break;
-
-//       case 'progress':
-//         // Handle tool execution or background tasks
-//         console.log(`🛠️ Tool: ${msg.tool} | Status: ${msg.status}`);
-//         // If you have a progress bar, update it here
-//         this.loadingSubject.next(true);
-//         break;
-
-//       case 'message':
-//         // The final LLM response
-//         if (msg.response) {
-//           this.addBotMessage(msg.response, true);
-//         }
-//         break;
-
-//       case 'error':
-//         // Server-side logic errors (e.g., API keys, database down)
-//         const errorText = msg.error || 'A server-side error occurred.';
-//         this.addBotMessage(`⚠️ ${errorText}`, true);
-//         break;
-
-//       default:
-//         // Catch-all for basic string messages or unmapped types
-//         const fallback = msg.message || msg.text;
-//         if (fallback) {
-//           this.addBotMessage(fallback, true);
-//         }
-//         break;
-//     }
-//   }
-
-//   // connect(startDate:string, endDate: string,sessionId: string, selectedSite: any,businessLine: string): void {
-
-//   //   // if (this.socket$ && !this.socket$.closed) {
-//   //   //   return; // Already connected
-//   //   // }
-//   //   this.sessionId = sessionId;
-
-//   //   if (!this.sessionId) {
-//   //     console.error('No session ID to connect to WebSocket');
-//   //     return;
-//   //   }
-
-//   //   //const wsUrl = `{{this.BASE_URL}}/ws/${this.sessionId}?owner_team=${selectedSite}`;
-//   //   const wsUrl = `${this.BASE_URL}/${this.sessionId}?owner_team=${selectedSite}&start_date=${startDate}&end_date=${endDate}&business_line=ALL`;
-//   //   this.socket$ = new WebSocketSubject(wsUrl);
-//   //   console.log('socket-->' + JSON.stringify(this.socket$));
-//   //   console.log('this.socket$.closed--->'+this.socket$.closed)
-//   //   // --- FIX 2: Added full message handling logic ---
-//   //   this.socket$.subscribe(
-//   //     (msg: any) => {
-//   //       console.log('Server Message:', msg); // Good for debugging
-
-//   //       // Use a switch to handle all message types from the backend
-//   //       switch (msg.type) {
-//   //         case 'connected':
-//   //           // This is the first message. Show "Connected as SITEOPS"
-//   //           // this.addBotMessage(msg.message, false);
-//   //           break;
-
-//   //         case 'typing':
-//   //           // The bot is thinking. Show the "..." indicator.
-//   //           this.loadingSubject.next(true);
-//   //           break;
-
-//   //         case 'progress':
-//   //           // The bot is using a tool. Log it to the console.
-//   //           console.log(
-//   //             `TOOL: ${msg.tool}, STATUS: ${msg.status}, ARGS:`,
-//   //             msg.args
-//   //           );
-//   //           // This is where you would update the "Execution Details" timeline in your UI
-//   //           break;
-
-//   //         case 'message':
-//   //           // This is the FINAL bot answer.
-//   //           // The key is 'response', not 'message'
-//   //           this.addBotMessage(msg.response, true);
-//   //           break;
-
-//   //         case 'error':
-//   //           // The bot had an error.
-//   //           this.addBotMessage(`Sorry, an error occurred: ${msg.error}`, true);
-//   //           break;
-
-//   //         default:
-//   //           // Fallback for any other message
-//   //           if (msg.message) {
-//   //             this.addBotMessage(msg.message, true);
-//   //           }
-//   //       }
-//   //     },
-//   //     (err: any) => {
-//   //       // Catches errors and unexpected closures
-//   //       console.error('WebSocket error:', err);
-//   //       const errMsg = err.wasClean
-//   //         ? 'Connection closed.'
-//   //         : 'Sorry, the connection was lost unexpectedly.';
-//   //       //this.addBotMessage(errMsg, true);
-//   //       if (!err.wasClean) {
-//   //         // this.addBotMessage("Sorry, the connection was lost unexpectedly.", true);
-//   //       }
-//   //     },
-//   //     () => {
-//   //       // WebSocket connection is fully closed
-//   //       this.loadingSubject.next(false);
-//   //       //this.addBotMessage("Connection closed.", false);
-//   //       console.log('WebSocket connection closed');
-//   //     }
-//   //   );
-//   // }
-
-//   /**
-//    * Helper function to add a bot message to the chat history
-//    */
-//   private addBotMessage(text: string, stopLoading: boolean) {
-//     if (stopLoading) {
-//       this.loadingSubject.next(false);
-//     }
-
-//     if (!text) return; // Don't add empty messages
-
-//     const botMsg: ChatMessage = {
-//       from: 'bot',
-//       text: text,
-//       time: Date.now(),
-//     };
-//     this.messagesSubject.next([...this.messagesSubject.value, botMsg]);
-//   }
-// }
-
-
-
-// New code 30 jan
-
-
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, filter, Observable, Subject, take } from 'rxjs';
 import { WebSocketSubject } from 'rxjs/webSocket';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
+import { API_ENDPOINTS } from '../constants/api-endpoints';
 
 export interface ChatMessage {
   from: 'user' | 'bot';
@@ -412,7 +61,7 @@ export class ChatService {
 
   private loadingSubject = new BehaviorSubject<boolean>(false);
   readonly loading$ = this.loadingSubject.asObservable();
-  
+
   // =====================================================
   // Filter state management
   // =====================================================
@@ -421,16 +70,14 @@ export class ChatService {
 
   private filterUpdateSubject = new Subject<FilterUpdateResponse>();
   readonly filterUpdate$ = this.filterUpdateSubject.asObservable();
+
+   // DEV API URL
+  private readonly chatAPIURL = API_ENDPOINTS.DEV_BASE_URL;
+  private readonly WS_URL = API_ENDPOINTS.DEV_WS_URL
+
   // UAT API URL
-  // private chatAPIURL =
-  //   'https://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com';
-  // private readonly BASE_URL = 'wss://e360-siteops-bot-v2-dot-digital-sme.uc.r.appspot.com/ws';
-
-   // Dev API URL
-   private chatAPIURL =
-      'https://e360-siteops-bot-dev-dot-digital-sme.uc.r.appspot.com';
-   private readonly BASE_URL = 'wss://e360-siteops-bot-dev-dot-digital-sme.uc.r.appspot.com/ws';
-
+  // private readonly chatAPIURL = API_ENDPOINTS.UAT_BASE_URL;
+  // private readonly WS_URL = API_ENDPOINTS.UAT_WS_URL
 
 
 
@@ -441,83 +88,72 @@ export class ChatService {
   ownerTeam: string | undefined;
   businessLine: string | undefined;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {}
 
+  /**
+   * Getter for the current active session ID.
+   */
   public get currentSessionId(): string | null {
     return this.sessionId;
   }
+
+  /**
+   * Getter for the currently applied session filters.
+  */
 
   public get currentFilters(): SessionFilters {
     return this.filtersSubject.value;
   }
 
-  // =====================================================
-  // 1. CREATE SESSION (with initial filters)
-  // =====================================================
+  /**
+   * Makes an HTTP POST request to initialize a new chat session with specified filters.
+  */
+
   createSession(
     ownerTeam?: string,
     businessLine?: string,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Observable<SessionCreateResponse> {
     const userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
-   // const apiUrl = `${this.chatAPIURL}/sessions`;
     const apiUrl = `${this.chatAPIURL}/sessions?owner_team=${ownerTeam}&start_date=${startDate}&end_date=${endDate}&business_line=${businessLine}`;
-
-    // Build request body with filters
     const body: SessionCreateRequest = {
       user_id: userData.email,
     };
 
-    // Add optional filter parameters
     if (ownerTeam) body.owner_team = ownerTeam;
     if (businessLine) body.business_line = businessLine;
     if (startDate) body.start_date = startDate;
     if (endDate) body.end_date = endDate;
-
-    console.log('Creating session with:', body);
-
     return this.http.post<SessionCreateResponse>(apiUrl, body);
   }
 
-  // Legacy method name (calls createSession)
+  /**
+   * Wrapper for createSession that stores local filter state before initializing the session.
+  */
+
   getSessions(
     startDate?: string,
     endDate?: string,
     ownerTeam?: string,
     businessLine?: string,
   ): Observable<SessionCreateResponse> {
-    this.startDate =startDate;
-    this.endDate =endDate;
-    this.ownerTeam =ownerTeam;
-    this.businessLine =businessLine;
+    this.startDate = startDate;
+    this.endDate = endDate;
+    this.ownerTeam = ownerTeam;
+    this.businessLine = businessLine;
     return this.createSession(ownerTeam, businessLine, startDate, endDate);
   }
 
-  // =====================================================
-  // 2. CONNECT WEBSOCKET
-  // =====================================================
+   /**
+   * Establishes a WebSocket connection using the session ID and current filter parameters.
+   * Handles incoming message types such as 'typing', 'progress', 'message', and 'updated_filters'.
+   */
+
   connect(sessionId: string): void {
-
-    //   const currentSite =
-    //   this.siteSource.value === 'Select' || !this.siteSource.value
-    //     ? 'ALL'
-    //     : this.siteSource.value;
-    // const currentBusinessLine =
-    //   this.businessLineSource.value === 'Select' ||
-    //   !this.businessLineSource.value
-    //     ? 'ALL'
-    //     : this.businessLineSource.value;
-    // const currentDateRange = this.dateRangeSource.value;
-
-    // // 2. Clean Data Extraction
-    // const dates = (currentDateRange || '').split(',');
-    // const startDate = (dates[0] || '').trim();
-    // const endDate = (dates[1] || '').trim();
-
-
-
-
     if (this.socket$ && !this.socket$.closed) {
       return; // Already connected
     }
@@ -529,16 +165,11 @@ export class ChatService {
     }
 
     // Simple WebSocket URL - filters already set during session creation
-    const wsUrl = `${this.BASE_URL}/${this.sessionId}?owner_team=${this.ownerTeam}&start_date=${this.startDate}&end_date=${this.endDate}&business_line=${this.businessLine}`;
-
-    console.log('WebSocket connecting to:', wsUrl);
-
+    const wsUrl = `${this.WS_URL}/${this.sessionId}?owner_team=${this.ownerTeam}&start_date=${this.startDate}&end_date=${this.endDate}&business_line=${this.businessLine}`;
     this.socket$ = new WebSocketSubject(wsUrl);
 
     this.socket$.subscribe(
       (msg: any) => {
-        console.log('Server Message:', msg);
-
         switch (msg.type) {
           case 'connected':
             // Store initial filters from connection
@@ -556,7 +187,7 @@ export class ChatService {
             this.loadingSubject.next(true);
             console.log(
               `TOOL: ${msg.tool}, STATUS: ${msg.status}, ARGS:`,
-              msg.args
+              msg.args,
             );
             break;
 
@@ -572,11 +203,6 @@ export class ChatService {
             this.addBotMessage(`Sorry, an error occurred: ${msg.error}`, true);
             break;
 
-
-
-          // =====================================================
-          // Handle filter update response (from WebSocket)
-          // =====================================================
           case 'updated_filters':
             console.log('Filter update response:', msg);
             this.loadingSubject.next(true);
@@ -591,7 +217,7 @@ export class ChatService {
               type: 'filters_updated',
               success: msg.success,
               message: msg.message,
-              context: msg.context
+              context: msg.context,
             });
             break;
 
@@ -607,13 +233,14 @@ export class ChatService {
       () => {
         this.loadingSubject.next(false);
         console.log('WebSocket connection closed');
-      }
+      },
     );
   }
 
-  // =====================================================
-  // 3. SEND CHAT MESSAGE
-  // =====================================================
+  /**
+   * Sends a user message to the WebSocket server and updates the local message history.
+   */
+
   sendMessage(text: string) {
     const trimmed = text?.trim();
     if (!trimmed) return;
@@ -633,121 +260,56 @@ export class ChatService {
     }
   }
 
-  // =====================================================
-  // 4. UPDATE FILTERS (via WebSocket - after session created)
-  // =====================================================
+  /**
+   * Sends a filter update command over the WebSocket. If the socket is not yet open,
+   * it queues the update until the connection is established.
+   */
 
+  updateFilters(filters: Partial<SessionFilters>): void {
+    // 1. Check if the socket is truly ready
+    if (!this.socket$ || this.socket$.closed) {
+      console.warn('Socket not ready. Queuing filters...');
 
+      this.loadingSubject.next(true);
 
+      // 2. Wait for the FIRST successful connection message
+      // We listen to filters$ because your connect() method calls .next() on 'connected'
+      this.filters$
+        .pipe(
+          filter((ctx) => Object.keys(ctx).length > 0), // Wait until context exists
+          take(1), // Execute only once then unsubscribe
+        )
+        .subscribe(() => {
+          console.log('Socket now ready! Sending queued filters:', filters);
+          this.socket$?.next({
+            type: 'update_filters',
+            filters: filters,
+          });
+        });
+      return;
+    }
 
-updateFilters(filters: Partial<SessionFilters>): void {
-  console.log('Updating filters:', filters);
-
-  // 1. Check if the socket is truly ready
-  if (!this.socket$ || this.socket$.closed) {
-    console.warn('Socket not ready. Queuing filters...');
-
+    // 3. Normal flow if already connected
     this.loadingSubject.next(true);
-
-    // 2. Wait for the FIRST successful connection message
-    // We listen to filters$ because your connect() method calls .next() on 'connected'
-    this.filters$.pipe(
-      filter(ctx => Object.keys(ctx).length > 0), // Wait until context exists
-      take(1) // Execute only once then unsubscribe
-    ).subscribe(() => {
-      console.log('Socket now ready! Sending queued filters:', filters);
-      this.socket$?.next({
-        type: 'update_filters',
-        filters: filters
-      });
+    this.socket$.next({
+      type: 'update_filters',
+      filters: filters,
     });
-    return;
   }
 
-  // 3. Normal flow if already connected
-  this.loadingSubject.next(true);
-  this.socket$.next({
-    type: 'update_filters',
-    filters: filters
-  });
-}
+  /**
+   * Submits user feedback (ratings/comments) for the current chat session via HTTP POST.
+  */
 
-
-// 6 feb code
-
-  // updateFilters(filters: Partial<SessionFilters>): void {
-  //   console.log('Updating filters:', filters);
-
-  //   if (!this.socket$ || this.socket$.closed) {
-  //     console.error('WebSocket is not connected. Cannot update filters.');
-  //     this.filterUpdateSubject.next({
-  //       type: 'filters_updated',
-  //       success: false,
-  //       message: 'WebSocket not connected'
-  //     });
-  //     return;
-  //   }
-  //   this.loadingSubject.next(true);
-  //   console.log('Sending filter update via WebSocket:', filters);
-
-  //   this.socket$.next({
-  //     type: 'update_filters',
-  //     filters: filters
-  //   });
-  // }
-
-
-
-
-
-
-// updateFilters(filters: Partial<SessionFilters>): void {
-//   console.log('Updating filters:', filters);
-
-//   // 1. Check if the socket is ready
-//   if (!this.socket$ || this.socket$.closed) {
-//     console.warn('WebSocket not connected. Queuing filter update...');
-
-//     this.loadingSubject.next(true);
-
-//     // 2. Wait for the FIRST successful connection message
-//     // We listen to filters$ because your 'connect' method updates it on type: 'connected'
-//     this.filters$.pipe(
-//       filter((currentFilters: {}) => Object.keys(currentFilters).length > 0), // Wait until we have a context
-//       take(1) // Only do this once
-//     ).subscribe(() => {
-//       console.log('Connection established! Sending queued filters:', filters);
-//       this.socket$?.next({
-//         type: 'update_filters',
-//         filters: filters
-//       });
-//     });
-
-//     // We return here because the actual send is now handled by the subscription above
-//     return;
-//   }
-
-//   // 3. Standard flow if socket is already open
-//   this.loadingSubject.next(true);
-//   console.log('Sending filter update via WebSocket:', filters);
-
-//   this.socket$.next({
-//     type: 'update_filters',
-//     filters: filters
-//   });
-// }
-
-  // =====================================================
-  // 5. SEND FEEDBACK
-  // =====================================================
   sendFeedback(payload: any): Observable<any> {
     const apiUrl = `${this.chatAPIURL}/feedback`;
     return this.http.post(apiUrl, payload);
   }
 
-  // =====================================================
-  // 6. CLEAR SESSION
-  // =====================================================
+  /**
+   * Closes the WebSocket connection and resets all local session-related state.
+  */
+
   clear() {
     this.socket$?.complete();
     this.socket$ = undefined;
@@ -756,9 +318,10 @@ updateFilters(filters: Partial<SessionFilters>): void {
     this.sessionId = null;
   }
 
-  // =====================================================
-  // Private helper
-  // =====================================================
+  /**
+   * Internal helper to add a bot's response to the message history and handle loading states.
+  */
+
   private addBotMessage(text: string, stopLoading: boolean) {
     if (stopLoading) {
       this.loadingSubject.next(false);

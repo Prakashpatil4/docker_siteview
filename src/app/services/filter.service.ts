@@ -42,10 +42,8 @@ export class FilterService {
   }
   setChatWindowOpenVisibility(visible: boolean) {
     this.chatWindowOpenVisibility.next(visible);
-    console.log('setChatWindowOpenVisibility--->'+this.chatWindowOpenVisibility.value)
   }
   get isAgentButtonVisible(): boolean {
-     console.log('isAgentButtonVisible--->'+this.chatWindowOpenVisibility.value)
     return this.chatWindowOpenVisibility.value;
   }
   connectWithAgent() {

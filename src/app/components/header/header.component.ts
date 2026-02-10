@@ -91,8 +91,7 @@ export class HeaderComponent implements OnInit {
     const isVisible = this.filterService.isAgentButtonVisible;
 
     if (isVisible) {
-      console.log('on site change if conddition')
-     this.filterService.setAgentButtonVisibility(true);
+      this.filterService.setAgentButtonVisibility(true);
     }
 
   }

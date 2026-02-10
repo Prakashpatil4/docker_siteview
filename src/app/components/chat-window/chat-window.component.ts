@@ -1,4 +1,4 @@
- import {
+import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
@@ -79,168 +79,92 @@ export class ChatWindowComponent
     private fb: FormBuilder,
   ) {}
 
-ngOnInit(): void {
-  // 1. Initialize the UI form
-  this.initForm();
-
-  // 2. Main Filter Subscription (Single Source of Truth)
-  // This replaces the 3 individual subscriptions and the combineLatest block
-  const filterSub = combineLatest([
-    this.filterService.currentDateRange,
-    this.filterService.currentBusinessLine,
-    this.filterService.currentSite,
-  ])
-    .pipe(
-      debounceTime(200), // Wait for dropdown changes to settle
-      distinctUntilChanged(
-        (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)
+   /**
+   * Initializes the component. Sets up the feedback form and a reactive pipeline
+   * to listen for global filter changes (date, business line, site).
+   */
+  ngOnInit(): void {
+    this.initForm();
+    const filterSub = combineLatest([
+      this.filterService.currentDateRange,
+      this.filterService.currentBusinessLine,
+      this.filterService.currentSite,
+    ])
+      .pipe(
+        debounceTime(200), // Wait for dropdown changes to settle
+        distinctUntilChanged(
+          (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
+        ),
       )
-    )
-    .subscribe(([dateRange, businessLine, site]) => {
-      console.log('🔄 Filter Change Detected: Syncing UI and Session');
+      .subscribe(([dateRange, businessLine, site]) => {
+        console.log('🔄 Filter Change Detected: Syncing UI and Session');
+        const dates = dateRange ? dateRange.split(',') : [];
+        this.startDate = (dates[0] || '').trim();
+        this.endDate = (dates[1] || '').trim();
+        this.selectedBusinessLine =
+          businessLine === 'Select' ? 'All' : businessLine;
+        this.selectedSite = site === 'Select' ? 'ALL' : site;
 
-      // Update local variables first
-      const dates = dateRange ? dateRange.split(',') : [];
-      this.startDate = (dates[0] || '').trim();
-      this.endDate = (dates[1] || '').trim();
-      this.selectedBusinessLine = businessLine === 'Select' ? 'All' : businessLine;
-      this.selectedSite = site === 'Select' ? 'ALL' : site;
+        // Update Chat Session only if we have valid data
+        this.initializeChatSession();
 
-      // Update Chat Session only if we have valid data
-      this.initializeChatSession();
-
-      // Notify the service/socket if the agent panel is already active
-      if (this.filterService.isAgentButtonVisible) {
-        this.filterService.connectWithAgent();
-      }
-    });
-
-  // Track the subscription for cleanup
-  this.subscriptions.add(filterSub);
-
-  // 3. Message Stream Subscription
-  const messagesSub = this.chat.messages$.subscribe((msgs) => {
-    if (msgs && msgs.length > 0) {
-      this.showHint = false;
-      this.chatHistory = msgs;
-    }
-    this.onUserActivity();
-  });
-  this.subscriptions.add(messagesSub);
-
-  // 4. Handle Idle Timer if window is already shown
-  if (this.isShowChatWindow) {
-    this.onUserActivity();
-  }
-}
-
-/**
- * Helper to handle session creation and socket connection
- * This ensures parameters are never empty.
- */
-private initializeChatSession(): void {
-  const sessionSub = this.chat
-    .getSessions(
-      this.startDate ?? '',
-      this.endDate ?? '',
-      this.selectedSite ?? '',
-      this.selectedBusinessLine ?? ''
-    )
-    .subscribe({
-      next: (response: any) => {
-        if (response?.session_id) {
-          console.log('✅ Session Created:', response.session_id);
-          this.chat.connect(response.session_id);
+        // Notify the service/socket if the agent panel is already active
+        if (this.filterService.isAgentButtonVisible) {
+          this.filterService.connectWithAgent();
         }
-      },
-      error: (err) => console.error('❌ Session API Error:', err)
+      });
+
+    // Track the subscription for cleanup
+    this.subscriptions.add(filterSub);
+
+    // 3. Message Stream Subscription
+    const messagesSub = this.chat.messages$.subscribe((msgs) => {
+      if (msgs && msgs.length > 0) {
+        this.showHint = false;
+        this.chatHistory = msgs;
+      }
+      this.onUserActivity();
     });
+    this.subscriptions.add(messagesSub);
 
-  this.subscriptions.add(sessionSub);
-}
+    // 4. Handle Idle Timer if window is already shown
+    if (this.isShowChatWindow) {
+      this.onUserActivity();
+    }
+  }
 
+  /**
+   * Helper to handle session creation and socket connection
+   * This ensures parameters are never empty.
+   */
+  private initializeChatSession(): void {
+    if (this.chat.currentSessionId && this.isShowChatWindow) {
+      return;
+    }
 
+    const sessionSub = this.chat
+      .getSessions(
+        this.startDate ?? '',
+        this.endDate ?? '',
+        this.selectedSite ?? '',
+        this.selectedBusinessLine ?? '',
+      )
+      .subscribe({
+        next: (response: any) => {
+          if (response?.session_id) {
+            this.chat.connect(response.session_id);
+          }
+        },
+        error: (err) => console.error('❌ Session API Error:', err),
+      });
 
+    this.subscriptions.add(sessionSub);
+  }
 
-  // ngOnInit(): void {
-  //     this.filterService.currentDateRange.subscribe(async (dateRange) => {
-  //       const dates = dateRange ? dateRange.split(',') : [];
-  //       this.startDate = (dates[0] || '').trim();
-  //       this.endDate = (dates[1] || '').trim();
-  //     });
-
-  //    this.filterService.currentBusinessLine.subscribe(async (businessLine) => {
-  //       if (businessLine == 'Select') {
-  //         this.selectedBusinessLine = 'All';
-  //       } else {
-  //         this.selectedBusinessLine = businessLine;
-  //       }
-  //     });
-
-
-  //     this.filterService.currentSite.subscribe(async (site) => {
-  //       this.selectedSite = site;
-
-  //       if (this.selectedSite == 'Select') {
-  //         this.selectedSite = 'ALL';
-  //       } else {
-  //         this.selectedSite = this.selectedSite;
-  //       }
-  //     });
-
-  //     combineLatest([
-  //       this.filterService.currentDateRange,
-  //       this.filterService.currentBusinessLine,
-  //       this.filterService.currentSite,
-  //     ])
-  //       .pipe(
-  //         debounceTime(100), // Wait 100ms for all potential changes to settle
-  //         distinctUntilChanged(
-  //           (prev, curr) => JSON.stringify(prev) === JSON.stringify(curr),
-  //         ),
-  //       )
-  //       .subscribe(([dateRange, businessLine, site]) => {
-  //         console.log('Reactive update: Re-syncing filters');
-
-  //         // Perform your logic here
-  //         const isVisible = this.filterService.isAgentButtonVisible;
-  //        console.log('window is-->'+isVisible)
-  //         if(isVisible) {
-  //           this.filterService.connectWithAgent();
-  //         }
-
-  //       });
-
-
-  //   const messagesSub = this.chat.messages$.subscribe((msgs) => {
-  //     if (msgs && msgs.length > 0) {
-  //       this.showHint = false; // hide hint on first message
-  //       this.chatHistory = msgs;
-  //     }
-  //     this.onUserActivity();
-  //   });
-  //   this.subscriptions.add(messagesSub);
-  //   const sessionSub = this.chat
-  //     .getSessions(
-  //       this.startDate ?? '',
-  //       this.endDate ?? '',
-  //       this.selectedSite ?? '',
-  //       this.selectedBusinessLine ?? '',
-  //     )
-  //     .subscribe((response: any) => {
-  //       if (response?.session_id) {
-  //         this.chat.connect(
-  //           response.session_id,
-  //         );
-  //       }
-  //     });
-  //   this.subscriptions.add(sessionSub);
-
-  //   if (this.isShowChatWindow) {
-  //     this.onUserActivity();
-  //   }
-  //   this.initForm();
-  // } // 1. Initialize the form with Reactive Forms
+  /**
+   * Initializes the Reactive Form for user feedback, setting up validators
+   * for the text area and the star rating.
+   */
   initForm(): void {
     this.feedbackForm = this.fb.group({
       // The 'feedbackText' control is required (must not be empty)
@@ -248,22 +172,40 @@ private initializeChatSession(): void {
       rating: [0, [Validators.required, Validators.min(1)]],
     });
   }
+
+  /**
+   * Sets the star rating in the feedback form and updates the UI state.
+   * @param rating The numeric value (1-5) selected by the user.
+  */
   setRating(rating: number): void {
     this.selectedRating = rating; // Update the form control value
     this.feedbackForm.controls['rating'].setValue(rating); // Manually mark the rating control as touched if needed for validation visibility
     this.feedbackForm.controls['rating'].markAsDirty();
     this.feedbackForm.controls['rating'].markAsTouched();
   }
+
+  /**
+   * Component cleanup. Clears active timeouts and unsubscribes from all
+   * RxJS observables to prevent memory leaks.
+  */
   ngOnDestroy(): void {
     this.clearIdleTimer();
     this.subscriptions.unsubscribe();
   }
+
+  /**
+   * Sends the user's current text input to the ChatService and resets the input field.
+   */
   send() {
     if (!this.text.trim()) return;
     this.chat.sendMessage(this.text);
     this.text = '';
     this.onUserActivity(); // reset timer on send
   }
+
+  /**
+   * Opens the chat window UI and starts the idle monitoring timer.
+  */
   showChatWindow() {
     this.text = '';
     this.isShowChatWindow = true;
@@ -271,23 +213,22 @@ private initializeChatSession(): void {
     this.showHint = true;
     this.onUserActivity(); // start/reset timer when opened
   }
+  /**
+   * Closes the chat window, terminates the current WebSocket connection,
+   * and notifies the parent component/service.
+   */
   clear() {
-
-  // if (!this.isShowChatWindow) {
-  //   console.log('im if')
-  //   return;
-  // }
     this.isShowChatWindow = false;
     this.chat.clear();
-
-   // this.isShowChatWindow = false;
     this.clearIdleTimer();
     this.showHint = true;
     this.closed.emit();
-    this.filterService.setChatWindowOpenVisibility(false)
-    // console.log(this.filterService.isAgentButtonVisible)
-    //  this.filterService.setAgentButtonVisibility(false);
+    this.filterService.setChatWindowOpenVisibility(false);
   }
+
+  /**
+   * Toggles the minimized/expanded state of the chat window.
+  */
   toggle() {
     this.isOpen = !this.isOpen;
     if (this.isShowChatWindow) {
@@ -295,28 +236,49 @@ private initializeChatSession(): void {
     } else {
       this.clearIdleTimer();
     }
-  } // call from template (input) and other user actions
+  }
+
+  /**
+   * Callback for user interactions (typing, clicking) to keep the chat session alive.
+  */
   onUserActivity() {
     if (!this.isShowChatWindow) return;
     this.resetIdleTimer();
   }
+
+  /**
+   * Resets the 7-minute idle timer.
+  */
   private resetIdleTimer() {
     this.clearIdleTimer();
     this.idleTimer = setTimeout(() => this.handleIdle(), this.idleTimeoutMs);
   }
 
+  /**
+   * Automatically closes the chat and clears the session when
+   * no user activity is detected for the timeout period.
+   */
   private handleIdle() {
     this.isShowChatWindow = false;
     this.chat.clear();
     this.clearIdleTimer();
     this.closed.emit();
   }
+
+  /**
+   * Safely clears the existing JavaScript timeout for the idle timer.
+  */
   private clearIdleTimer() {
     if (this.idleTimer) {
       clearTimeout(this.idleTimer);
       this.idleTimer = undefined;
     }
   }
+
+  /**
+   * Angular Lifecycle Hook. Automatically scrolls the message container
+   * to the bottom whenever the chat history updates.
+  */
   ngAfterViewChecked(): void {
     if (this.messagesContainer) {
       try {
@@ -325,6 +287,10 @@ private initializeChatSession(): void {
       } catch {}
     }
   }
+
+  /**
+   * Performance optimization for ngFor. Tracks message items by index.
+  */
   trackByIndex(_: number, __: ChatMessage) {
     return _;
   }
@@ -346,6 +312,10 @@ private initializeChatSession(): void {
     return classes;
   }
 
+  /**
+   * Handles the submission of the feedback form. Maps chat history to the
+   * required payload format and sends it to the API.
+   */
   onSubmit(): void {
     if (this.feedbackForm.valid && !this.isSubmitting) {
       this.isSubmitting = true;
@@ -376,10 +346,18 @@ private initializeChatSession(): void {
         },
       });
     }
-  } // 3. Methods to control the pop-up
+  }
+
+  /**
+   * Opens the feedback/rating popup.
+   */
   openPopup(): void {
     this.isVisible = true;
   }
+
+  /**
+   * Closes the feedback popup and resets the form state.
+   */
   closePopup(): void {
     this.isVisible = false;
     this.close.emit(); // Notify parent to close

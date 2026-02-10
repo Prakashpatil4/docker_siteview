@@ -16,7 +16,7 @@ import {
 } from '../../services/notification-service';
 import { FilterService } from '../../services/filter.service';
 import { SafeHtml } from '@angular/platform-browser';
-// Update import path
+
 interface MetricAlert {
   metric: string;
   metric_full_name: string;
@@ -111,21 +111,18 @@ export class NotificationsComponent implements OnInit {
   userData: any;
   all: NotificationItem[] = [];
   loading = false;
-
   unreadCount = input<number>(0);
-  // View Control
-  initialCount = 5; // Enough to show the summary
+  initialCount = 5;
   showAll = false;
 
-  // Modal State
+
   isModalOpen = false;
   selectedData: any = null; // Will hold the full JSON for the modal
   selectedSite: string = '';
   localCount: number | undefined;
-  //digestData: any = null; // Will hold the JSON
   currentView: 'focus' | 'specializations' | 'products' | 'trends' = 'focus';
 
-  // UI Flags
+
   showNotificationPanel = true;
   showReportModal = false;
   showDetailModal = false;
@@ -137,14 +134,13 @@ export class NotificationsComponent implements OnInit {
   alertInfo: any;
 
   digestData: any = null;
-  // digestData: DigestData = this.getInitialDigestData(); // Load data from method
   notificationCards: NotificationCard[] = [];
 
   isPanelOpen: boolean = true;
-  // isModalOpen: boolean = false;
+
   modalTitle: string = '';
   modalBodyContent: SafeHtml | undefined;
-  // unreadCount = 0;
+
   @Output() unreadCountChange = new EventEmitter<number>();
   notifications: any;
   @Output() alertOccurred = new EventEmitter<string>();
@@ -157,23 +153,42 @@ export class NotificationsComponent implements OnInit {
     private filterService: FilterService,
   ) {}
 
+  /**
+   * Closes the high-level executive report modal.
+  */
+
   closeReportModal() {
     this.showReportModal = false;
   }
+
+  /**
+   * Opens the detail view for a specific metric alert within the report.
+   * @param alert The specific alert object to display.
+  */
 
   openAlertDetail(alert: any) {
     this.selectedAlert = alert;
     this.showDetailModal = true;
   }
 
+  /**
+   * Closes the alert detail modal.
+  */
   closeDetailModal() {
     this.showDetailModal = false;
-    // this.selectedAlert = null;
   }
-  // Add this method to handle the 'unknown' conversion
+
+  /**
+   * Type-cast helper for severity objects to ensure template type safety.
+   */
   getSeverityData(value: unknown): { count: number; label: string } {
     return value as { count: number; label: string };
   }
+
+  /**
+   * Filters and combines daily and monthly trend metrics based on their direction (improving/declining).
+   * @param filterDirection String 'improving' or 'declining'.
+  */
 
   getTrendItems(filterDirection: string): any[] {
     // 1. Safety check to ensure trends object exists
@@ -194,12 +209,14 @@ export class NotificationsComponent implements OnInit {
     });
   }
 
+  /**
+   * Returns the CSS variable color associated with an executive status level.
+   * @param status String status like 'CRITICAL', 'GOOD', etc.
+  */
+
   getStatusColor(status: string): string {
     if (!status) return 'var(--text-secondary)';
-
-    // 1. Normalize: Convert "Needs Attention" -> "NEEDS_ATTENTION"
-    // and "Critical" -> "CRITICAL"
-    const normalizedStatus = status
+     const normalizedStatus = status
       .toUpperCase() // Handles "critical" or "Critical"
       .replace(/\s+/g, '_'); // Handles spaces by turning them into underscores
 
@@ -209,9 +226,12 @@ export class NotificationsComponent implements OnInit {
       GOOD: 'var(--blue-500)',
       EXCELLENT: 'var(--green-500)',
     };
-
     return colors[normalizedStatus] || 'var(--text-secondary)';
   }
+
+  /**
+   * Determines color coding for progress bars or metric values based on percentage thresholds.
+  */
 
   getMetricColor(value: number): string {
     if (value >= 70) return 'var(--green-500)';
@@ -219,13 +239,19 @@ export class NotificationsComponent implements OnInit {
     return 'var(--red-500)';
   }
 
+  /**
+   * Cleans up technical metric names for display by removing underscores and common suffixes.
+  */
+
   formatMetricName(name: string): string {
-    console.log(name);
-    // return name.replace(/_/g, ' ').replace(/Rate|Score/g, '');
     return String(name)
       .replace(/_/g, ' ')
       .replace(/Rate|Score/g, '');
   }
+
+  /**
+   * Calculates total counts of declining vs improving metrics across both daily and monthly trends.
+  */
 
   getTrendCounts() {
     const daily = this.digestData?.emerging_trends?.daily || {};
@@ -236,6 +262,11 @@ export class NotificationsComponent implements OnInit {
       (daily.improving?.length || 0) + (monthly.improving?.length || 0);
     return { declining, improving };
   }
+
+  /**
+   * Switches the active tab view within the Notification Report modal.
+   * @param view The target view identifier.
+  */
 
   switchView(view: 'focus' | 'specializations' | 'products' | 'trends') {
     this.currentView = view;
@@ -249,14 +280,28 @@ export class NotificationsComponent implements OnInit {
     this.openSpec = null;
     this.openProd = null;
   }
+
+  /**
+   * Toggles the visibility of the notification list dropdown panel.
+  */
+
   toggleNotificationPanel(event?: Event) {
     if (event) event.stopPropagation();
     this.showNotificationPanel = !this.showNotificationPanel;
   }
 
+  /**
+   * Explicitly closes the notification list panel.
+  */
+
   closeNotificationPanel() {
     this.showNotificationPanel = false;
   }
+
+  /**
+   * Toggles the accordion expansion for a specific specialization card in the UI.
+  */
+
   toggleSpecCard(index: number) {
     const spec = this.digestData.specializations.specializations;
     spec.forEach((spec: any, i: number) => {
@@ -267,15 +312,28 @@ export class NotificationsComponent implements OnInit {
       }
     });
   }
+
+  /**
+   * Opens the detailed JSON-driven report modal for a specific notification.
+   * Marks notification as read if not already.
+  */
   openFullReport(note: any) {
     this.currentView = 'focus';
     this.showReportModal = true;
     this.getNotificationDetails(note);
   }
 
+  /**
+   * Toggles the accordion expansion for a specific specialization card in the UI.
+  */
+
   togglePanel() {
     this.isPanelOpen = !this.isPanelOpen;
   }
+
+  /**
+   * Lifecycle hook to initialize component data and subscribe to filter changes.
+  */
   ngOnInit(): void {
     this.localCount = this.unreadCount(); // plainNumber is now exactly 3
     this.userData = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
@@ -297,6 +355,11 @@ export class NotificationsComponent implements OnInit {
       await this.getNotificationData();
     });
   }
+
+  /**
+   * Fetches the list of notification summaries from the API based on current filters.
+   * Parses the raw summary text using regex to extract UI-friendly segments.
+  */
 
   async getNotificationData() {
     const userEmail = this.userData?.email;
@@ -362,25 +425,32 @@ export class NotificationsComponent implements OnInit {
     }
   }
 
+  /**
+   * Optimization for *ngFor to only re-render items if their ID has changed.
+  */
+
   trackByFn(index: number, item: any) {
     return item.notification_id; // Tells Angular to track items by ID instead of index
   }
-  // Inside your component.ts
+
+  /**
+   * Helper to truncate long text for the notification preview cards.
+  */
+
   truncateText(text: string, limit: number): string {
     if (!text) return '';
     return text.length > limit ? text.substring(0, limit) + '...' : text;
   }
+
+  /**
+   * Fetches the deep-dive JSON payload for a notification and marks it as read on the server.
+  */
   async getNotificationDetails(note: any) {
     this.digestData = null;
-    //this.loading = true;
-    //  this.userData.email use this user_id as a dynamic for below payload
-    //    "b41c862f-9dca-4d5d-bd0b-9331e27f8ce9"
     const payload = {
       user_id: this.userData.email,
       notification_id: note.notification_id,
     };
-
-    // this.loading = true;
     try {
       const response: any = await lastValueFrom(
         this.svc.getNotificationDetails(payload),
@@ -405,17 +475,21 @@ export class NotificationsComponent implements OnInit {
     }
   }
 
-  // --- Modal Logic ---
+  /**
+   *  open details for notification
+   */
   openDetails(item: NotificationItem) {
     this.selectedData = item.fullData;
     this.isModalOpen = true;
   }
 
+  /**
+   * Maps backend leadership status strings to specific CSS classes for styling.
+  */
+
   getLeadershipClass(status: string): string {
     if (!status) return 'leadership-none';
-
     const s = status.toLowerCase();
-
     // 1. Positive states (Leading, Holding)
     if (s.includes('lead') || s.includes('hold')) {
       return 'leadership-leading';
@@ -432,13 +506,13 @@ export class NotificationsComponent implements OnInit {
   // inside your component class
   openSpec: string | null = null;
   openProd: string | null = null;
-
+   /**
+   * Toggles the visibility of specific specialization sections in the report.
+   */
   toggleSpec(specName: string) {
     this.openSpec = this.openSpec === specName ? null : specName;
     this.openProd = null;
   }
-
-  // dashboard.component.ts
 
   // To track which sections are open
   expandedSections: { [key: string]: boolean } = {
@@ -448,7 +522,9 @@ export class NotificationsComponent implements OnInit {
     LOW: false,
   };
 
-  // Helper to group alerts by severity
+  /**
+   * Getter that organizes product alerts by their severity levels for grouped display.
+  */
   get groupedAlerts() {
     if (!this.digestData?.products?.alerts) return [];
 
@@ -472,10 +548,16 @@ export class NotificationsComponent implements OnInit {
       .sort((a, b) => (a.severity === 'CRITICAL' ? -1 : 1)); // Keep Critical at top
   }
 
+  /**
+   * Toggles the expansion state of a severity section in the Product Alerts view.
+  */
   toggleSection(severity: string) {
     this.expandedSections[severity] = !this.expandedSections[severity];
   }
   activeAlertKey: string | null = null;
+  /**
+   * Exclusively expands one severity alert section while collapsing others.
+   */
   expandAlerts(severity: string) {
     this.activeAlertKey = severity;
     const isCurrentlyExpanded = !!this.expandedSections[severity];
@@ -486,6 +568,10 @@ export class NotificationsComponent implements OnInit {
       this.expandedSections[severity] = true;
     }
   }
+
+  /**
+   * Checks for valid daily data and sets the display string for the week-over-week date range.
+  */
 
   hasValidDailyMetrics(metrics: any): boolean {
     if (!metrics) return false;
@@ -506,6 +592,9 @@ export class NotificationsComponent implements OnInit {
     return true;
   }
 
+  /**
+   * Checks for valid monthly data and sets the display string for the month-over-month date range.
+   */
   hasValidMonthlyMetrics(metrics: any): boolean {
     if (!metrics) return false;
     const values = Object.values(metrics);
@@ -523,16 +612,26 @@ export class NotificationsComponent implements OnInit {
     }
     return true;
   }
+
+  /**
+   * Toggles the expansion of a specific product list within the specializations view.
+  */
   toggleProd(prodName: string) {
     this.openProd = this.openProd === prodName ? null : prodName;
   }
 
+  /**
+   * Returns a Material Icon name based on the trend status string.
+  */
   getTrendIcon(trend: string): string {
     if (trend === 'IMPROVING') return 'trending_up';
     if (trend === 'DECLINING') return 'trending_down';
     return 'remove';
   }
-  // Generic function to find a record by frequency type
+
+  /**
+   * Helper to find focus-area metric records based on their frequency (DAILY/MONTHLY).
+  */
   getRecordByFrequency(freqType: string) {
     if (!this.digestData || !this.digestData.focus) return null;
 
@@ -541,6 +640,10 @@ export class NotificationsComponent implements OnInit {
         item.metric_info?.frequency === freqType,
     );
   }
+
+  /**
+   * Calculates total count of daily frequency metrics currently in the focus view.
+   */
   get dailyMetricsCount(): number {
     if (!this.digestData?.focus) return 0;
     return Object.values(this.digestData.focus).reduce(
@@ -554,6 +657,9 @@ export class NotificationsComponent implements OnInit {
     );
   }
 
+  /**
+   * Filters the focus metrics to return only those with a DAILY frequency.
+   */
   get dailyAlerts() {
     return (
       this.digestData?.focus?.filter(
@@ -562,7 +668,9 @@ export class NotificationsComponent implements OnInit {
     );
   }
 
-  // Getter for Monthly Alerts
+  /**
+   * Filters the focus metrics to return only those with a MONTHLY frequency.
+   */
   get monthlyAlerts() {
     return (
       this.digestData?.focus?.filter(
@@ -570,6 +678,10 @@ export class NotificationsComponent implements OnInit {
       ) || []
     );
   }
+
+  /**
+   * Returns a specific CSS class based on a status keyword for badge styling.
+   */
   getStatusClass(status: string | undefined): string {
     if (!status) return '';
     const s = status.toLowerCase();
@@ -580,12 +692,20 @@ export class NotificationsComponent implements OnInit {
       return 'status-critical';
     return '';
   }
+
+  /**
+   * Validates if a breakdown array contains actual volume data to display.
+   */
+
   hasValidBreakdown(breakdown: any[]): boolean {
     if (!breakdown) return false;
     // Returns true if at least one item has a score > 0
     return breakdown.some((item) => item.volume_share_pct > 0);
   }
 
+  /**
+   * Closes any generic open modals and resets selected data.
+  */
   closeModal(event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -594,14 +714,17 @@ export class NotificationsComponent implements OnInit {
     this.isModalOpen = false;
     this.selectedData = null;
   }
-
+  /**
+   * Toggles the "Show All" flag for notification lists to expand/collapse the history.
+   */
   toggleView() {
     this.showAll = !this.showAll;
   }
 
-  // --- Helpers for Dashboard Visualization ---
+ /**
+   * Calculates the percentage width of a progress bar relative to alert counts.
+  */
 
-  // Calculate width for progress bars relative to the highest alert count
   getProgressWidth(count: number): string {
     if (!this.selectedData) return '0%';
     // Find max value to normalize bars (prevent overflow)
@@ -612,12 +735,19 @@ export class NotificationsComponent implements OnInit {
     return Math.min((count / max) * 100, 100) + '%';
   }
 
-  // Determine color based on severity (you can adjust thresholds)
+  /**
+   * Returns a color name for alert badges based on the total alert count.
+  */
   getSeverityColor(count: number): string {
     if (count > 500) return 'red';
     if (count > 100) return 'orange';
     return 'green';
   }
+
+  /**
+   * Determines if a trend should be styled as success (good) or danger (bad).
+   * Note: Logic is inverted for rates where an increase is bad (e.g., Reopens).
+  */
   getTrendClass(t: any): string {
     const name = t?.metric_info?.display_name;
     const current = t?.site_trend?.current_period?.rate ?? 0;
@@ -633,40 +763,46 @@ export class NotificationsComponent implements OnInit {
     return changePct >= 0 ? 'bg-success' : 'bg-danger';
   }
 
+  /**
+   * Converts raw trend data into a human-readable text status (STABLE, INCREASING, etc).
+   */
+
   getTrendText(m: any): string {
-  const val = m.value;
-  if (val.trend === "NO_DATA") return "N/A";
+    const val = m.value;
+    if (val.trend === 'NO_DATA') return 'N/A';
 
-  const last = val.last_week?.rate;
-  const current = val.this_week?.rate;
+    const last = val.last_week?.rate;
+    const current = val.this_week?.rate;
 
-  if (last != null && current != null) {
-    if (last === current) return "STABLE";
-    // Logic: If last week was 5 and this week is 10, it's INCREASING
-    return last < current ? "INCREASING" : "DECREASING";
+    if (last != null && current != null) {
+      if (last === current) return 'STABLE';
+      // Logic: If last week was 5 and this week is 10, it's INCREASING
+      return last < current ? 'INCREASING' : 'DECREASING';
+    }
+    return val.trend;
   }
-  return val.trend;
-}
-
-getMetricTrend(m: any): string {
+  /**
+   * Returns a specific trend-related CSS class for monthly comparisons.
+   */
+  getMetricTrend(m: any): string {
     const name = m.value.display_name;
     let className = ''; // Initialize as empty string
 
     if (name === 'Reopen Rate' || name === 'Escalation Rate') {
-        // Safe check for null/undefined before comparing
-        if (m.value.last_month?.rate != null && m.value.this_month?.rate != null) {
-            if (m.value.last_month.rate < m.value.this_month.rate) {
-                console.log('Class assigned: declining');
-                className = 'declining';
-            } else if (m.value.last_month.rate > m.value.this_month.rate) {
-                className = 'improving'; // Or whatever your 'good' class is
-            } else {
-                className = 'stable';
-            }
+      // Safe check for null/undefined before comparing
+      if (
+        m.value.last_month?.rate != null &&
+        m.value.this_month?.rate != null
+      ) {
+        if (m.value.last_month.rate < m.value.this_month.rate) {
+          className = 'declining';
+        } else if (m.value.last_month.rate > m.value.this_month.rate) {
+          className = 'improving'; // Or whatever your 'good' class is
+        } else {
+          className = 'stable';
         }
+      }
     }
     return className;
-}
-
-
+  }
 }

@@ -16,14 +16,6 @@
     </div>
   </div>
   <div class="chat-body" *ngIf="isOpen">
-    <!-- <div
-      class="loader-overlay"
-      *ngIf="chat.loading$ | async"
-      aria-hidden="false"
-    >
-      <div class="spinner"></div>
-    </div> -->
-
     <div class="chat-hint" *ngIf="showHint">
       Welcome to Support chat Type  your message to connect with agent
     </div>
@@ -71,11 +63,11 @@
       <button *ngIf="chatHistory.length >= 2" (click)="openPopup()" class="feedback-button" title="Provide Feedback">
         <i class="fa-regular fa-comment-dots"></i>
       </button>
-     
+
     </div>
   </div>
 </div>
- 
+
 <div *ngIf="isVisible" class="modal-overlay" (click)="closePopup()">
   <div class="modal-content" (click)="$event.stopPropagation()">
 

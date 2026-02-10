@@ -18,8 +18,7 @@ export class TimeAgoPipe implements PipeTransform {
 
     // Safety check to prevent "Invalid Date" errors in the UI
     if (!isValid(date)) {
-      console.warn('TimeAgoPipe: Invalid date provided', value);
-      return 'just now';
+       return 'just now';
     }
 
     return formatDistanceToNow(date, { addSuffix: true });
